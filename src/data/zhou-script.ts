@@ -1,0 +1,309 @@
+import type { ChainNode, FreeNode } from '../types/script';
+import type { TargetScript } from '../types/scripts-registry';
+
+/**
+ * 周老师 story chain — 63岁丧偶退休语文教师，儿子在深圳，一年回来一次。
+ * 情感缺口 daughter_figure：学生都毕业了，家里安静得能听见钟走。
+ * 上午在线（早起的人），慷慨（红包大）但粘人（断联惩罚重）。
+ * Register: 书面语、客气、老派礼貌里藏着不知所措的孤独。
+ */
+export const ZHOU_CHAIN: Record<string, ChainNode> = {
+  c_zhou_1: {
+    id: 'c_zhou_1',
+    openers: [
+      '你好。冒昧打扰了。',
+      '我在你发的那首诗下面留了很长一段评论，不知道你看到没有。',
+      '现在的年轻人还读北岛，不多见了。',
+    ],
+    options: [
+      {
+        text: '看到了！叔叔你的评论比诗还长',
+        style: 'playful',
+        trust: 6,
+        replies: ['（过了很久）抱歉，职业病。教书四十年，改作文改的。', '你看，又忍不住多说了。'],
+      },
+      {
+        text: '您是老师？',
+        style: 'intellectual',
+        trust: 5,
+        replies: ['退休了。语文。', '以前我的学生，也有喜欢读诗的。'],
+      },
+      {
+        text: '（只回了个表情）',
+        style: 'sweet',
+        trust: 0,
+        replies: ['（他也回了一个。大概是翻了很久表情库。）'],
+      },
+    ],
+    next: 'c_zhou_2',
+  },
+  c_zhou_2: {
+    id: 'c_zhou_2',
+    minTrust: 10,
+    openers: ['今天批改了社区书法班的作业。', '都是比我年纪大的人。他们说周老师您怎么还不歇歇。', '歇下来干什么呢。家里那口钟，走得比谁都响。'],
+    options: [
+      {
+        text: '叔，家里有钟声陪着，也挺好的',
+        style: 'caring',
+        trust: 8,
+        replies: ['（很久没回）', '那口钟是她还在的时候买的。'],
+      },
+      {
+        text: '那你教教我写毛笔字吧，我字丑',
+        style: 'sweet',
+        trust: 9,
+        replies: {
+          sweet_daughter: ['（他的回复一下子多了起来，像上课铃响了。）', '好啊。先备齐文房四宝。磨刀不误砍柴工。'],
+          default: ['（他认真想了想）可以先从描红开始。', '你若不嫌我啰嗦。'],
+        },
+      },
+      {
+        text: '（问他）钟坏了吗？',
+        style: 'intellectual',
+        trust: 3,
+        wariness: 2,
+        replies: ['没坏。走得很好。', '……你问这个做什么。（笑了笑）没事，随口一问就好。'],
+      },
+    ],
+    next: 'c_zhou_3',
+  },
+  c_zhou_3: {
+    id: 'c_zhou_3',
+    minTrust: 22,
+    openers: ['跟你说件小事。', '今天在阳台上晒被子，忽然想不起来午饭吃没吃。', '一个人过日子，就是这样。日子叠日子，没有记日子的必要。'],
+    options: [
+      {
+        text: '叔，我给你当闹钟吧，每天中午提醒你吃饭',
+        style: 'caring',
+        trust: 10,
+        numbness: 5,
+        conscience: -1,
+        replies: ['（他发来一个大拇指。旧表情。）', '（从那天起，你设了个真的闹钟——按了静音。）'],
+      },
+      {
+        text: '儿子不管你吗',
+        style: 'playful',
+        trust: 2,
+        wariness: 4,
+        replies: ['他忙。深圳。', '年轻人有年轻人的战场。'],
+      },
+      {
+        text: '「周老师，你学生里最出息的是谁呀」',
+        style: 'intellectual',
+        trust: 7,
+        replies: ['（他说了三个名字。都是大人物。）', '（又说：不过我最惦记的，是个当年没念完书的。他后来开了家面馆。每年教师节都来看我。）'],
+      },
+    ],
+    next: 'c_zhou_4',
+  },
+  c_zhou_4: {
+    id: 'c_zhou_4',
+    minTrust: 34,
+    openers: ['你像我的一个学生。', '不是长得像。是那种——坐在窗边、看起来乖、其实心里有一整本书的样子。', '她后来去了很远的地方。再没回来。'],
+    options: [
+      {
+        text: '「老师，那我现在回来陪你」',
+        style: 'sweet',
+        trust: 11,
+        numbness: 7,
+        conscience: -2,
+        replies: ['（他沉默了很久。）', '你啊。', '（后来他把你的备注改成了那个学生的名字。你没告诉他你看见了。）'],
+      },
+      {
+        text: '「她为什么没回来呀」',
+        style: 'intellectual',
+        trust: 6,
+        replies: ['（很久）因为我没让她走。她要走的那个晚上，我说了很重的话。', '这件事我想了半辈子。'],
+      },
+      {
+        text: '（不接话茬，转开话题）「老师今天的字练了吗」',
+        style: 'caring',
+        trust: 5,
+        replies: ['练了练了。还给你留着作业呢。', '（你根本没有看过他发来的字。）'],
+      },
+    ],
+    next: 'c_zhou_5',
+  },
+  c_zhou_5: {
+    id: 'c_zhou_5',
+    minTrust: 48,
+    openers: ['我退休金一个月七千二。', '说出来不怕你笑话——我上个月算了一笔账。', '我走了以后，这些钱，一分也带不走。'],
+    options: [
+      {
+        text: '「老师你别胡说，你身体好着呢」',
+        style: 'caring',
+        trust: 8,
+        replies: ['（他发来一张体检报告的照片。箭头不少。）', '都是小毛病。可小毛病多了，就成年纪了。'],
+      },
+      {
+        text: '（要红包——「老师，我想买套好点的毛笔，跟你学」）',
+        style: 'sweet',
+        trust: -2,
+        wariness: 4,
+        isAsk: true,
+        replies: [],
+      },
+      {
+        text: '「那你儿子该给你养老呀」',
+        style: 'playful',
+        trust: 4,
+        wariness: 3,
+        replies: ['他不欠我的。是我把他推出去的。', '（这话说完，他一个月没提儿子。）'],
+      },
+    ],
+    next: 'c_zhou_6',
+  },
+  c_zhou_6: {
+    id: 'c_zhou_6',
+    minTrust: 60,
+    minStage: 'trusted',
+    openers: ['我把存折的事，想明白了。', '七千二，我自己用不了两千。剩下的，放着也是放着。', '你要是缺——'],
+    options: [
+      {
+        text: '（要红包——接过话头「老师你真的要给我吗」）',
+        style: 'sweet',
+        trust: -3,
+        wariness: 6,
+        isAsk: true,
+        setFlag: 'zhou_deposit_asked',
+        replies: [],
+      },
+      {
+        text: '（截住话头）「老师，你存折留着。我要的不是这个」',
+        style: 'caring',
+        trust: 10,
+        conscience: 8,
+        setFlag: 'zhou_refused_deposit',
+        replies: ['（他过了很久才回。）', '……好。', '（但那之后，他发红包的次数变多了。像是在绕开你说过的话。）'],
+      },
+      {
+        text: '（装没看见这条消息）',
+        style: 'intellectual',
+        trust: -5,
+        wariness: 8,
+        numbness: 3,
+        replies: ['（他撤回了那条消息。）', '（又发：当我没说。字都打了，老糊涂。）'],
+      },
+    ],
+    next: 'c_zhou_7',
+  },
+  c_zhou_7: {
+    id: 'c_zhou_7',
+    minTrust: 68,
+    minStage: 'harvest',
+    openers: ['今天书法班来了个新学员，七十多了，说起话中气十足。', '他说他孙子在给他"冲业绩"。', '我问什么叫冲业绩。他笑了，没解释。'],
+    options: [
+      {
+        text: '「那是他的孩子们在孝顺他」',
+        style: 'caring',
+        trust: 6,
+        replies: ['是。都好。', '（他没再说话。你不太确定他信没信。）'],
+      },
+      {
+        text: '（心里一紧，转开话题）「老师你的字呢，发来看看」',
+        style: 'sweet',
+        trust: 7,
+        conscience: 2,
+        replies: ['（他发来一张字。写的是：但愿人长久。）', '（笔画很稳。他练了很久。）'],
+      },
+      {
+        text: '「老师，其实我……」（差点说出口）',
+        style: 'intellectual',
+        trust: 3,
+        wariness: 10,
+        replies: ['（他等了很久。）', '（最后他说：不急。你想说的时候再说。他从来不打断人。）'],
+      },
+    ],
+    next: 'c_zhou_8',
+  },
+  c_zhou_8: {
+    id: 'c_zhou_8',
+    minTrust: 64,
+    minStage: 'harvest',
+    openers: ['（语音，1 分 47 秒。他很少发语音。）', '（点开，前半段是安静的。然后他说：）', '我不糊涂。我知道你手机里不止我一个老头。', '（停顿。粉笔灰一样的安静。）', '我是想，你连装都肯装，说明你心里苦。能装到底的人，都是心里缺东西的。'],
+    options: [
+      {
+        text: '「老师，对不起」（说一半的真话）',
+        style: 'caring',
+        trust: 2,
+        conscience: 10,
+        setFlag: 'zhou_half_confessed',
+        replies: ['（语音，4 秒：）', '「行了。字还在练吗？」', '（他什么都没追究。他只是把话题，轻轻放回了原处。）'],
+      },
+      {
+        text: '「老师你误会了，他们都是普通朋友」（撒谎到底）',
+        style: 'sweet',
+        trust: 5,
+        wariness: -4,
+        numbness: 12,
+        conscience: -6,
+        setFlag: 'zhou_lied_final',
+        replies: ['（很长时间的安静。）', '「好。」', '「那就好。」', '（他后来照常上课、照常发字、照常发红包。只是那条语音，他再也没提过。）'],
+      },
+      {
+        text: '（退掉了他的语音。整晚没回。）',
+        style: 'intellectual',
+        trust: -14,
+        wariness: 15,
+        numbness: 6,
+        conscience: -3,
+        setFlag: 'zhou_ghosted',
+        replies: ['（第二天早上他发来：）', '「语音没什么要紧的。你好好吃饭。」'],
+      },
+    ],
+    next: '',
+  },
+};
+
+export const ZHOU_FREE: FreeNode[] = [
+  {
+    id: 'f_zhou_1',
+    minTrust: 15,
+    openers: ['今天讲了《项脊轩志》。「庭有枇杷树，吾妻死之年所手植也，今已亭亭如盖矣。」', '讲到那句，我停了一下。跟班里的老张说，讲义落家里了，歇十分钟。'],
+    options: [
+      { text: '「叔，枇杷树还在吗」', style: 'intellectual', trust: 8, replies: ['在。我修枝修得勤。', '（其实你根本不知道那篇课文讲什么。但你说了句：亭亭如盖。他记了很久。）'] },
+      { text: '「你们下课还休息呀，跟小学生似的」', style: 'playful', trust: 5, replies: ['对。老张还抢我粉笔。', '（他笑。那天的字写得格外工整。）'] },
+      { text: '（敷衍）嗯嗯', style: 'sweet', trust: -1, replies: ['（他也回了个嗯。语气看不出什么。）'] },
+    ],
+  },
+  {
+    id: 'f_zhou_2',
+    minTrust: 30,
+    openers: ['（上午 9:40）今天的粥熬糊了。', '就一点点。我还是吃完了。', '以前都是她熬粥。我到现在没学会那个火候。'],
+    options: [
+      { text: '「叔，明天你拍糊的我也要看」', style: 'caring', trust: 9, replies: ['（第二天他真的拍了。那天粥没糊。）', '（你随口一句话，他记了两个月。）'] },
+      { text: '「教你个办法，水开了再下米」', style: 'intellectual', trust: 6, replies: ['（他认真记了。回了个：受教。）', '第二天：粥好了。就是有点像饭。'] },
+      { text: '（要红包）「老师请我喝粥~ 熬糊的那锅算我的」', style: 'sweet', trust: -2, wariness: 5, isAsk: true, replies: [] },
+    ],
+  },
+  {
+    id: 'f_zhou_3',
+    openers: ['（他发来一张字。今天写的是：「静」。）'],
+    options: [
+      { text: '「老师今天怎么写这个字」', style: 'caring', trust: 7, replies: ['写着写着就写了这个字。', '手比脑子老实。'] },
+      { text: '「好字！ Lehrer 周赛过田英章」', style: 'playful', trust: 4, replies: ['（他没懂这个梗。但他认真地去查了田英章是谁。）', '查到了。不敢比不敢比。'] },
+      { text: '（收藏）', style: 'sweet', trust: 5, replies: ['（他的状态亮了一上午。）'] },
+    ],
+  },
+];
+
+export const ZHOU_LINES: TargetScript['lines'] = {
+  greeting: [
+    '（09:20）今天风好。晾了被子。',
+    '（08:47）晨练回来。你醒了吗？年轻人别睡懒觉。',
+    '（09:55）在阳台写了两行字。给你看看。',
+  ],
+  reply_sweet: ['（他打字很慢，但一定回。）', '「好孩子。」', '（他发来一个很旧的表情，玫瑰花，闪着像素的光。）'],
+  reply_flirty: ['（他不接。第二天他发来一张字：「发乎情，止乎礼。」）', '（他大概想了很久怎么回。）'],
+  reply_caring: ['「你也是个细致人。」', '（他回得很快。上午他总是很有空。）'],
+  reply_intellectual: ['（他认真地回了一段。引了半句古文。）', '「孺子可教。」'],
+  reply_playful: ['（他大概笑了。回了个"哈哈"。打成了"哈哈哈"。）', '「你呀。」'],
+  packet_received: ['（红包备注：添置文房。）', '（红包备注：小姑娘家，别亏待自己。）'],
+  ask_success: ['（红包来了。附言：拿着。老师的一点心意。）', '（红包来了。他什么都没说，只发了个"静"字。）'],
+  ask_fail: ['（他很晚才回：）最近学校要交个材料，手头紧。', '（他没接话。第二天照常发来一张字。）'],
+  wariness_high: ['（他开始用"您"了。称呼回到了讲台上。）', '（他的字，忽然写得很用力。）'],
+  deep_night: ['（23:50）这个点你还醒着？年轻人，不要学我。', '（他说完这句就下线了。老年人的夜，是安静的。）'],
+  morning: ['（06:20）晨练去了。今天有雾。', '（07:00）粥熬好了。拍给你看。'],
+  blocked: ['（头像变成了灰的。像粉笔灰。）', '（他删你之前，给你发了最后一张字：「珍重」。）'],
+  silent_warning: ['（他每天上午照常发一张字。像打卡。像交作业。）', '（字写得越来越潦草。他大概是察觉了什么。）'],
+};
