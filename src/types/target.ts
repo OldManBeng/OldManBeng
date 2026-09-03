@@ -15,7 +15,12 @@ export type TargetArchetype =
   | 'divorced_driver'   // 离异出租车司机
   | 'married_boss'      // 已婚个体老板
   | 'cafe_owner_ninety' // 九零后网吧老板
-  | 'lonely_engineer';  // 独居老工程师
+  | 'lonely_engineer'   // 独居老工程师
+  // ---- v2.0 老头库：4 个新原型（45 人库按这些扩展）----
+  | 'night_guard'       // 小区夜班保安：话说三句，烟买两包
+  | 'fisherman'         // 钓友大叔：水库、鱼护、永远差一根竿
+  | 'chess_uncle'       // 棋摊大爷：悔棋、观棋、输棋骂孙子
+  | 'square_dancer'     // 广场舞大爷：音响、领队阿姨、腰不好
 
 /** Mechanical hooks the engine reads (mirrors GL2's GirlfriendTrait). */
 export const TargetTrait = {
@@ -90,10 +95,19 @@ export interface TargetState {
   daysSincePaid: number;
   /** Day of his last chat session — one conversation per person per day. */
   lastChatDay: number;
+  /** v2.0：偶遇入通讯录的日期（0 = 还没遇到——主五人开局即 1）。 */
+  discoveredDay: number;
+  /** v2.0：今天他来找过你（防重复投递）。 */
+  pingedToday: boolean;
+  /** v2.0：近 3 套用过的话术组 id（去重轮换）。 */
+  recentPacks: string[];
   blocked: boolean;
   /** Set when he stops being reachable forever. */
   ended: TargetEndingId | null;
 }
 
-/** Content-complete targets shipped in this build. */
+/** Content-complete main targets (story chains fully written). */
 export const ACTIVE_TARGETS: string[] = ['lao_li', 'zhou_teacher', 'boss_wang', 'hao_ge', 'chen_gong'];
+
+/** v2.0 老头库：45 个偶遇目标（9 原型 × 5 人），按计划事件逐步入通讯录。 */
+export const LIBRARY_TARGETS: string[] = []; // 由 data/target-library.ts 填充

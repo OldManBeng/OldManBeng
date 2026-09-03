@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import type { GameAction, GameState } from '../types/game';
-import { createInitialState, dispatch } from '../engine/state-machine';
+import { createInitialState, defaultProfile, dispatch } from '../engine/state-machine';
+import { ALL_TARGETS } from '../data/target-library';
+import type { TargetState } from '../types/target';
 
 const SAVE_KEY = 'beng_save_v1';
 
@@ -13,11 +15,44 @@ export interface GameStore {
   hasSave(): boolean;
 }
 
+/** v1 存档 → v2：补默认字段（profile/流水/归档/incoming/计划/麻木日限 + 老头新字段 + 45 人库）。
+ *  旧档的五个老头视为第 1 天认识；库目标由 state.targets 数量决定补哪些。 */
+function migrate(saved: GameState): GameState {
+  const base = createInitialState();
+  // 1) 老头运行时状态：按 v2 全量名单补齐（旧档只有主五人 → 库目标以"未认识"入场）。
+  const byId = new Map(saved.targets.map((t) => [t.targetId, t]));
+  const targets: TargetState[] = ALL_TARGETS.map((def) => {
+    const old = byId.get(def.id);
+    if (!old) {
+      const fresh = base.targets.find((t) => t.targetId === def.id)!;
+      return { ...fresh, discoveredDay: 0 };
+    }
+    return {
+      ...old,
+      discoveredDay: old.discoveredDay ?? 1,
+      pingedToday: old.pingedToday ?? false,
+      recentPacks: old.recentPacks ?? [],
+    };
+  });
+  // 2) 顶层 v2 新字段。
+  return {
+    ...saved,
+    targets,
+    profile: saved.profile ?? defaultProfile(),
+    ledger: saved.ledger ?? [],
+    archives: saved.archives ?? [],
+    incoming: saved.incoming ?? [],
+    todayPlan: saved.todayPlan ?? '',
+    numbnessToday: saved.numbnessToday ?? 0,
+    energyMax: saved.energyMax ?? base.energyMax,
+  };
+}
+
 function loadSaved(): GameState | null {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as GameState;
+    return migrate(JSON.parse(raw) as GameState);
   } catch {
     return null;
   }

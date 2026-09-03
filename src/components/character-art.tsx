@@ -58,8 +58,27 @@ const PERSONA_STYLE: Record<PersonaId, { bg: string; hair: string; hairStyle: 'l
   artistic_soul: { bg: '#16141c', hair: '#242424', hairStyle: 'bob', accent: '#8e44ad' },
 };
 
+/** 6 款可选头像（发型×发色×领色组合，数据驱动）。 */
+export const AVATAR_PRESETS: { id: number; bg: string; hair: string; hairStyle: 'long' | 'twin' | 'bob' | 'bun'; accent: string }[] = [
+  { id: 1, bg: '#1a1216', hair: '#1c1c1c', hairStyle: 'long', accent: '#c0392b' },
+  { id: 2, bg: '#141c22', hair: '#4a3020', hairStyle: 'twin', accent: '#e67e22' },
+  { id: 3, bg: '#121a14', hair: '#2c2018', hairStyle: 'bun', accent: '#27ae60' },
+  { id: 4, bg: '#16141c', hair: '#242424', hairStyle: 'bob', accent: '#8e44ad' },
+  { id: 5, bg: '#1c1418', hair: '#6b3a2a', hairStyle: 'long', accent: '#d4a017' },
+  { id: 6, bg: '#10161c', hair: '#38506b', hairStyle: 'bob', accent: '#2e86ab' },
+];
+
+/** 可选头像渲染（AvatarId 1-6）。 */
+export function ProfileAvatar({ avatarId, size = 44 }: { avatarId: number; size?: number }) {
+  const st = AVATAR_PRESETS[(avatarId - 1) % AVATAR_PRESETS.length];
+  return <PersonaFace st={st} size={size} />;
+}
+
 export function PersonaAvatar({ personaId, size = 44 }: { personaId: PersonaId; size?: number }) {
-  const st = PERSONA_STYLE[personaId];
+  return <PersonaFace st={PERSONA_STYLE[personaId]} size={size} />;
+}
+
+function PersonaFace({ st, size }: { st: { bg: string; hair: string; hairStyle: 'long' | 'twin' | 'bob' | 'bun'; accent: string }; size: number }) {
   const hair = st.hairStyle;
   return (
     <svg width={size} height={size} viewBox="0 0 54 54" role="img" aria-label="你">

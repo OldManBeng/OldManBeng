@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createInitialState, dispatch, TARGET_MAP, targetAwake, scoreEnding } from '../../engine/state-machine';
+import { createInitialState, dispatch, TARGET_MAP, ALL_TARGET_MAP, targetAwake, scoreEnding } from '../../engine/state-machine';
 import { LAO_LI_CHAIN } from '../../data/scripts';
 import { ZHOU_CHAIN, ZHOU_FREE, ZHOU_LINES } from '../../data/zhou-script';
 import { WANG_CHAIN, WANG_FREE, WANG_LINES } from '../../data/wang-script';
@@ -28,7 +28,7 @@ function autoPlay(seed: number): ReturnType<typeof createInitialState> {
       s = dispatch(s, { type: 'industry_reply', accept: s.money >= INDUSTRY_COURSE_COST });
     }
     if (s.dayPhase === 'morning') {
-      const morningTargets = s.targets.filter((t) => !t.blocked && t.lastChatDay !== s.day && targetAwake(TARGET_MAP[t.targetId], 'morning') && s.energy >= CHAT_SESSION_COST);
+      const morningTargets = s.targets.filter((t) => !t.blocked && t.discoveredDay > 0 && t.lastChatDay !== s.day && targetAwake(ALL_TARGET_MAP[t.targetId], 'morning') && s.energy >= CHAT_SESSION_COST);
       if (morningTargets.length) {
         s = dispatch(s, { type: 'start_chat', targetId: morningTargets[0].targetId });
       } else {
@@ -36,7 +36,7 @@ function autoPlay(seed: number): ReturnType<typeof createInitialState> {
       }
     } else if (s.dayPhase === 'night') {
       const nightTargets = s.targets
-        .filter((t) => !t.blocked && t.lastChatDay !== s.day && targetAwake(TARGET_MAP[t.targetId], 'night') && s.energy >= CHAT_SESSION_COST)
+        .filter((t) => !t.blocked && t.discoveredDay > 0 && t.lastChatDay !== s.day && targetAwake(ALL_TARGET_MAP[t.targetId], 'night') && s.energy >= CHAT_SESSION_COST)
         .sort((a, b) => b.trust - a.trust);
       if (nightTargets.length) {
         s = dispatch(s, { type: 'start_chat', targetId: nightTargets[0].targetId });

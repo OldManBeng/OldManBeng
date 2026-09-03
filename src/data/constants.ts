@@ -12,9 +12,7 @@ export const MONTHLY_GOAL = 1500;
 /** One run lasts this many days; retire or keep grinding to the wire. */
 export const DAYS_LIMIT = 30;
 
-/** Nightly energy: every chat session costs this much. */
-export const ENERGY_MAX = 10;
-export const CHAT_SESSION_COST = 4;
+
 
 /** Trust/wariness drift, GL2-style per-turn decay.
  *  Wariness decays 6/day so recovery is a real tactic: after one failed
@@ -118,3 +116,80 @@ export const PERSONA_NEED_MATCH: Record<string, Record<string, number>> = {
 
 /** events.ts / scripts.ts line maps allow a `default` key fallback. */
 export type LineVariantMap = Partial<Record<string, string[]>>;
+
+/** ---- v2.0：精力与节奏 ----
+ *  16/4 = 每天最多 4 场对话（白天 2 + 深夜 2），同时经营 4 条线才转得开。 */
+export const ENERGY_MAX = 16;
+export const CHAT_SESSION_COST = 4;
+
+/** ---- v2.0：性格 × 老头原型 亲和矩阵 ----
+ *  每场对话开场结算一次：trust 是信任漂移（可为负），wariness 是警惕漂移
+ *  （可为负=更放心）。设计意图：没有万能人设——嘴甜能哄住疑心重的，
+ *  却让渴望被仰视的觉得廉价；高冷勾住老板型，却把丧偶老师越推越远。 */
+export interface TraitAffinity {
+  trust: number;
+  wariness: number;
+}
+export const TRAIT_ARCHETYPE_AFFINITY: Record<string, Partial<Record<string, TraitAffinity>>> = {
+  // 嘴甜：对孤独系是糖，对要面子的生意人是掉价
+  sweet_mouth: {
+    divorced_driver: { trust: 2, wariness: 0 },
+    widowed_teacher: { trust: 2, wariness: 0 },
+    lonely_engineer: { trust: 1, wariness: 0 },
+    married_boss: { trust: -1, wariness: 2 },
+    cafe_owner_ninety: { trust: 0, wariness: 0 },
+    // 库存 45 人（共享原型 key 同名扩展）
+  },
+  // 高冷：让疑心重的更放心（不粘人=不图钱），让情感依赖型的更焦虑
+  cold_queen: {
+    divorced_driver: { trust: -1, wariness: 2 },
+    widowed_teacher: { trust: -2, wariness: 3 },
+    lonely_engineer: { trust: 1, wariness: -2 },
+    married_boss: { trust: 2, wariness: -1 },
+    cafe_owner_ninety: { trust: 0, wariness: 1 },
+  },
+  // 直爽：工程师式好感（有事说事），文青式的则觉得你煞风景
+  straight_shooter: {
+    lonely_engineer: { trust: 2, wariness: -1 },
+    widowed_teacher: { trust: 1, wariness: 0 },
+    divorced_driver: { trust: 1, wariness: 0 },
+    married_boss: { trust: 0, wariness: 1 },
+    cafe_owner_ninety: { trust: -1, wariness: 0 },
+  },
+  // 软文艺：所有"孤独成诗"原型 +，但对生意人像外星语
+  soft_artsy: {
+    widowed_teacher: { trust: 2, wariness: 0 },
+    lonely_engineer: { trust: 1, wariness: 0 },
+    cafe_owner_ninety: { trust: 1, wariness: 0 },
+    divorced_driver: { trust: 0, wariness: 1 },
+    married_boss: { trust: -2, wariness: 2 },
+  },
+};
+
+/** 自称年龄 × 情感缺口 亲和（每场 +1/-1 级别）。
+ *  设计意图：谎报年龄本身是话术——报小了哄"想找女儿感觉"的人，
+ *  报真实了让"渴望被仰视"的老板觉得"像个大人，能聊"。 */
+export const AGE_NEED_AFFINITY: Record<string, Partial<Record<string, number>>> = {
+  // daughter_figure 老头：越像"闺女辈"越加分；自称 32 反而像同龄网友
+  '20': { daughter_figure: 1, desired: -1, listened_to: 0, respected: 0 },
+  '24': { daughter_figure: 1, desired: 0, listened_to: 0, respected: 0 },
+  '28': { daughter_figure: 0, desired: 1, listened_to: 0, respected: 0 },
+  '32': { daughter_figure: -1, desired: 1, listened_to: 0, respected: 1 },
+};
+
+/** ---- v2.0：朋友圈自拍 → "他来找你" ----
+ *  新照片发布后 3 天内，他主动私聊的概率/天（按情感缺口加权）。 */
+export const SELFIE_LINGER_DAYS = 3;
+/** 他主动来找你的基础日概率（叠加：断联天数、信任、缺口匹配）。 */
+export const INCOMING_BASE_CHANCE = 0.45;
+/** 一天最多攒几条"他来找你"（多了等于全员轰炸）。 */
+export const INCOMING_DAILY_CAP = 2;
+/** 归档容量上限（防止存档无限膨胀）。 */
+export const ARCHIVE_CAP = 40;
+/** 麻木日上限：一天演四场也不会一晚变机器人——麻痹是月的事，不是天的事。 */
+export const NUMBNESS_DAILY_CAP = 8;
+/** 麻木的自然缓解：一晚不聊天缓 -5（表演的伤，休息一晚能缓一点，但缓得慢）。
+ *  设计意图：麻木是"表演亲密"的累积伤，满场演出 30 天 × 8/天 ≈ 必然 end_numb
+ *  ——这是这门生意的结构性代价；但"歇一晚"是个真实的取舍：少挣一场的钱，
+ *  换回 5 点麻木。连续歇能从麻木边缘爬回来，代价是月底账面更难看。 */
+export const NUMBNESS_REST_RECOVERY = 5;

@@ -1,4 +1,4 @@
-import type { EmotionalNeed, TalkStyle } from './target';
+import type { EmotionalNeed, TalkStyle, TargetArchetype } from './target';
 import type { PersonaId } from './persona';
 
 /** Long-form story chains — the scripted spines of a relationship (老李 M1: 4 阶段). */
@@ -41,6 +41,44 @@ export interface FreeNode {
   minTrust?: number;
   openers: string[];
   options: ChainOption[];
+}
+
+/** v2.0 闲聊话术组——每个老头 10 套，开场按权重轮换，近期用过的不再重复。 */
+export interface ChatPack {
+  id: string;
+  /** 相对权重（话题冷热）。 */
+  weight?: number;
+  /** 他的开场 2-4 条（第一句引用 profile 时按 selfie/age/_trait 变体）。 */
+  openers: string[];
+  options: ChainOption[];
+}
+
+/** v2.0 每日计划：白天选一个，决定今晚在哪、遇到什么人。 */
+export interface DailyPlan {
+  id: string;
+  name: string;
+  /** 1-2 句计划描述。 */
+  description: string;
+  /** 能遇到的库原型池（空 = 本来就在通讯录里的人）。 */
+  meetArchetypes: TargetArchetype[];
+  /** 遇到新人的概率。 */
+  meetChance: number;
+  /** 白天精力花费（占用今天额度）。 */
+  energyCost: number;
+  /** 计划事件的钱务效果（可正可负）。 */
+  money?: number;
+  /** 随机风险微调（危险计划才有）。 */
+  riskAdd?: number;
+}
+
+/** v2.0 他主动找你的开场台词组。 */
+export interface IncomingLines {
+  /** 因为你的新自拍。 */
+  on_selfie: string[];
+  /** 就是想你了。 */
+  missed_you: string[];
+  /** 发工资/退休金的日子。 */
+  wallet_open: string[];
 }
 
 export interface DialogueContextMap {

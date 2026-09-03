@@ -8,6 +8,7 @@ import type { Target, TargetState } from '../types/target';
 import type { ChainNode, ChainOption } from '../types/script';
 import { PERSONAS } from '../data/personas';
 import { TARGETS } from '../data/targets';
+import { ACTIVE_TARGETS } from '../types/target';
 import { scriptFor } from '../data/script-registry';
 import { DAY_EVENTS } from '../data/events';
 import { ENDINGS } from '../data/endings';
@@ -16,6 +17,9 @@ import { nightStamp } from '../utils/format';
 import {
   clamp, replyMultiplier, applyOptionToTrust, resolveAsk, walletReady,
 } from './chat';
+import { DAILY_PLANS } from '../data/plans';
+import { ALL_TARGETS, LIBRARY_IDS, libraryTargetById } from '../data/target-library';
+import { ARCHETYPE_PACKS } from '../data/archetype-packs';
 import {
   START_MONEY, MONTHLY_GOAL, DAYS_LIMIT, ENERGY_MAX, CHAT_SESSION_COST,
   TRUST_DECAY_PER_DAY, WARINESS_DECAY_PER_DAY, SILENT_TRUST_PENALTY,
@@ -25,9 +29,13 @@ import {
   RISK_EXPOSE_WARINESS, MORNING_HOUR_MAX,
   INDUSTRY_COURSE_COST, INDUSTRY_MAINTAIN_TRUST, INDUSTRY_RISK_PER_DAY,
   INDUSTRY_NUMBNESS_PER_DAY, VERDICT_ASK_THRESHOLD,
+  TRAIT_ARCHETYPE_AFFINITY, AGE_NEED_AFFINITY, INCOMING_BASE_CHANCE,
+  INCOMING_DAILY_CAP, SELFIE_LINGER_DAYS, ARCHIVE_CAP, NUMBNESS_DAILY_CAP, NUMBNESS_REST_RECOVERY,
 } from '../data/constants';
 
 export const TARGET_MAP: Record<string, Target> = Object.fromEntries(TARGETS.map((t) => [t.id, t]));
+/** v2.0：含老头库的全量映射。 */
+export const ALL_TARGET_MAP: Record<string, Target> = Object.fromEntries(ALL_TARGETS.map((t) => [t.id, t]));
 export const PERSONA_MAP = Object.fromEntries(PERSONAS.map((p) => [p.id, p]));
 
 function log(state: GameState, kind: EventLogEntry['kind'], details: string, line?: string) {
@@ -36,6 +44,25 @@ function log(state: GameState, kind: EventLogEntry['kind'], details: string, lin
 
 function clone<T>(v: T): T {
   return JSON.parse(JSON.stringify(v)) as T;
+}
+
+/** 一次性 RNG（动作内判定用）。 */
+function rng01(s: GameState) {
+  const rng = makeRng(s.rngSeed);
+  s.rngSeed = (s.rngSeed * 1664525 + 1013904223) >>> 0;
+  return rng;
+}
+
+type ChatMsg = import('../types/chat').ChatMessage;
+
+/** 原型中文名（日志用）。 */
+function archetypeCN(a: string): string {
+  const m: Record<string, string> = {
+    divorced_driver: '出租车司机', widowed_teacher: '退休教师', married_boss: '个体老板',
+    cafe_owner_ninety: '网吧老板', lonely_engineer: '工程师', night_guard: '小区保安',
+    fisherman: '钓友', chess_uncle: '棋友', square_dancer: '广场舞大爷',
+  };
+  return m[a] ?? a;
 }
 
 function freshTargetState(targetId: string): TargetState {
@@ -50,9 +77,62 @@ function freshTargetState(targetId: string): TargetState {
     timesPaid: 0,
     daysSincePaid: 0,
     lastChatDay: 0,
+    discoveredDay: 0,
+    pingedToday: false,
+    recentPacks: [],
     blocked: false,
     ended: null,
   };
+}
+
+/** v2.0：女主默认自设资料。 */
+export function defaultProfile(): GameState['profile'] {
+  return { avatarId: 1, ageClaim: 24, traitId: 'sweet_mouth', selfieId: 'cake', selfieDay: 0 };
+}
+
+/** v2.0：钱包流水工具——每一笔钱都记账。 */
+function ledgerAdd(s: GameState, amount: number, note: string, kind: import('../types/game').LedgerEntry['kind']) {
+  s.ledger.push({ day: s.day, amount, note, kind });
+}
+
+/** v2.0：亲和结算——每场对话开场套一次（profile 性格/年龄 × 老头原型/缺口）。 */
+function applyAffinity(s: GameState, t: TargetState, def: Target) {
+  const trait = s.profile.traitId;
+  const aff = TRAIT_ARCHETYPE_AFFINITY[trait]?.[def.archetype];
+  if (aff) {
+    t.trust = clamp(t.trust + aff.trust, 0, 100);
+    t.wariness = clamp(t.wariness + aff.wariness, 0, 100);
+  }
+  const ageAff = AGE_NEED_AFFINITY[String(s.profile.ageClaim)]?.[def.need];
+  if (ageAff) t.trust = clamp(t.trust + ageAff, 0, 100);
+}
+
+/** v2.0：话术里的 {selfie}/{age}/{trait} 占位符——他的台词会念到你的资料。 */
+export const SELFIE_LABEL: Record<string, string> = { cake: '那个蛋糕', gym: '夜跑那几张', pool: '泳池照', cat: '那只橘猫' };
+export const TRAIT_LABEL: Record<string, string> = {
+  sweet_mouth: '嘴甜', cold_queen: '清冷', straight_shooter: '直性子', soft_artsy: '文艺',
+};
+function fillProfileVars(text: string, s: GameState): string {
+  return text
+    .replace(/\{selfie\}/g, SELFIE_LABEL[s.profile.selfieId] ?? '你朋友圈那张照片')
+    .replace(/\{age\}/g, String(s.profile.ageClaim))
+    .replace(/\{trait\}/g, TRAIT_LABEL[s.profile.traitId] ?? '你');
+}
+
+/** v2.0：选话术组——近 3 套用过的去重，避免"每次都是同一套话术"。 */
+function pickPack(s: GameState, t: TargetState, def: Target): import('../types/script').ChatPack | null {
+  const packs = scriptFor(t.targetId).packs ?? (def.archetype in ARCHETYPE_PACKS ? ARCHETYPE_PACKS[def.archetype] : undefined);
+  if (!packs || packs.length === 0) return null;
+  const pool = packs.filter((p) => !t.recentPacks.includes(p.id));
+  const usable = pool.length ? pool : packs;
+  const rng = makeRng(s.rngSeed);
+  s.rngSeed = (s.rngSeed * 1664525 + 1013904223) >>> 0;
+  const totalW = usable.reduce((sum, p) => sum + (p.weight ?? 1), 0);
+  let roll = rng.next() * totalW;
+  let chosen = usable[0];
+  for (const p of usable) { roll -= (p.weight ?? 1); if (roll <= 0) { chosen = p; break; } }
+  t.recentPacks = [...t.recentPacks, chosen.id].slice(-3);
+  return chosen;
 }
 
 /** Stage from trust, monotonic upward (never demote on decay alone). */
@@ -137,7 +217,7 @@ export function createInitialState(): GameState {
     numbness: 0,
     conscience: 50,
     riskLevel: 0,
-    targets: TARGETS.map((t) => freshTargetState(t.id)),
+    targets: ALL_TARGETS.map((t) => freshTargetState(t.id)),
     chat: null,
     log: [],
     usedOneTimeEvents: [],
@@ -145,6 +225,12 @@ export function createInitialState(): GameState {
     endingId: null,
     flags: {},
     industryCourse: false,
+    profile: defaultProfile(),
+    ledger: [],
+    archives: [],
+    incoming: [],
+    todayPlan: '',
+    numbnessToday: 0,
   };
 }
 
@@ -162,7 +248,10 @@ function runMorning(state: GameState) {
   if (ev) {
     if (ev.oneTime) state.usedOneTimeEvents.push(ev.id);
     for (const eff of ev.effects) {
-      if (eff.kind === 'money') state.money += eff.amount;
+      if (eff.kind === 'money') {
+        state.money += eff.amount;
+        state.ledger.push({ day: state.day, amount: eff.amount, note: ev.name, kind: 'event' });
+      }
       if (eff.kind === 'wariness') {
         // 无 targetId = 全员生效；否则只影响指定关系。
         const hit = 'targetId' in eff && eff.targetId ? [state.targets.find((t) => t.targetId === eff.targetId)] : state.targets;
@@ -183,20 +272,23 @@ function runMorning(state: GameState) {
   // Bills every day (rent pro-rated: keep simple — daily slice of monthly total).
   const dailyBills = BILLS.reduce((s, b) => s + b.amount, 0) / 30;
   state.money -= dailyBills;
+  state.ledger.push({ day: state.day, amount: -Math.round(dailyBills), note: '房租/话费/会员/伙食（日摊）', kind: 'bill' });
   log(state, 'bill', `今日开销 ${Math.round(dailyBills)} 元（房租/话费/会员/伙食摊到每天）`);
 
   // Trust/wariness drift + silent penalty + spontaneous gifts.
   for (const t of state.targets) {
-    const def = TARGET_MAP[t.targetId];
-    const lines = scriptFor(t.targetId).lines;
-    // 昨天聊过就不算断联（runMorning 在每日开始时跑，day 已 +1）。
-    const silentYesterday = !t.blocked && t.lastChatDay !== state.day - 1 && t.lastChatDay !== state.day;
-    let decay = TRUST_DECAY_PER_DAY;
-    if (t.lastChatDay > 0 && silentYesterday) {
-      decay += def?.traits.includes('clingy') ? SILENT_TRUST_PENALTY * CLINGY_SILENT_MULTIPLIER : SILENT_TRUST_PENALTY;
-    }
-    t.trust = clamp(t.trust - decay, 0, 100);
-    t.wariness = clamp(t.wariness - WARINESS_DECAY_PER_DAY, 0, 100);
+    // v2.0：全量名单（库里 50 人也在 drift 循环里，但未认识的不吃断联惩罚）。
+    const def = ALL_TARGET_MAP[t.targetId];
+      const lines = scriptFor(t.targetId).lines;
+      // 昨天聊过就不算断联（runMorning 在每日开始时跑，day 已 +1）。
+      // v2.0：只有"认识过"的老头才吃断联惩罚——库里没解锁的人不欠你。
+      const silentYesterday = !t.blocked && !!t.discoveredDay && t.lastChatDay !== state.day - 1 && t.lastChatDay !== state.day;
+      let decay = TRUST_DECAY_PER_DAY;
+      if (t.lastChatDay > 0 && silentYesterday) {
+        decay += def?.traits.includes('clingy') ? SILENT_TRUST_PENALTY * CLINGY_SILENT_MULTIPLIER : SILENT_TRUST_PENALTY;
+      }
+      if (t.discoveredDay) t.trust = clamp(t.trust - decay, 0, 100);
+      t.wariness = clamp(t.wariness - WARINESS_DECAY_PER_DAY, 0, 100);
     t.daysSincePaid = Math.min(99, t.daysSincePaid + 1);
     // 断联天数：拉黑的不算（结束了）；没被聊过的才积累。
     if (!t.blocked) t.daysSilent = silentYesterday ? Math.min(99, t.daysSilent + 1) : 0;
@@ -212,6 +304,7 @@ function runMorning(state: GameState) {
       state.stats.totalEarned += gift;
       state.stats.redPacketsReceived += 1;
       state.stats.biggestPacket = Math.max(state.stats.biggestPacket, gift);
+      state.ledger.push({ day: state.day, amount: gift, note: `${def?.name ?? '他'} 主动转的（没人开口要过）`, kind: 'gift' });
       log(state, 'packet', `早上醒来，${def?.name ?? '他'} 转了你 ${gift} 元。没有人开口要过这笔钱。`);
     }
     // Terminal endings by story drift.
@@ -223,15 +316,16 @@ function runMorning(state: GameState) {
   }
 
   // 朋友圈穿帮风险：多线经营本身就是风险。每晚活跃关系越多，越容易被互相看见。
-  const activeRels = state.targets.filter((t) => !t.blocked && t.trust >= STAGE_TRUST.warming).length;
-  if (activeRels >= 2) {
+  // v2.0：只数"认识过"的活跃关系——库目标没加微信就不可能撞见彼此。
+  const activeRels = state.targets.filter((t) => !t.blocked && !!t.discoveredDay && t.trust >= STAGE_TRUST.warming).length;
+    if (activeRels >= 2) {
     state.riskLevel = clamp(state.riskLevel + RISK_PER_ACTIVE_RELATION * (activeRels - 1), 0, 100);
     if (state.riskLevel >= 40 && rng.chance(RISK_EVENT_CHANCE)) {
       // 穿帮事件：随机一个关系遭殃，全体警惕上升。
-      const victims = state.targets.filter((t) => !t.blocked && t.trust >= STAGE_TRUST.warming);
+      const victims = state.targets.filter((t) => !t.blocked && !!t.discoveredDay && t.trust >= STAGE_TRUST.warming);
       const victim = victims.length ? rng.pick(victims) : null;
       if (victim) {
-        const vdef = TARGET_MAP[victim.targetId];
+        const vdef = ALL_TARGET_MAP[victim.targetId];
         const vlines = scriptFor(victim.targetId).lines;
         victim.wariness = clamp(victim.wariness + RISK_EXPOSE_WARINESS, 0, 100);
         for (const other of state.targets) {
@@ -245,7 +339,7 @@ function runMorning(state: GameState) {
           log(state, 'blocked', `${vdef?.name} 把你删了。干净利落。`);
         }
         // 全员被穿帮拉黑 → 评论区结局。
-        const aliveAfter = state.targets.filter((t) => !t.blocked);
+        const aliveAfter = state.targets.filter((t) => !t.blocked && !!t.discoveredDay);
         if (aliveAfter.length === 0) {
           state.flags.risk_exposed_all = true;
         }
@@ -253,6 +347,45 @@ function runMorning(state: GameState) {
     }
   } else {
     state.riskLevel = clamp(state.riskLevel - RISK_DECAY_PER_DAY, 0, 100);
+  }
+
+  // v2.0：他主动找你——新自拍 3 天内最猛，信任高的、断联的都会来。
+  // incoming：两晚没回应，他就不再等你了。过期清理。满了还硬挤进来的人，把最早那条顶掉——
+  // 等待列表总长 ≤ INCOMING_DAILY_CAP（别攒成轰炸队列）。
+  state.incoming = state.incoming.filter((m) => state.day - m.day <= 1);
+  while (state.incoming.length > INCOMING_DAILY_CAP) state.incoming.shift();
+  let madeToday = 0;
+  const selfieFresh = state.day - state.profile.selfieDay <= SELFIE_LINGER_DAYS && state.profile.selfieDay > 0;
+  for (const t of state.targets) {
+    t.pingedToday = false;
+    if (t.blocked || t.ended || !t.discoveredDay) continue;
+    const def = ALL_TARGET_MAP[t.targetId];
+    if (!def) continue;
+    if (state.incoming.length >= INCOMING_DAILY_CAP) break;
+    let p = 0.08; // 想你了的基础
+    if (selfieFresh) p += INCOMING_BASE_CHANCE * (def.need === 'daughter_figure' || def.need === 'desired' ? 1 : 0.5);
+    if (t.trust >= 50) p += 0.1;
+    if (t.daysSilent >= 3) p += 0.2; // 断联的人憋不住了
+    if (t.daysSincePaid >= 5 && t.trust >= 40) p += 0.15; // 发工资的日子
+    if (rng.chance(p)) {
+      const script = scriptFor(t.targetId);
+      const inc = script.incoming;
+      let reason: 'selfie' | 'missed_you' | 'wallet_open' = 'missed_you';
+      let pool = inc?.missed_you ?? ['（他发来一条消息。）'];
+      if (selfieFresh && inc?.on_selfie?.length) { reason = 'selfie'; pool = inc.on_selfie; }
+      else if (t.daysSincePaid >= 5 && inc?.wallet_open?.length) { reason = 'wallet_open'; pool = inc.wallet_open; }
+      state.incoming.push({
+        targetId: t.targetId,
+        day: state.day,
+        reason,
+        opener: rng.pick(pool),
+        stamp: nightStamp(def.activeHour, rng.int(0, 25)),
+      });
+      t.pingedToday = true;
+      madeToday += 1;
+      // 顶到上限：新消息挤掉最老那条（他等不到回音了）。
+      while (state.incoming.length > INCOMING_DAILY_CAP) state.incoming.shift();
+    }
   }
 
   // 产业化代聊结算：课程买断后，代聊群每天替你维护所有未拉黑的关系。
@@ -302,17 +435,30 @@ export function dispatch(state: GameState, action: GameAction): GameState {
   const s = clone(state);
   switch (action.type) {
     case 'new_game': {
+      // 测试可注入确定性 seed：先种 rngSeed 再 dispatch（覆盖 Date.now 默认值）。
+      const injectedSeed = s.rngSeed;
       s.sessionId = `run_${Date.now().toString(36)}`;
-      s.rngSeed = (Date.now() ^ 0x9e3779b9) >>> 0;
+      s.rngSeed = injectedSeed;
       s.phase = 'main';
       s.dayPhase = 'morning';
       s.playerName = action.name || '小满';
       s.motive = action.motive;
       s.personaId = action.personaId;
-      s.targets = TARGETS.map((t) => freshTargetState(t.id));
+      s.targets = ALL_TARGETS.map((t) => freshTargetState(t.id));
+      // 主五人开局即在通讯录；库里 45 人要靠计划偶遇解锁。
+      for (const id of ACTIVE_TARGETS) {
+        const t = s.targets.find((x) => x.targetId === id);
+        if (t) t.discoveredDay = 1;
+      }
       s.log = [];
       s.flags = {};
       s.industryCourse = false;
+      s.profile = defaultProfile();
+      s.ledger = [];
+      s.archives = [];
+      s.incoming = [];
+      s.todayPlan = '';
+      s.numbnessToday = 0;
       s.money = START_MONEY;
       s.riskLevel = 0;
       s.numbness = 0;
@@ -333,6 +479,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
           return s;
         }
         s.money -= INDUSTRY_COURSE_COST;
+        s.ledger.push({ day: s.day, amount: -INDUSTRY_COURSE_COST, note: '那位"姐"的课（代聊群）', kind: 'course' });
         s.industryCourse = true;
         s.riskLevel = clamp(s.riskLevel + 20, 0, 100);
         s.numbness = clamp(s.numbness + 10, 0, 100);
@@ -350,10 +497,131 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       return s;
     }
 
+    case 'choose_plan': {
+      // v2.0：每天一个计划——决定今晚在哪、遇到谁、花多少。
+      if (s.dayPhase !== 'morning' || s.todayPlan) return s;
+      const plan = DAILY_PLANS.find((p) => p.id === action.planId);
+      if (!plan) return s;
+      if (s.energy < plan.energyCost) return s;
+      s.todayPlan = plan.id;
+      s.energy -= plan.energyCost;
+      if (plan.money) {
+        s.money += plan.money;
+        ledgerAdd(s, plan.money, `${plan.name}${plan.money > 0 ? '的零钱' : '花费'}`, 'plan');
+      }
+      if (plan.riskAdd) s.riskLevel = clamp(s.riskLevel + plan.riskAdd, 0, 100);
+      // 偶遇判定：从库里抽一个未解锁的、原型对口的老头。
+      let metLine = `${plan.name}。`;
+      if (plan.meetArchetypes.length && rng01(s).chance(plan.meetChance)) {
+        const pool = s.targets.filter((t) => {
+          const d = ALL_TARGET_MAP[t.targetId];
+          return d && !t.discoveredDay && !t.blocked && plan.meetArchetypes.includes(d.archetype);
+        });
+        if (pool.length) {
+          const met = rng01(s).pick(pool);
+          met.discoveredDay = s.day;
+          const d = ALL_TARGET_MAP[met.targetId];
+          metLine = `${plan.name}。你遇到了${d.name}（${d.age}岁，${archetypeCN(d.archetype)}）。他跟你搭话的方式有点笨拙——你把微信给了他。`;
+          log(s, 'flag', metLine);
+          s.chat = null;
+          return s;
+        }
+        metLine = `${plan.name}。今晚没什么新鲜的遇见。`;
+      }
+      log(s, 'plan', metLine);
+      return s;
+    }
+
+    case 'update_profile': {
+      // v2.0：改资料。换头像/性格随时可以；发自拍会刷新 selfieDay（引来他找你）。
+      if (action.avatarId !== undefined) s.profile.avatarId = clamp(action.avatarId, 1, 6);
+      if (action.ageClaim) s.profile.ageClaim = action.ageClaim;
+      if (action.traitId) s.profile.traitId = action.traitId;
+      if (action.selfieId) {
+        // 换照片=发新朋友圈：重置 linger。
+        if (s.profile.selfieId !== action.selfieId) {
+          s.profile.selfieId = action.selfieId;
+          s.profile.selfieDay = s.day;
+          log(s, 'flag', '你发了条朋友圈。配图换成了新的那张。');
+        } else {
+          s.profile.selfieDay = s.day;
+          log(s, 'flag', '你把那张照片又置顶了一次——配文换了两个表情。');
+        }
+      }
+      return s;
+    }
+
+    case 'accept_incoming': {
+      // v2.0：回应"他来找你"——开一场他起头的会话。
+      const idx = s.incoming.findIndex((m) => m.targetId === action.targetId);
+      if (idx < 0 || s.dayPhase === 'chat') return s;
+      const t = s.targets.find((x) => x.targetId === action.targetId);
+      const def = ALL_TARGET_MAP[action.targetId];
+      if (!t || !def || t.blocked || s.energy < CHAT_SESSION_COST) return s;
+      if (t.lastChatDay === s.day) {
+        // 今天聊过了：把这条 incoming 消掉但不开会话。
+        s.incoming.splice(idx, 1);
+        return s;
+      }
+      const msg = s.incoming[idx];
+      s.incoming.splice(idx, 1);
+      t.lastChatDay = s.day;
+      s.energy -= CHAT_SESSION_COST;
+      s.dayPhase = 'chat';
+      s.stats.nightsWorked += 1;
+      applyAffinity(s, t, def);
+      const lines = scriptFor(t.targetId).lines;
+      const chainNode = t.discoveredDay === 1 ? pickChainNode(s, def, t) : null;
+      const pack = chainNode ? null : pickPack(s, t, def);
+      const freeNode = chainNode || pack ? null : pickFreeNode(s, def, t);
+      const node = chainNode ?? pack ?? freeNode;
+      const transcript: ChatMsg[] = [];
+      const phaseLabel = def.activeHour >= 6 && def.activeHour <= 12 ? '上午' : '深夜';
+      transcript.push({ speaker: 'system' as const, text: `和 ${def.name} 的${phaseLabel}对话（他先找的你）`, stamp: msg.stamp });
+      transcript.push({ speaker: 'target' as const, text: fillProfileVars(msg.opener, s), stamp: msg.stamp });
+      if (t.wariness >= 50 && t.timesPaid > 0) {
+        transcript.push({ speaker: 'target' as const, text: rng01(s).pick(lines.wariness_high ?? ['（他回得越来越慢。）']), stamp: nightStamp(def.activeHour, 5) });
+      }
+      if (node) {
+        for (const opener of node.openers) {
+          transcript.push({ speaker: 'target' as const, text: fillProfileVars(opener, s), stamp: nightStamp(def.activeHour, 6 + transcript.length) });
+        }
+        s.chat = {
+          targetId: t.targetId,
+          transcript,
+          pendingOptions: node.options,
+          pendingNodeId: chainNode ? chainNode.id : '',
+          awaiting: 'player',
+          closingNote: null,
+        };
+        if (chainNode) t.pendingChain = chainNode.next;
+      } else {
+        transcript.push({ speaker: 'target' as const, text: '（他今天就想说这么多。）', stamp: nightStamp(def.activeHour, 9) });
+        s.chat = { targetId: t.targetId, transcript, pendingOptions: [], pendingNodeId: '', awaiting: 'closed', closingNote: null };
+      }
+      t.daysSilent = 0;
+      return s;
+    }
+
+    case 'ignore_incoming': {
+      // v2.0：装没看见。不回应是有代价的——孤独的人记得每一次已读不回。
+      const idx = s.incoming.findIndex((m) => m.targetId === action.targetId);
+      if (idx < 0) return s;
+      const t = s.targets.find((x) => x.targetId === action.targetId);
+      if (t && !t.blocked) {
+        t.trust = clamp(t.trust - 3, 0, 100);
+        t.daysSilent += 1;
+      }
+      s.incoming.splice(idx, 1);
+      log(s, 'flag', `你把那条消息划掉了。${t ? ALL_TARGET_MAP[t.targetId]?.name : '他'}的头像在列表里亮了一会儿，暗了。`);
+      return s;
+    }
+
     case 'start_chat': {
       if (s.dayPhase === 'chat') return s;
       const t = s.targets.find((x) => x.targetId === action.targetId);
-      const def = TARGET_MAP[action.targetId];
+      // v2.0：全量映射——库里偶遇的老头也能开聊。
+      const def = ALL_TARGET_MAP[action.targetId];
       if (!t || !def || t.blocked || s.energy < CHAT_SESSION_COST) return s;
       if (!targetAwake(def, s.dayPhase)) return s;
       // 一个人一天只聊一场：重复刷同一个老头没有额外收益——
@@ -364,9 +632,14 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       s.dayPhase = 'chat';
       s.stats.nightsWorked += 1;
       const lines = scriptFor(t.targetId).lines;
-      const chainNode = pickChainNode(s, def, t);
-      const freeNode = chainNode ? null : pickFreeNode(s, def, t);
-      const node = chainNode ?? freeNode;
+      // v2.0：亲和结算——profile 性格/年龄 × 他的原型/缺口，先漂移再选话术。
+      applyAffinity(s, t, def);
+      // v2.0：话术优先级 = 剧情节点 > 闲聊组（10套，去重轮换）> 空闲节点 > 两句话。
+      // 老头库目标没有剧情链，直接走话术组。
+      const chainNode = t.discoveredDay === 1 ? pickChainNode(s, def, t) : null;
+      const pack = chainNode ? null : pickPack(s, t, def);
+      const freeNode = chainNode || pack ? null : pickFreeNode(s, def, t);
+      const node = chainNode ?? pack ?? freeNode;
       const transcript = [];
       const rng = makeRng(s.rngSeed);
       s.rngSeed = (s.rngSeed * 1664525 + 1013904223) >>> 0;
@@ -381,7 +654,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       }
       if (node) {
         for (const opener of node.openers) {
-          transcript.push({ speaker: 'target' as const, text: opener, stamp: nightStamp(def.activeHour, 3 + transcript.length) });
+          transcript.push({ speaker: 'target' as const, text: fillProfileVars(opener, s), stamp: nightStamp(def.activeHour, 3 + transcript.length) });
         }
         s.chat = {
           targetId: t.targetId,
@@ -403,7 +676,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
     case 'pick_option': {
       if (!s.chat || s.chat.awaiting !== 'player') return s;
       const t = s.targets.find((x) => x.targetId === s.chat!.targetId);
-      const def = TARGET_MAP[s.chat.targetId];
+      const def = ALL_TARGET_MAP[s.chat.targetId];
       if (!t || !def) return s;
       const options = s.chat.pendingOptions;
       const isChain = s.chat.pendingNodeId !== '';
@@ -416,13 +689,19 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       const trustDelta = applyOptionToTrust(option, mult);
       t.trust = clamp(t.trust + trustDelta, 0, 100);
       if (option.wariness) t.wariness = clamp(t.wariness + option.wariness, 0, 100);
-      if (option.numbness) s.numbness = clamp(s.numbness + option.numbness, 0, 100);
+      // v2.0：麻木每日上限（+8）——一天演四场，也不能一晚透支成机器人。
+      // flirty 的固定 +4 同样吃日额度：否则连开四场挑 flirty 直接绕过上限。
+      const room = Math.max(0, NUMBNESS_DAILY_CAP - s.numbnessToday);
+      const numbCut = Math.min((option.numbness ?? 0) + (option.style === 'flirty' ? NUMBNESS_PER_FLIRT : 0), room);
+      if (numbCut > 0) {
+        s.numbness = clamp(s.numbness + numbCut, 0, 100);
+        s.numbnessToday += numbCut;
+      }
       if (option.conscience) s.conscience = clamp(s.conscience + option.conscience, 0, 100);
       // 要钱的 setFlag 延后到 ask 分支：只有真拿到钱，故事 flag 才成立
       // （"拿到了周老师的存折"不能发生在她拒绝你的那一晚）。
       const pendingFlag = option.isAsk ? option.setFlag : null;
       if (option.setFlag && !option.isAsk) s.flags[option.setFlag] = true;
-      if (option.style === 'flirty') s.numbness = clamp(s.numbness + NUMBNESS_PER_FLIRT, 0, 100);
       advanceStage(t);
 
       s.chat.transcript.push({ speaker: 'player' as const, text: option.text, stamp: nightStamp(def.activeHour, 10 + s.chat.transcript.length) });
@@ -459,6 +738,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
           s.stats.totalEarned += result.amount;
           s.stats.redPacketsReceived += 1;
           s.stats.biggestPacket = Math.max(s.stats.biggestPacket, result.amount);
+          s.ledger.push({ day: s.day, amount: result.amount, note: `${def.name} 的红包（${result.tierLabel}）`, kind: 'packet' });
           s.chat.transcript.push({ speaker: 'system' as const, label: `红包 +${result.amount} 元`, text: `（${result.tierLabel}）`, stamp: nightStamp(def.activeHour, 14) });
           if (result.line) s.chat.transcript.push({ speaker: 'target' as const, text: result.line, stamp: nightStamp(def.activeHour, 15) });
           log(s, 'packet', `${def.name} 的红包：${result.amount} 元`);
@@ -496,12 +776,15 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       if (!s.chat) return s;
       const from = s.chat;
       const t = s.targets.find((x) => x.targetId === from.targetId);
+      // v2.0：整场对话归档（聊天记录模块的数据源）。
+      s.archives.push({ targetId: from.targetId, day: s.day, transcript: from.transcript });
+      if (s.archives.length > ARCHIVE_CAP) s.archives.splice(0, s.archives.length - ARCHIVE_CAP);
       if (t) {
         if (from.awaiting === 'player') {
           t.pendingChain = from.pendingNodeId;
         }
       }
-      const def = TARGET_MAP[from.targetId];
+      const def = ALL_TARGET_MAP[from.targetId];
       s.chat = null;
       // Return to the phase we came from: a morning chat (退休老师/上午在线)
       // stays in morning; a night chat returns to the night roster.
@@ -511,6 +794,12 @@ export function dispatch(state: GameState, action: GameAction): GameState {
 
     case 'sleep': {
       s.dayPhase = 'morning';
+      s.todayPlan = '';
+      // v2.0：一晚没聊（0 场对话）→ 麻木自然缓解一点。表演的伤，休息能缓，但缓得慢。
+      if (s.targets.every((t) => t.lastChatDay !== s.day)) {
+        s.numbness = clamp(s.numbness - NUMBNESS_REST_RECOVERY, 0, 100);
+      }
+      s.numbnessToday = 0;
       s.day += 1;
       if (s.day > s.daysLimit) {
         s.phase = 'ended';
