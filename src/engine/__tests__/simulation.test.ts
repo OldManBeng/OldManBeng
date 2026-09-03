@@ -11,7 +11,7 @@ import { SCRIPTS, scriptFor } from '../../data/script-registry';
 import { DAY_EVENTS } from '../../data/events';
 import { ENDINGS } from '../../data/endings';
 import { TARGETS } from '../../data/targets';
-import { MONTHLY_GOAL, STAGE_TRUST, RISK_PER_ACTIVE_RELATION, INDUSTRY_COURSE_COST, VERDICT_ASK_THRESHOLD } from '../../data/constants';
+import { MONTHLY_GOAL, STAGE_TRUST, RISK_PER_ACTIVE_RELATION, INDUSTRY_COURSE_COST, VERDICT_ASK_THRESHOLD, CHAT_SESSION_COST } from '../../data/constants';
 
 /**
  * 多目标自动跑局：贪心 + 广撒网。
@@ -28,7 +28,7 @@ function autoPlay(seed: number): ReturnType<typeof createInitialState> {
       s = dispatch(s, { type: 'industry_reply', accept: s.money >= INDUSTRY_COURSE_COST });
     }
     if (s.dayPhase === 'morning') {
-      const morningTargets = s.targets.filter((t) => !t.blocked && t.lastChatDay !== s.day && targetAwake(TARGET_MAP[t.targetId], 'morning') && s.energy >= 4);
+      const morningTargets = s.targets.filter((t) => !t.blocked && t.lastChatDay !== s.day && targetAwake(TARGET_MAP[t.targetId], 'morning') && s.energy >= CHAT_SESSION_COST);
       if (morningTargets.length) {
         s = dispatch(s, { type: 'start_chat', targetId: morningTargets[0].targetId });
       } else {
@@ -36,7 +36,7 @@ function autoPlay(seed: number): ReturnType<typeof createInitialState> {
       }
     } else if (s.dayPhase === 'night') {
       const nightTargets = s.targets
-        .filter((t) => !t.blocked && t.lastChatDay !== s.day && targetAwake(TARGET_MAP[t.targetId], 'night') && s.energy >= 4)
+        .filter((t) => !t.blocked && t.lastChatDay !== s.day && targetAwake(TARGET_MAP[t.targetId], 'night') && s.energy >= CHAT_SESSION_COST)
         .sort((a, b) => b.trust - a.trust);
       if (nightTargets.length) {
         s = dispatch(s, { type: 'start_chat', targetId: nightTargets[0].targetId });
@@ -66,7 +66,7 @@ function autoPlay(seed: number): ReturnType<typeof createInitialState> {
 
 describe('simulation: multi-target auto runs', () => {
   for (const seed of [1, 42, 777, 2024, 9999]) {
-    it(`seed ${seed}: 30 days, 3 targets, invariants hold`, () => {
+    it(`seed ${seed}: 30 days, 5 targets, invariants hold`, () => {
       const s = autoPlay(seed);
       for (const t of s.targets) {
         expect(t.trust).toBeGreaterThanOrEqual(0);
@@ -174,6 +174,91 @@ describe('simulation: chain gating (all targets)', () => {
   });
 });
 
+describe('regression: review fixes', () => {
+  it('ask setFlag only fires when the ask succeeds', () => {
+    // 成功路径：直接把周老师骑到存折节点（pendingChain），信任拉满、警惕 0、
+    // harvest、钱包冷却完 → 掷到成功为止，flag 必须落下。
+    let s = createInitialState();
+    s = dispatch(s, { type: 'new_game', name: 't', motive: 'debt', personaId: 'sweet_daughter' });
+    const zhou = () => s.targets.find((t) => t.targetId === 'zhou_teacher')!;
+    let gotFlag = false;
+    for (let attempt = 0; attempt < 40 && !gotFlag; attempt++) {
+      const z = zhou();
+      z.trust = 90; z.wariness = 0; z.stage = 'harvest'; z.daysSincePaid = 5;
+      z.lastChatDay = 0; // 绕开"一人一天一场"（引擎 day 从 1 起）
+      z.pendingChain = 'c_zhou_6'; // 存折节点
+      s = dispatch(s, { type: 'start_chat', targetId: 'zhou_teacher' });
+      const askIdx = s.chat?.pendingOptions.findIndex((o) => o.isAsk) ?? -1;
+      if (askIdx < 0) return; // 节点结构变化时跳过
+      s = dispatch(s, { type: 'pick_option', optionIndex: askIdx });
+      gotFlag = !!s.flags.zhou_took_deposit;
+      if (!gotFlag) s = dispatch(s, { type: 'end_chat' });
+    }
+    // p = 0.25+0.45-0+0.1(慷慨无，周无孤独加成) ≈ 0.7，40 次全败概率 < 1e-6。
+    expect(gotFlag).toBe(true);
+
+    // 失败路径：stranger 阶段开口必被冒犯 → asksFailed+1，且不落下任何剧情 flag。
+    let s2 = createInitialState();
+    s2 = dispatch(s2, { type: 'new_game', name: 't', motive: 'debt', personaId: 'wise_sister' });
+    const li = s2.targets.find((t) => t.targetId === 'lao_li')!;
+    li.stage = 'stranger'; li.trust = 0; li.wariness = 60; li.lastChatDay = 0;
+    li.pendingChain = 'c_li_9'; // 奶茶要红包节点
+    s2 = dispatch(s2, { type: 'enter_night' });
+    s2 = dispatch(s2, { type: 'start_chat', targetId: 'lao_li' });
+    const askIdx2 = s2.chat!.pendingOptions.findIndex((o) => o.isAsk);
+    expect(askIdx2).toBeGreaterThanOrEqual(0);
+    s2 = dispatch(s2, { type: 'pick_option', optionIndex: askIdx2 });
+    expect(s2.stats.asksFailed).toBe(1);
+    expect(Object.keys(s2.flags).filter((f) => f.startsWith('li_')).length).toBe(0);
+  });
+
+  it('chatting every day never accrues the silent penalty', () => {
+    let s = createInitialState();
+    s = dispatch(s, { type: 'new_game', name: 't', motive: 'debt', personaId: 'wise_sister' });
+    let prev = 0;
+    for (let d = 1; d <= 5; d++) {
+      s = dispatch(s, { type: 'start_chat', targetId: 'zhou_teacher' });
+      if (s.chat?.awaiting === 'player') {
+        let best = 0; let bs = -Infinity;
+        s.chat.pendingOptions.forEach((o, i) => { if (o.trust > bs) { bs = o.trust; best = i; } });
+        s = dispatch(s, { type: 'pick_option', optionIndex: best });
+      }
+      s = dispatch(s, { type: 'end_chat' });
+      s = dispatch(s, { type: 'sleep' });
+      const zhou = s.targets.find((t) => t.targetId === 'zhou_teacher')!;
+      expect(zhou.daysSilent).toBe(0);
+      prev = zhou.trust;
+    }
+    expect(prev).toBeGreaterThan(0);
+  });
+
+  it('v1.0 saves (no lastChatDay field) keep playing on the v1.1 engine', () => {
+    // 旧档没有 lastChatDay——引擎必须容忍 undefined 并在下一场聊天时补上。
+    let s = createInitialState();
+    s = dispatch(s, { type: 'new_game', name: 'old', motive: 'debt', personaId: 'wise_sister' });
+    s = dispatch(s, { type: 'sleep' });
+    for (const t of s.targets as unknown as Array<Record<string, unknown>>) delete t.lastChatDay;
+    s = dispatch(s, { type: 'sleep' });
+    s = dispatch(s, { type: 'enter_night' });
+    s = dispatch(s, { type: 'start_chat', targetId: 'lao_li' });
+    const li = s.targets.find((t) => t.targetId === 'lao_li');
+    expect(s.dayPhase).toBe('chat');
+    expect(li!.lastChatDay).toBe(s.day);
+  });
+
+  it('every ending flag is reachable from some option or system event', () => {
+    const blob = JSON.stringify([SCRIPTS, DAY_EVENTS]);
+    for (const e of ENDINGS) {
+      if (!e.requires) continue;
+      for (const f of e.requires) {
+        if (f === 'industry_course_done') continue; // 由 scoreEnding 设置
+        if (f === 'risk_exposed_all') continue;     // 由穿帮事件设置
+        expect(blob.includes(`"${f}"`)).toBe(true);
+      }
+    }
+  });
+});
+
 describe('safeguards: content gates (all content)', () => {
   it('all targets are middle-aged or older (35+)', () => {
     for (const t of TARGETS) expect(t.age).toBeGreaterThanOrEqual(35);
@@ -194,7 +279,7 @@ describe('safeguards: content gates (all content)', () => {
   });
 
   it('every ask option carries consequences (no free money)', () => {
-    for (const chain of [LAO_LI_CHAIN, ZHOU_CHAIN, WANG_CHAIN]) {
+    for (const chain of [LAO_LI_CHAIN, ZHOU_CHAIN, WANG_CHAIN, HAO_CHAIN, CHEN_CHAIN]) {
       for (const node of Object.values(chain)) {
         for (const o of node.options) {
           if (o.isAsk) {

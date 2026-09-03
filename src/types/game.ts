@@ -92,7 +92,6 @@ export type GameAction =
   | { type: 'pick_option'; optionIndex: number }
   | { type: 'end_chat' }
   | { type: 'sleep' }
-  | { type: 'advance_morning' }
   | { type: 'retire' }
   | { type: 'continue_playing' }
   | { type: 'industry_reply'; accept: boolean };

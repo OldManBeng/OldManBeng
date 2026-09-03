@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useGame } from '../store/gameStore';
 import { PERSONAS } from '../data/personas';
 import { isMuted, loadMutePref, setMuted } from '../utils/sound';
 import { formatMoney } from '../utils/format';
+import { MONTHLY_GOAL as GOAL } from '../data/constants';
 import type { PersonaId } from '../types/persona';
 import { PersonaAvatar } from './character-art';
 
 export function TitleScreen() {
   const store = useGame();
   const [muted, setM] = useState(isMuted());
-  loadMutePref();
+  useEffect(() => { loadMutePref(); setM(isMuted()); }, []);
   const hasSave = store.hasSave();
 
   return (
@@ -85,8 +86,8 @@ export function NewGameScreen({ onStart }: { onStart: (name: string, personaId: 
         </button>
       </div>
       <p className="muted small">
-        这个月你要凑出 <strong>{formatMoney(1500)}</strong>——网贷下月就到期了。
-        通讯录里有三个人：一个深夜的司机，一个上午的老师，一个凌晨的老板。
+        这个月你要凑出 <strong>{formatMoney(GOAL)}</strong>——网贷下月就到期了。
+        通讯录里躺着五个人：深夜的司机、上午的老师、凌晨的老板、网吧的阿豪、画图纸的陈工。
         同时崩的越多，钱来得越快——穿帮也来得越快。
       </p>
     </div>

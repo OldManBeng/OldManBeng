@@ -3,6 +3,7 @@ import { ENDINGS } from '../data/endings';
 import { formatMoney } from '../utils/format';
 import { playEnding } from '../utils/sound';
 import { TARGET_MAP } from '../engine/state-machine';
+import { useEffect } from 'react';
 import type { Target } from '../types/target';
 import type { TargetState } from '../types/target';
 
@@ -77,7 +78,7 @@ export function EndingScreen() {
   const store = useGame();
   const { state } = store;
   const ending = ENDINGS.find((e) => e.id === state.endingId) ?? ENDINGS[ENDINGS.length - 1];
-  playEnding();
+  useEffect(() => { playEnding(); }, []);
 
   return (
     <div className="screen ending-screen">

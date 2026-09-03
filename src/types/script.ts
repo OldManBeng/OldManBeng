@@ -52,6 +52,7 @@ export type RandomEventEffect =
   | { kind: 'money'; amount: number }
   | { kind: 'wariness'; targetId?: string; amount: number }
   | { kind: 'trust'; targetId?: string; amount: number }
+  | { kind: 'conscience'; amount: number }
   | { kind: 'mood' }
   | { kind: 'flag'; flag: string };
 

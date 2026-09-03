@@ -165,7 +165,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
         trust: -3,
         wariness: 6,
         isAsk: true,
-        setFlag: 'zhou_deposit_asked',
+        setFlag: 'zhou_took_deposit',
         replies: [],
       },
       {

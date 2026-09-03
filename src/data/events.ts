@@ -14,7 +14,7 @@ export const DAY_EVENTS: DayEvent[] = [
     name: '妈妈的电话',
     description: '「钱还够不够花？不够妈给你转点。」你够上挂了，怕她听出你哭了。',
     diceRange: { min: 4, max: 4 },
-    effects: [{ kind: 'trust', amount: 0 }],
+    effects: [{ kind: 'conscience', amount: 3 }],
     oneTime: true,
   },
   {

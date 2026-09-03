@@ -2,9 +2,9 @@ import { useGame } from '../store/gameStore';
 import { TARGET_MAP, PERSONA_MAP, targetAwake, isMorningTarget } from '../engine/state-machine';
 import { formatMoney } from '../utils/format';
 import { OldManAvatar, PersonaAvatar } from './character-art';
-import { playMessage } from '../utils/sound';
+import { playMessage, playSend, playPacket, playFail, playBlocked, playMorning } from '../utils/sound';
 import { useEffect, useRef, useState } from 'react';
-import { INDUSTRY_COURSE_COST } from '../data/constants';
+import { INDUSTRY_COURSE_COST, CHAT_SESSION_COST } from '../data/constants';
 
 /** 打字机入场：每个气泡先露一个字，再逐字打完（收到新气泡时也走这个）。 */
 function firstChunk(text: string): number {
@@ -32,6 +32,17 @@ export function MainScreen() {
   const persona = PERSONA_MAP[state.personaId];
   const risk = riskLabel(state.riskLevel);
   const [showLog, setShowLog] = useState(false);
+  // 事件日志驱动的音效：只对"新增"条目响一次（重渲染/读档不重放）。
+  const lastPlayedLog = useRef(state.log.length);
+  useEffect(() => {
+    const fresh = state.log.slice(lastPlayedLog.current);
+    lastPlayedLog.current = state.log.length;
+    for (const e of fresh) {
+      if (e.kind === 'ask_fail') playFail();
+      if (e.kind === 'blocked' || e.kind === 'target_ending') playBlocked();
+      if (e.kind === 'day') playMorning();
+    }
+  }, [state.log]);
   // HUD label survives the chat phase (dayPhase === 'chat').
   const phaseLabel =
     state.dayPhase === 'chat'
@@ -87,7 +98,7 @@ export function MainScreen() {
       {/* night: roster of everyone awake now */}
       {state.dayPhase === 'night' && (
         <section className="roster-panel">
-          <p className="muted small">今晚精力还剩 {state.energy} 点，一场深夜对话要 4 点。</p>
+          <p className="muted small">今晚精力还剩 {state.energy} 点，一场深夜对话要 {CHAT_SESSION_COST} 点。</p>
           <TargetList dayPhase="night" />
           <button className="btn wide" onClick={() => store.dispatch({ type: 'sleep' })}>
             睡了（进入明天）
@@ -158,7 +169,7 @@ function TargetList({ dayPhase }: { dayPhase: 'morning' | 'night' }) {
         const def = TARGET_MAP[t.targetId];
         const awake = targetAwake(def, dayPhase);
         const chatted = t.lastChatDay === state.day;
-        const canChat = !t.blocked && awake && !chatted && state.energy >= 4 && state.dayPhase !== 'chat';
+        const canChat = !t.blocked && awake && !chatted && state.energy >= CHAT_SESSION_COST && state.dayPhase !== 'chat';
         return (
           <div key={t.targetId} className={`target-card ${t.blocked ? 'blocked' : ''} ${!awake ? 'asleep' : ''}`}>
             <OldManAvatar target={def} state={t} size={56} />
@@ -229,7 +240,12 @@ function ChatView() {
     const isPlayerMsg = cur.speaker === 'player';
     const delay = isPlayerMsg ? 40 : Math.min(1200, 350 + cur.text.length * 6);
     const id = window.setTimeout(() => {
-      if (!isPlayerMsg) playMessage();
+      const next = chat.transcript[bubbleCount];
+      // 到达音随气泡：红包系统条用金币声，他的话用消息声，你自己的话不出声。
+      if (next && next.speaker !== 'player') {
+        if (next.label) playPacket();
+        else playMessage();
+      }
       setBubbleCount((c) => c + 1);
       setTyped(firstChunk(chat.transcript[bubbleCount]?.text ?? ''));
     }, delay);
@@ -303,7 +319,7 @@ function ChatView() {
               key={i}
               className="option"
               onClick={() => {
-                playMessage();
+                playSend();
                 store.dispatch({ type: 'pick_option', optionIndex: i });
                 // 追加消息（你的选择 + 他的回应）从当前位置继续打字机；他的停在后面。
                 setSkipAll(false);

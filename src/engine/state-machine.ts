@@ -164,8 +164,16 @@ function runMorning(state: GameState) {
     for (const eff of ev.effects) {
       if (eff.kind === 'money') state.money += eff.amount;
       if (eff.kind === 'wariness') {
-        for (const t of state.targets) t.wariness = clamp(t.wariness + eff.amount, 0, 100);
+        // 无 targetId = 全员生效；否则只影响指定关系。
+        const hit = 'targetId' in eff && eff.targetId ? [state.targets.find((t) => t.targetId === eff.targetId)] : state.targets;
+        for (const t of hit) if (t) t.wariness = clamp(t.wariness + eff.amount, 0, 100);
       }
+      if (eff.kind === 'trust') {
+        const hit = 'targetId' in eff && eff.targetId ? [state.targets.find((t) => t.targetId === eff.targetId)] : state.targets;
+        for (const t of hit) if (t) t.trust = clamp(t.trust + eff.amount, 0, 100);
+      }
+      if (eff.kind === 'conscience') state.conscience = clamp(state.conscience + eff.amount, 0, 100);
+      // 'mood'：纯风味标记，无数值效果——留着供事件文案引用。
       if (eff.kind === 'flag') state.flags[eff.flag] = true;
     }
     eventLine = `${ev.name}——${ev.description}`;
@@ -181,13 +189,17 @@ function runMorning(state: GameState) {
   for (const t of state.targets) {
     const def = TARGET_MAP[t.targetId];
     const lines = scriptFor(t.targetId).lines;
+    // 昨天聊过就不算断联（runMorning 在每日开始时跑，day 已 +1）。
+    const silentYesterday = !t.blocked && t.lastChatDay !== state.day - 1 && t.lastChatDay !== state.day;
     let decay = TRUST_DECAY_PER_DAY;
-    if (t.daysSilent >= 1) decay += def?.traits.includes('clingy') ? SILENT_TRUST_PENALTY * CLINGY_SILENT_MULTIPLIER : SILENT_TRUST_PENALTY;
+    if (t.lastChatDay > 0 && silentYesterday) {
+      decay += def?.traits.includes('clingy') ? SILENT_TRUST_PENALTY * CLINGY_SILENT_MULTIPLIER : SILENT_TRUST_PENALTY;
+    }
     t.trust = clamp(t.trust - decay, 0, 100);
     t.wariness = clamp(t.wariness - WARINESS_DECAY_PER_DAY, 0, 100);
     t.daysSincePaid = Math.min(99, t.daysSincePaid + 1);
     // 断联天数：拉黑的不算（结束了）；没被聊过的才积累。
-    if (!t.blocked) t.daysSilent = Math.min(99, t.daysSilent + 1);
+    if (!t.blocked) t.daysSilent = silentYesterday ? Math.min(99, t.daysSilent + 1) : 0;
     if (t.blocked) continue;
     // He sometimes gives without being asked — the money that costs the most.
     if (!t.ended && t.trust >= 60 && t.stage !== 'stranger' && rng.chance(0.08)) {
@@ -259,19 +271,22 @@ function runMorning(state: GameState) {
 
 /** Score the ending from run shape.
  *  1. 判决书优先于一切：进了产业链，结局就不由你的良心决定了。
- *  2. 数字结局（达标/麻木/全灭）先于普通剧情 flag——"都是真的/对不起"
- *     只是某晚的一次回答；月底的账不会因为你嘴硬就变了。存折/车库/
- *     全穿帮这类改变一切的 flag 仍然压过数字结局。 */
+ *  2. 全员穿帮压倒一切数字——那不是账的问题了。
+ *  3. 存折/车库是"掏空了一个人"的大事件，压过账本；但存折要求真到 harvest
+ *     （关系没深到那份上就开口，拿不到那笔钱——flag 本来就不会落）。
+ *  4. 账本（达标/麻木/全灭）先于某晚的一次回答（坦白/嘴硬）——月底的账
+ *     不会因为你嘴硬就变了。 */
 export function scoreEnding(state: GameState): string {
   // 判决书：买了课 + 业务量做起来了（大量开口）→ 被卷进案件。
   if (state.industryCourse && state.stats.asksMade >= VERDICT_ASK_THRESHOLD) {
     state.flags.industry_course_done = true;
     return 'end_verdict';
   }
-  // 大结局 flag：一笔超过整月收入的转账、或全书穿帮——事件大于账本。
   if (state.flags.risk_exposed_all) return 'end_exposed';
-  if (state.flags.zhou_took_deposit) return 'end_deposit';
   if (state.flags.wang_took_it_all) return 'end_family_man';
+  // 存折：flag 只在要钱真成功时落下（pick_option 里保证）——拿到那笔钱
+  // 的那一刻，这段关系和这个结局就都定了。贪到底的玩家就该走到这里。
+  if (state.flags.zhou_took_deposit) return 'end_deposit';
   // 账本先说话。
   if (state.stats.totalEarned >= MONTHLY_GOAL) return 'end_debt_free';
   if (state.numbness >= 70) return 'end_numb';
@@ -403,7 +418,10 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       if (option.wariness) t.wariness = clamp(t.wariness + option.wariness, 0, 100);
       if (option.numbness) s.numbness = clamp(s.numbness + option.numbness, 0, 100);
       if (option.conscience) s.conscience = clamp(s.conscience + option.conscience, 0, 100);
-      if (option.setFlag) s.flags[option.setFlag] = true;
+      // 要钱的 setFlag 延后到 ask 分支：只有真拿到钱，故事 flag 才成立
+      // （"拿到了周老师的存折"不能发生在她拒绝你的那一晚）。
+      const pendingFlag = option.isAsk ? option.setFlag : null;
+      if (option.setFlag && !option.isAsk) s.flags[option.setFlag] = true;
       if (option.style === 'flirty') s.numbness = clamp(s.numbness + NUMBNESS_PER_FLIRT, 0, 100);
       advanceStage(t);
 
@@ -432,6 +450,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
         }
         const result = resolveAsk(s, def, t);
         if (result.success) {
+          if (pendingFlag) s.flags[pendingFlag] = true;
           t.wariness = clamp(t.wariness + ASK_SUCCESS_WARINESS, 0, 100);
           t.totalReceived += result.amount;
           t.timesPaid += 1;
