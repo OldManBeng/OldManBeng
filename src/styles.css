@@ -63,6 +63,27 @@ body {
 .content-warning p { margin-bottom: 6px; }
 .content-warning strong { color: var(--text); }
 
+/* ---------- v2.2 序章 ---------- */
+.prologue-screen { justify-content: center; gap: 22px; max-width: 640px; }
+.prologue-block {
+  padding: 22px 26px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.prologue-title {
+  font-size: 20px;
+  letter-spacing: 4px;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+.prologue-body p {
+  margin-bottom: 12px;
+  line-height: 1.85;
+  font-size: 14.5px;
+}
+.prologue-actions { display: flex; gap: 10px; justify-content: center; align-items: center; }
+
 /* ---------- buttons ---------- */
 .btn {
   background: var(--panel-2);
@@ -309,6 +330,16 @@ body {
   text-align: center;
 }
 .bubble.packet { border-color: var(--warm); }
+/* v2.2：照片气泡——程序化 SVG 立绘，微信发图样式（圆角贴图）。 */
+.bubble-photo {
+  margin-top: 6px;
+  border-radius: 8px;
+  overflow: hidden;
+  width: 200px;
+  max-width: 100%;
+  background: #000;
+}
+.bubble-photo svg { display: block; width: 100%; height: auto; }
 /* 新气泡浮出（到达动画）；正在打字的气泡带光标。 */
 .bubble.arriving { animation: bubble-in 0.24s ease-out; }
 @keyframes bubble-in {
@@ -365,6 +396,36 @@ body {
 .ledger-grid div { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--line); padding: 4px 0; }
 .ledger-grid span { color: var(--muted); }
 .target-epilogue p { color: var(--muted); font-size: 14px; }
+/* 终章编者按：比正文更安静的一块排版 */
+.ending-essay {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--accent, #5b8db8);
+  border-radius: 12px;
+  padding: 18px 20px;
+  text-align: left;
+}
+.ending-essay h3 {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 12px;
+  font-weight: normal;
+  letter-spacing: 3px;
+}
+.ending-essay p {
+  font-size: 13.5px;
+  line-height: 1.9;
+  color: var(--muted);
+  margin-bottom: 10px;
+  text-align: justify;
+}
+.ending-essay p:last-child { margin-bottom: 0; }
+.ending-essay .essay-close {
+  color: var(--text);
+  border-top: 1px dashed var(--line);
+  padding-top: 12px;
+  margin-top: 4px;
+}
 .ending-actions { display: flex; gap: 10px; justify-content: center; }
 
 /* ---------- overlay log ---------- */
@@ -561,7 +622,17 @@ body {
 .contact-row.blocked { opacity: 0.45; }
 .contact-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .contact-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.contact-bio { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* v2.2：bio 两行截断——完整交代每个老头的身份背景。 */
+.contact-bio {
+  font-size: 12.5px;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* v2.2：性格一行——"客气、老派、克制"这种情感卖点。 */
+.contact-personality { color: var(--accent); font-size: 12px; opacity: 0.8; }
 
 /* 钱包 */
 .wallet-summary {

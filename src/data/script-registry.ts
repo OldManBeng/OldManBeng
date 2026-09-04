@@ -19,11 +19,11 @@ import { CHEN_PACKS_V2 } from './packs-chen';
  * no target-specific imports leak into engine code.
  */
 export const SCRIPTS: Record<string, TargetScript> = {
-  lao_li: { chain: LAO_LI_CHAIN, free: LAO_LI_FREE, lines: LAO_LI_LINES, packs: [...LAO_LI_PACKS, ...LAO_LI_PACKS_V2], incoming: INCOMING_LINES.lao_li },
-  zhou_teacher: { chain: ZHOU_CHAIN, free: ZHOU_FREE, lines: ZHOU_LINES, packs: [...ZHOU_PACKS, ...ZHOU_PACKS_V2], incoming: INCOMING_LINES.zhou_teacher },
-  boss_wang: { chain: WANG_CHAIN, free: WANG_FREE, lines: WANG_LINES, packs: [...WANG_PACKS, ...WANG_PACKS_V2], incoming: INCOMING_LINES.boss_wang },
-  hao_ge: { chain: HAO_CHAIN, free: HAO_FREE, lines: HAO_LINES, packs: [...HAO_PACKS, ...HAO_PACKS_V2], incoming: INCOMING_LINES.hao_ge },
-  chen_gong: { chain: CHEN_CHAIN, free: CHEN_FREE, lines: CHEN_LINES, packs: [...CHEN_PACKS, ...CHEN_PACKS_V2], incoming: INCOMING_LINES.chen_gong },
+  lao_li: { chain: LAO_LI_CHAIN, free: LAO_LI_FREE, lines: LAO_LI_LINES, packs: [...LAO_LI_PACKS, ...LAO_LI_PACKS_V2], incoming: INCOMING_LINES.lao_li, photos: ['lao_li_taxi_night', 'lao_li_radio_night'] },
+  zhou_teacher: { chain: ZHOU_CHAIN, free: ZHOU_FREE, lines: ZHOU_LINES, packs: [...ZHOU_PACKS, ...ZHOU_PACKS_V2], incoming: INCOMING_LINES.zhou_teacher, photos: ['zhou_calligraphy', 'zhou_flower_balcony'] },
+  boss_wang: { chain: WANG_CHAIN, free: WANG_FREE, lines: WANG_LINES, packs: [...WANG_PACKS, ...WANG_PACKS_V2], incoming: INCOMING_LINES.boss_wang, photos: ['wang_garage_smoke', 'wang_store_front'] },
+  hao_ge: { chain: HAO_CHAIN, free: HAO_FREE, lines: HAO_LINES, packs: [...HAO_PACKS, ...HAO_PACKS_V2], incoming: INCOMING_LINES.hao_ge, photos: ['hao_cafe_cats', 'hao_counter_noodles'] },
+  chen_gong: { chain: CHEN_CHAIN, free: CHEN_FREE, lines: CHEN_LINES, packs: [...CHEN_PACKS, ...CHEN_PACKS_V2], incoming: INCOMING_LINES.chen_gong, photos: ['chen_balcony_vise', 'chen_blueprint_desk'] },
 };
 
 /** 库目标（45 人）没有专属脚本——按原型挂 ARCHETYPE_PACKS + 原型 incoming 台词。 */
@@ -38,6 +38,15 @@ const LIBRARY_FALLBACK_LINES: DialogueContextMap = {
   ask_fail: ['（他岔开了话题。）'],
   blocked: ['（头像灰了。）'],
 };
+/** v2.2：库人物按原型挂照片（每人 1 张代表照）。 */
+const ARCHETYPE_PHOTOS: Record<string, string[]> = {
+  night_guard: ['arch_guard_booth'],
+  designated_driver: ['arch_roadside'],
+  fisherman: ['arch_fishing'],
+  chess_uncle: ['arch_chess'],
+  square_dancer: ['arch_square'],
+};
+
 for (const t of LIBRARY) {
   SCRIPTS[t.id] = {
     chain: {},
@@ -46,6 +55,7 @@ for (const t of LIBRARY) {
     packs: ARCHETYPE_PACKS[t.archetype],
     incoming: ARCHETYPE_INCOMING[t.archetype],
     archetype: t.archetype,
+    photos: ARCHETYPE_PHOTOS[t.archetype],
   };
 }
 

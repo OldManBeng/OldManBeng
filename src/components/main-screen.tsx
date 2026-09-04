@@ -1,7 +1,7 @@
 import { useGame } from '../store/gameStore';
 import { ALL_TARGET_MAP, PERSONA_MAP, targetAwake, isMorningTarget, SELFIE_LABEL, TRAIT_LABEL } from '../engine/state-machine';
 import { formatMoney } from '../utils/format';
-import { OldManAvatar, PersonaAvatar, ProfileAvatar, AVATAR_PRESETS } from './character-art';
+import { OldManAvatar, PersonaAvatar, ProfileAvatar, AVATAR_PRESETS, PhotoRender } from './character-art';
 import { playMessage, playSend, playPacket, playFail, playBlocked, playMorning } from '../utils/sound';
 import { useEffect, useRef, useState } from 'react';
 import { INDUSTRY_COURSE_COST, CHAT_SESSION_COST } from '../data/constants';
@@ -262,7 +262,8 @@ function ContactsPanel() {
               <OldManAvatar target={def} state={t} size={44} />
               <div className="contact-body">
                 <div className="contact-name">{def.name} <span className="muted small">{def.age}岁 · 第 {t.discoveredDay} 天认识</span></div>
-                <div className="muted small contact-bio">{def.bio.slice(0, 42)}…</div>
+                <div className="contact-bio">{def.bio}</div>
+                <div className="muted small contact-personality">{def.personality}</div>
                 <div className="muted small">信任 {Math.round(t.trust)} · 警惕 {Math.round(t.wariness)} · 给过 {formatMoney(t.totalReceived)}</div>
               </div>
               {t.blocked && <span className="blocked-note">不回你了</span>}
@@ -331,6 +332,11 @@ function HistoryPanel() {
                     <div key={j} className={`bubble ${m.speaker} ${m.label ? 'packet' : ''}`}>
                       {m.label && <div className="packet-label">{m.label}</div>}
                       <div className="bubble-text">{m.text}</div>
+                      {m.photoId && (
+                        <div className="bubble-photo">
+                          <PhotoRender photoId={m.photoId} />
+                        </div>
+                      )}
                       {m.stamp && <div className="bubble-stamp">{m.stamp}</div>}
                     </div>
                   ))}
@@ -516,6 +522,11 @@ function ChatView() {
                 {text}
                 {isTyping && <span className="type-caret" />}
               </div>
+              {m.photoId && !isTyping && (
+                <div className="bubble-photo">
+                  <PhotoRender photoId={m.photoId} />
+                </div>
+              )}
               {m.stamp && !isTyping && <div className="bubble-stamp">{m.stamp}</div>}
             </div>
           );

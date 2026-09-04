@@ -23,6 +23,34 @@ export type TargetArchetype =
   | 'chess_uncle'       // 棋摊大爷：悔棋、观棋、输棋骂孙子
   | 'square_dancer'     // 广场舞大爷：音响、领队阿姨、腰不好
 
+/** v2.2：头像背景场景类型——决定 SVG 背景图层。 */
+export type BgScene =
+  | 'night_road'      // 深夜公路（出租车司机）
+  | 'study'           // 书房（退休教师）
+  | 'garage'          // 车库（个体老板）
+  | 'internet_cafe'   // 网吧（网吧老板）
+  | 'balcony'         // 阳台（退休工程师）
+  | 'guard_booth'     // 保安岗亭（夜班保安）
+  | 'roadside'        // 路边等单（代驾师傅）
+  | 'fishing'         // 水边钓位（钓友）
+  | 'chess'           // 棋摊（棋友）
+  | 'square'          // 广场（广场舞大爷）
+  | 'default';        // 兜底
+
+/** v2.2：头像配饰图标类型——在头像角落画一个小图标。 */
+export type Accessory =
+  | 'steering_wheel'    // 方向盘
+  | 'calligraphy_brush' // 毛笔
+  | 'cigarette'         // 烟
+  | 'gamepad'           // 游戏手柄
+  | 'wrench'            // 扳手
+  | 'flashlight'        // 手电筒
+  | 'fishing_rod'       // 钓竿
+  | 'chess_piece'       // 棋子
+  | 'speaker'           // 音箱
+  | 'helmet'            // 安全帽
+  | 'none';
+
 /** Mechanical hooks the engine reads (mirrors GL2's GirlfriendTrait). */
 export const TargetTrait = {
   /** Only reliably online after 23:00. */
@@ -70,6 +98,12 @@ export interface Target {
     beard: number;
     cheeks: number;     // fullness 0-1
     shirtColor: string;
+    /** v2.2：头像背景场景——决定 SVG 背景图层。 */
+    bgScene: BgScene;
+    /** v2.2：配饰图标——在头像角落画一个小图标。 */
+    accessory: Accessory;
+    /** v2.2：头像色调（背景渐变 / 装饰用）。 */
+    accent: string;
   };
 }
 
@@ -104,6 +138,8 @@ export interface TargetState {
   recentPacks: string[];
   /** v2.1：上一晚的 greeting 下标——连聊两晚不再同一句开场白（-1 = 无记录）。 */
   recentGreetingIdx: number;
+  /** v2.2：上一场他发过的照片下标——连发两张不重复（-1 = 无记录）。 */
+  recentPhotoIdx: number;
   blocked: boolean;
   /** Set when he stops being reachable forever. */
   ended: TargetEndingId | null;

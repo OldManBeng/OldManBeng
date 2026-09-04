@@ -31,11 +31,16 @@ function lib(
 }
 
 const P = {
-  guard: { hair: 0, hairColor: '#2a2a2a', glasses: 0, beard: 1, cheeks: 0.45, shirtColor: '#3a4a5a' } as Target['portraitSpec'],
-  driver: { hair: 1, hairColor: '#333', glasses: 0, beard: 1, cheeks: 0.5, shirtColor: '#6a5a3a' } as Target['portraitSpec'],
-  fish:  { hair: 2, hairColor: '#555', glasses: 1, beard: 2, cheeks: 0.6, shirtColor: '#4a6a4a' } as Target['portraitSpec'],
-  chess: { hair: 1, hairColor: '#999', glasses: 1, beard: 0, cheeks: 0.5, shirtColor: '#6a5a4a' } as Target['portraitSpec'],
-  dance: { hair: 1, hairColor: '#777', glasses: 0, beard: 0, cheeks: 0.55, shirtColor: '#8a3a5a' } as Target['portraitSpec'],
+  guard:  { hair: 0, hairColor: '#2a2a2a', glasses: 0, beard: 1, cheeks: 0.45, shirtColor: '#3a4a5a', bgScene: 'guard_booth' as const, accessory: 'flashlight' as const, accent: '#3a4a5a' },
+  guard2: { hair: 0, hairColor: '#333', glasses: 0, beard: 1, cheeks: 0.5, shirtColor: '#2a3a4a', bgScene: 'guard_booth' as const, accessory: 'flashlight' as const, accent: '#2a3a4a' },
+  driver: { hair: 1, hairColor: '#333', glasses: 0, beard: 1, cheeks: 0.5, shirtColor: '#6a5a3a', bgScene: 'roadside' as const, accessory: 'helmet' as const, accent: '#6a5a3a' },
+  driver2:{ hair: 0, hairColor: '#2a2a2a', glasses: 0, beard: 0, cheeks: 0.4, shirtColor: '#5a4a3a', bgScene: 'roadside' as const, accessory: 'helmet' as const, accent: '#5a4a3a' },
+  fish:   { hair: 2, hairColor: '#555', glasses: 1, beard: 2, cheeks: 0.6, shirtColor: '#4a6a4a', bgScene: 'fishing' as const, accessory: 'fishing_rod' as const, accent: '#4a6a4a' },
+  fish2:  { hair: 1, hairColor: '#666', glasses: 0, beard: 1, cheeks: 0.5, shirtColor: '#3a5a3a', bgScene: 'fishing' as const, accessory: 'fishing_rod' as const, accent: '#3a5a3a' },
+  chess:  { hair: 1, hairColor: '#999', glasses: 1, beard: 0, cheeks: 0.5, shirtColor: '#6a5a4a', bgScene: 'chess' as const, accessory: 'chess_piece' as const, accent: '#6a5a4a' },
+  chess2: { hair: 0, hairColor: '#aaa', glasses: 0, beard: 1, cheeks: 0.6, shirtColor: '#5a4a3a', bgScene: 'chess' as const, accessory: 'chess_piece' as const, accent: '#5a4a3a' },
+  dance:  { hair: 1, hairColor: '#777', glasses: 0, beard: 0, cheeks: 0.55, shirtColor: '#8a3a5a', bgScene: 'square' as const, accessory: 'speaker' as const, accent: '#8a3a5a' },
+  dance2: { hair: 0, hairColor: '#888', glasses: 0, beard: 0, cheeks: 0.5, shirtColor: '#7a3a4a', bgScene: 'square' as const, accessory: 'speaker' as const, accent: '#7a3a4a' },
 };
 
 export const LIBRARY: Target[] = [
@@ -61,11 +66,11 @@ export const LIBRARY: Target[] = [
   lib('c5', '喝水的老聂', 59, 'chess_uncle', '保温杯泡枸杞，下棋慢得让人睡着。他说快有什么用，"我这辈子就没快过"。', '慢性子，聊天像下长棋。', 'listened_to', 11, [], 50, P.chess),
 
   // ---- 广场舞大爷 ×5 ----
-  lib('d1', '领舞对面的', 63, 'square_dancer', '站领队阿姨正对面的位置十年。阿姨换了几任舞伴，他没挪过窝。他说那个位置"音响的回音最好"。', '嘴上不服老，膝盖最先服。', 'desired', 19, [], 45, P.dance),
+  lib('d1', '领舞对面的', 63, 'square_dancer', '站领队阿姨正对面的位置十年。阿姨换了几任舞伴，他没挪过窝。他说那个位置"音响的回音最好"。', '嘴上不服老，膝盖最先服。', 'desired', 19, [], 45, P.dance2),
   lib('d2', '搬音响的蒋叔', 60, 'square_dancer', '每天负责搬40斤的音响上五楼台阶。队里没人知道他有腰椎间盘突出，包括他自己——他以为是老了都这样。', '力气是他在这个世界上的存在证明。', 'respected', 18, ['generous'], 50, P.dance),
-  lib('d3', '慢四步老康', 65, 'square_dancer', '只会慢四，快三快二一概不上场。他说慢四才有"社交"，快的都是蹦迪。他老伴以前嫌他跳得难看。', '守旧，礼数多，在意"体面"两个字。', 'listened_to', 20, ['clingy'], 55, P.dance),
+  lib('d3', '慢四步老康', 65, 'square_dancer', '只会慢四，快三快二一概不上场。他说慢四才有"社交"，快的都是蹦迪。他老伴以前嫌他跳得难看。', '守旧，礼数多，在意"体面"两个字。', 'listened_to', 20, ['clingy'], 55, P.dance2),
   lib('d4', '新来的老岳', 55, 'square_dancer', '退休三个月，被楼下邻居拉来看热闹，第三天就站在了队尾。他学得笨，但每天都来。', '孤独是新的，热络是装出来的，渴望是真的。', 'listened_to', 19, ['loneliness'], 40, P.dance),
-  lib('d5', '音响师傅老樊', 57, 'square_dancer', '其实是修家电的，来给领队修过一次音响就没走成。队里谁的电器坏都找他。他说这是"售后"。', '用有用换亲近，他自己没意识到。', 'respected', 20, [], 45, P.dance),
+  lib('d5', '音响师傅老樊', 57, 'square_dancer', '其实是修家电的，来给领队修过一次音响就没走成。队里谁的电器坏都找他。他说这是"售后"。', '用有用换亲近，他自己没意识到。', 'respected', 20, [], 45, P.dance2),
 
   // ---- 代驾司机 ×5（夜里蹲活的那批人——和白天开出租的老李不是一个时区） ----
   lib('e1', '等单的侯师傅', 48, 'designated_driver', '代驾司机，电动车折叠塞在后备厢跟客户一起走。等单的间隙在路边刷手机，屏幕亮着，人像睡着了。', '话不多，一单结束会在朋友圈发定位。', 'listened_to', 1, ['night_owl'], 45, P.driver),
@@ -87,9 +92,9 @@ export const LIBRARY: Target[] = [
   lib('c8', '棋摊新客老雷', 57, 'chess_uncle', '刚退休才发现小区有个棋摊，去了一个月没人跟他多说话。他天天去，就为了那个"有人"的感觉。', '局促，别人笑他也跟着笑。', 'listened_to', 15, ['loneliness'], 40, P.chess),
   lib('c9', '云棋的甄大爷', 69, 'chess_uncle', '不来了，改下云棋。他说网上好，"输了没人看见"。他赢棋的截图存了两百多张。', '较真，会把聊天当对弈。', 'listened_to', 9, [], 45, P.chess),
   lib('d6', '队尾的丁姨夫', 63, 'square_dancer', '被老伴拉来的，站队尾五年。他自己不跳，就站着，"帮大家看东西"。', '耐心，谁的包都记得住。', 'listened_to', 19, ['loneliness'], 45, P.dance),
-  lib('d7', '替补的武叔', 60, 'square_dancer', '队里男的不够，他是"替补"。领队喊他上他就上，不喊他就在边上跟着比划。', '随和到没有存在感，直到你跟他说话。', 'listened_to', 20, [], 40, P.dance),
+  lib('d7', '替补的武叔', 60, 'square_dancer', '队里男的不够，他是"替补"。领队喊他上他就上，不喊他就在边上跟着比划。', '随和到没有存在感，直到你跟他说话。', 'listened_to', 20, [], 40, P.dance2),
   lib('d8', '写队史的鲁老', 71, 'square_dancer', '广场舞队九年的"队史记录员"，谁哪天入队、哪年换的音响，都记在一个笔记本上。没人看过那个本子。', '珍视被记住的人。', 'listened_to', 18, ['clingy'], 55, P.dance),
-  lib('d9', '对跳的荣姐夫', 58, 'square_dancer', '领队阿姨的对跳搭档，位置在"领舞对面的"正对面。两人谁也不承认自己是被安排的。', '嘴硬，心软，跳完总给全场买水。', 'desired', 19, ['generous'], 45, P.dance),
+  lib('d9', '对跳的荣姐夫', 58, 'square_dancer', '领队阿姨的对跳搭档，位置在"领舞对面的"正对面。两人谁也不承认自己是被安排的。', '嘴硬，心软，跳完总给全场买水。', 'desired', 19, ['generous'], 45, P.dance2),
   lib('e6', '机场线的孔师傅', 50, 'designated_driver', '专跑机场线的代驾。凌晨的机场高速他闭着眼都认得。他说这条线最清净，"客人一上车就睡，没人说话"。', '安静，会主动把音乐调小。', 'listened_to', 2, ['night_owl'], 45, P.driver),
   lib('e7', '雨天翻倍的桂师傅', 46, 'designated_driver', '雨天单子翻倍，他从不休息。雨衣里揣着手机，怕漏单，也怕漏掉谁的晚安。', '要强，觉得自己还能更拼。', 'respected', 1, ['night_owl'], 40, P.driver),
   lib('e8', '电动车的韩叔', 59, 'designated_driver', '代驾界"活地图"，全城的小巷他都知道。年轻时蹬三轮送货练出来的。', '知识型选手，就盼着有人问路。', 'respected', 3, [], 50, P.driver),

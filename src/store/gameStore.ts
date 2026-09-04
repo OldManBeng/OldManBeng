@@ -33,6 +33,7 @@ function migrate(saved: GameState): GameState {
       pingedToday: old.pingedToday ?? false,
       recentPacks: old.recentPacks ?? [],
       recentGreetingIdx: old.recentGreetingIdx ?? -1,
+      recentPhotoIdx: old.recentPhotoIdx ?? -1,
     };
   });
   // 2) 顶层 v2 新字段。

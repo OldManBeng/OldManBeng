@@ -22,6 +22,7 @@ function tstate(over: Partial<TargetState> = {}): TargetState {
     pingedToday: false,
     recentPacks: [],
     recentGreetingIdx: -1,
+    recentPhotoIdx: -1,
     blocked: false,
     ended: null,
     ...over,

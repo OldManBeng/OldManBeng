@@ -11,6 +11,8 @@ export interface TargetScript {
   incoming?: IncomingLines;
   /** v2.0：老头库目标共享的原型闲聊组（按 archetype 查）。 */
   archetype?: string;
+  /** v2.2：他会发来的照片 photoId 池（程序化 SVG 立绘，character-art.tsx 渲染）。 */
+  photos?: string[];
 }
 
 /**

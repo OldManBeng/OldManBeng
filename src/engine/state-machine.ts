@@ -81,6 +81,7 @@ function freshTargetState(targetId: string): TargetState {
     pingedToday: false,
     recentPacks: [],
     recentGreetingIdx: -1, // v2.1：上一条的 greeting 下标——连聊两晚不再同一句开场白
+    recentPhotoIdx: -1, // v2.2：上一场他发过的照片下标
     blocked: false,
     ended: null,
   };
@@ -135,6 +136,26 @@ function pickVaryLine(rng: ReturnType<typeof makeRng>, pool: string[] | undefine
   if (idx === lastIdx.val) idx = (idx + 1) % pool.length;
   lastIdx.val = idx;
   return pool[idx];
+}
+
+/** v2.2：他要给你看样东西——约 35% 的场次他会发一张照片（自己的世界）。
+ *  孤独的人发照片不是炫，是"你看，我的生活还在动"。
+ *  照片去重：上一场发过的不再发。 */
+function maybePushPhoto(t: TargetState, rng: ReturnType<typeof makeRng>, transcript: ChatMsg[], activeHour: number): void {
+  const photos = scriptFor(t.targetId).photos;
+  if (!photos || photos.length === 0) return;
+  if (!rng.chance(0.35)) return;
+  // 上一场发过哪张——从 TargetState 挂 recentPhotoIdx（不持久化，场内状态足够）。
+  const last = t.recentPhotoIdx ?? -1;
+  let idx = rng.int(0, photos.length - 1);
+  if (idx === last && photos.length > 1) idx = (idx + 1) % photos.length;
+  t.recentPhotoIdx = idx;
+  transcript.push({
+    speaker: 'target' as const,
+    photoId: photos[idx],
+    text: '（他给你发来一张照片。）',
+    stamp: nightStamp(activeHour, 4 + transcript.length),
+  });
 }
 
 /** v2.0：选话术组——近 N 套用过的去重，避免"每次都是同一套话术"。 */
@@ -606,6 +627,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
         for (const opener of node.openers) {
           transcript.push({ speaker: 'target' as const, text: fillProfileVars(opener, s), stamp: nightStamp(def.activeHour, 6 + transcript.length) });
         }
+        maybePushPhoto(t, rng01(s), transcript, def.activeHour);
         s.chat = {
           targetId: t.targetId,
           transcript,
@@ -679,6 +701,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
         for (const opener of node.openers) {
           transcript.push({ speaker: 'target' as const, text: fillProfileVars(opener, s), stamp: nightStamp(def.activeHour, 3 + transcript.length) });
         }
+        maybePushPhoto(t, rng, transcript, def.activeHour);
         s.chat = {
           targetId: t.targetId,
           transcript,
