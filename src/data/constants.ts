@@ -139,6 +139,12 @@ export const TRAIT_ARCHETYPE_AFFINITY: Record<string, Partial<Record<string, Tra
     married_boss: { trust: -1, wariness: 2 },
     cafe_owner_ninety: { trust: 0, wariness: 0 },
     // 库存 45 人（共享原型 key 同名扩展）
+ 
+    // 库存 45 人原型（9 原型）：    night_guard: { trust: 1, wariness: 0 },
+    designated_driver: { trust: 1, wariness: 0 },
+    fisherman: { trust: 1, wariness: 0 },
+    chess_uncle: { trust: 1, wariness: 1 },
+    square_dancer: { trust: 1, wariness: 0 },
   },
   // 高冷：让疑心重的更放心（不粘人=不图钱），让情感依赖型的更焦虑
   cold_queen: {
@@ -147,6 +153,12 @@ export const TRAIT_ARCHETYPE_AFFINITY: Record<string, Partial<Record<string, Tra
     lonely_engineer: { trust: 1, wariness: -2 },
     married_boss: { trust: 2, wariness: -1 },
     cafe_owner_ninety: { trust: 0, wariness: 1 },
+ 
+    // 库存 45 人原型（9 原型）：    night_guard: { trust: -1, wariness: 2 },
+    designated_driver: { trust: 0, wariness: 1 },
+    fisherman: { trust: 0, wariness: 1 },
+    chess_uncle: { trust: 0, wariness: 1 },
+    square_dancer: { trust: -2, wariness: 2 },
   },
   // 直爽：工程师式好感（有事说事），文青式的则觉得你煞风景
   straight_shooter: {
@@ -155,6 +167,12 @@ export const TRAIT_ARCHETYPE_AFFINITY: Record<string, Partial<Record<string, Tra
     divorced_driver: { trust: 1, wariness: 0 },
     married_boss: { trust: 0, wariness: 1 },
     cafe_owner_ninety: { trust: -1, wariness: 0 },
+ 
+    // 库存 45 人原型（9 原型）：    night_guard: { trust: 1, wariness: 0 },
+    designated_driver: { trust: 1, wariness: 0 },
+    fisherman: { trust: 2, wariness: -1 },
+    chess_uncle: { trust: 1, wariness: 0 },
+    square_dancer: { trust: 1, wariness: 0 },
   },
   // 软文艺：所有"孤独成诗"原型 +，但对生意人像外星语
   soft_artsy: {
@@ -163,6 +181,12 @@ export const TRAIT_ARCHETYPE_AFFINITY: Record<string, Partial<Record<string, Tra
     cafe_owner_ninety: { trust: 1, wariness: 0 },
     divorced_driver: { trust: 0, wariness: 1 },
     married_boss: { trust: -2, wariness: 2 },
+ 
+    // 库存 45 人原型（9 原型）：    night_guard: { trust: 0, wariness: 1 },
+    designated_driver: { trust: 0, wariness: 1 },
+    fisherman: { trust: 1, wariness: 0 },
+    chess_uncle: { trust: 1, wariness: 0 },
+    square_dancer: { trust: 1, wariness: 0 },
   },
 };
 

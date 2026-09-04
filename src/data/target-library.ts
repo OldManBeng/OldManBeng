@@ -32,6 +32,7 @@ function lib(
 
 const P = {
   guard: { hair: 0, hairColor: '#2a2a2a', glasses: 0, beard: 1, cheeks: 0.45, shirtColor: '#3a4a5a' } as Target['portraitSpec'],
+  driver: { hair: 1, hairColor: '#333', glasses: 0, beard: 1, cheeks: 0.5, shirtColor: '#6a5a3a' } as Target['portraitSpec'],
   fish:  { hair: 2, hairColor: '#555', glasses: 1, beard: 2, cheeks: 0.6, shirtColor: '#4a6a4a' } as Target['portraitSpec'],
   chess: { hair: 1, hairColor: '#999', glasses: 1, beard: 0, cheeks: 0.5, shirtColor: '#6a5a4a' } as Target['portraitSpec'],
   dance: { hair: 1, hairColor: '#777', glasses: 0, beard: 0, cheeks: 0.55, shirtColor: '#8a3a5a' } as Target['portraitSpec'],
@@ -67,11 +68,11 @@ export const LIBRARY: Target[] = [
   lib('d5', '音响师傅老樊', 57, 'square_dancer', '其实是修家电的，来给领队修过一次音响就没走成。队里谁的电器坏都找他。他说这是"售后"。', '用有用换亲近，他自己没意识到。', 'respected', 20, [], 45, P.dance),
 
   // ---- 代驾司机 ×5（夜里蹲活的那批人——和白天开出租的老李不是一个时区） ----
-  lib('e1', '等单的侯师傅', 48, 'night_guard', '代驾司机，电动车折叠塞在后备厢跟客户一起走。等单的间隙在路边刷手机，屏幕亮着，人像睡着了。', '话不多，一单结束会在朋友圈发定位。', 'listened_to', 1, ['night_owl'], 45, P.guard),
-  lib('e2', '烧烤摊老潘', 53, 'night_guard', '开代驾三年，认得全城所有还亮着灯的摊子。收工必在烧烤摊吃一顿，那是一天里唯一坐着吃的热饭。', '热络，跟摊主都熟，唯独家里没人等他。', 'listened_to', 0, ['night_owl', 'loneliness'], 40, P.guard),
-  lib('e3', '夜班代驾小魏', 41, 'night_guard', '白天在物流园卸货，晚上跑代驾，一天睡五个小时。他说等攒够钱就不干了，这句话说了四年。', '疲惫，但回消息快得像在等一个人。', 'listened_to', 2, ['night_owl'], 35, P.guard),
-  lib('e4', '酒后陪聊的谢叔', 57, 'night_guard', '代驾接的单一半是喝多的。有的客人上车就哭，他就听着。他说这活儿一半是开车，一半是听人说话。', '好脾气，酒后的话他都替人收着。', 'listened_to', 1, ['night_owl', 'loneliness'], 50, P.guard),
-  lib('e5', '抢单的吴师傅', 46, 'night_guard', '代驾平台积分榜前十。他给自己定了规矩：每天必须抢满十单，哪怕最后一单是凌晨四点。', '较劲，跟平台较劲，也跟自己较劲。', 'respected', 3, ['night_owl'], 45, P.guard),
+  lib('e1', '等单的侯师傅', 48, 'designated_driver', '代驾司机，电动车折叠塞在后备厢跟客户一起走。等单的间隙在路边刷手机，屏幕亮着，人像睡着了。', '话不多，一单结束会在朋友圈发定位。', 'listened_to', 1, ['night_owl'], 45, P.driver),
+  lib('e2', '烧烤摊老潘', 53, 'designated_driver', '开代驾三年，认得全城所有还亮着灯的摊子。收工必在烧烤摊吃一顿，那是一天里唯一坐着吃的热饭。', '热络，跟摊主都熟，唯独家里没人等他。', 'listened_to', 0, ['night_owl', 'loneliness'], 40, P.driver),
+  lib('e3', '夜班代驾小魏', 41, 'designated_driver', '白天在物流园卸货，晚上跑代驾，一天睡五个小时。他说等攒够钱就不干了，这句话说了四年。', '疲惫，但回消息快得像在等一个人。', 'listened_to', 2, ['night_owl'], 35, P.driver),
+  lib('e4', '酒后陪聊的谢叔', 57, 'designated_driver', '代驾接的单一半是喝多的。有的客人上车就哭，他就听着。他说这活儿一半是开车，一半是听人说话。', '好脾气，酒后的话他都替人收着。', 'listened_to', 1, ['night_owl', 'loneliness'], 50, P.driver),
+  lib('e5', '抢单的吴师傅', 46, 'designated_driver', '代驾平台积分榜前十。他给自己定了规矩：每天必须抢满十单，哪怕最后一单是凌晨四点。', '较劲，跟平台较劲，也跟自己较劲。', 'respected', 3, ['night_owl'], 45, P.driver),
 
   lib('g6', '物业刘主管', 47, 'night_guard', '物业维修班主管，管着小区八个门。业主群里谁骂物业他都第一个出来回，回到最后没声了。', '责任心过剩，深夜下班要在车里坐半小时才上楼。', 'respected', 21, [], 50, P.guard),
   lib('g7', '北门老翟', 55, 'night_guard', '只在北门。北门对着高架，一年四季吃灰。他说北门好，"清净，能听收音机"。', '自得其乐，收音机评书能跟你复述一整段。', 'listened_to', 22, ['loneliness'], 40, P.guard),
@@ -89,10 +90,10 @@ export const LIBRARY: Target[] = [
   lib('d7', '替补的武叔', 60, 'square_dancer', '队里男的不够，他是"替补"。领队喊他上他就上，不喊他就在边上跟着比划。', '随和到没有存在感，直到你跟他说话。', 'listened_to', 20, [], 40, P.dance),
   lib('d8', '写队史的鲁老', 71, 'square_dancer', '广场舞队九年的"队史记录员"，谁哪天入队、哪年换的音响，都记在一个笔记本上。没人看过那个本子。', '珍视被记住的人。', 'listened_to', 18, ['clingy'], 55, P.dance),
   lib('d9', '对跳的荣姐夫', 58, 'square_dancer', '领队阿姨的对跳搭档，位置在"领舞对面的"正对面。两人谁也不承认自己是被安排的。', '嘴硬，心软，跳完总给全场买水。', 'desired', 19, ['generous'], 45, P.dance),
-  lib('e6', '机场线的孔师傅', 50, 'night_guard', '专跑机场线的代驾。凌晨的机场高速他闭着眼都认得。他说这条线最清净，"客人一上车就睡，没人说话"。', '安静，会主动把音乐调小。', 'listened_to', 2, ['night_owl'], 45, P.guard),
-  lib('e7', '雨天翻倍的桂师傅', 46, 'night_guard', '雨天单子翻倍，他从不休息。雨衣里揣着手机，怕漏单，也怕漏掉谁的晚安。', '要强，觉得自己还能更拼。', 'respected', 1, ['night_owl'], 40, P.guard),
-  lib('e8', '电动车的韩叔', 59, 'night_guard', '代驾界"活地图"，全城的小巷他都知道。年轻时蹬三轮送货练出来的。', '知识型选手，就盼着有人问路。', 'respected', 3, [], 50, P.guard),
-  lib('e9', '等单区的小岳', 43, 'night_guard', '酒吧街代驾聚集区的"区长"。等单的师傅们凑一块抽烟，他从不抽，就在边上刷你发的朋友圈。', '观察型，你说过的话他都记得。', 'listened_to', 2, ['night_owl', 'loneliness'], 35, P.guard),
+  lib('e6', '机场线的孔师傅', 50, 'designated_driver', '专跑机场线的代驾。凌晨的机场高速他闭着眼都认得。他说这条线最清净，"客人一上车就睡，没人说话"。', '安静，会主动把音乐调小。', 'listened_to', 2, ['night_owl'], 45, P.driver),
+  lib('e7', '雨天翻倍的桂师傅', 46, 'designated_driver', '雨天单子翻倍，他从不休息。雨衣里揣着手机，怕漏单，也怕漏掉谁的晚安。', '要强，觉得自己还能更拼。', 'respected', 1, ['night_owl'], 40, P.driver),
+  lib('e8', '电动车的韩叔', 59, 'designated_driver', '代驾界"活地图"，全城的小巷他都知道。年轻时蹬三轮送货练出来的。', '知识型选手，就盼着有人问路。', 'respected', 3, [], 50, P.driver),
+  lib('e9', '等单区的小岳', 43, 'designated_driver', '酒吧街代驾聚集区的"区长"。等单的师傅们凑一块抽烟，他从不抽，就在边上刷你发的朋友圈。', '观察型，你说过的话他都记得。', 'listened_to', 2, ['night_owl', 'loneliness'], 35, P.driver),
 ];
 
 /** 主五人 + 库 45 人 = 全量目标。 */

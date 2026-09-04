@@ -256,13 +256,13 @@ describe('v2.0: 亲和矩阵 —— 正负增益', () => {
 });
 
 describe('v2.0: 话术库 —— 不再每次同一套', () => {
-  it('主五人各有 10 套话术，库 45 人按原型挂 5 套', () => {
+  it('主五人各有 60 套话术（10 + v2.1 的 50），库 45 人按原型挂 13+ 套', () => {
     for (const id of ['lao_li', 'zhou_teacher', 'boss_wang', 'hao_ge', 'chen_gong']) {
-      expect(SCRIPTS[id].packs?.length).toBeGreaterThanOrEqual(10);
+      expect(SCRIPTS[id].packs?.length).toBeGreaterThanOrEqual(60);
       expect(SCRIPTS[id].incoming).toBeDefined();
     }
     for (const id of LIBRARY_IDS) {
-      expect(SCRIPTS[id].packs?.length).toBeGreaterThanOrEqual(5);
+      expect(SCRIPTS[id].packs?.length).toBeGreaterThanOrEqual(13);
     }
   });
 
@@ -282,7 +282,7 @@ describe('v2.0: 话术库 —— 不再每次同一套', () => {
       expect(s.chat).not.toBeNull();
       const after = s.targets.find((y) => y.targetId === nightFisher.id)!;
       expect(new Set(after.recentPacks).size).toBe(after.recentPacks.length);
-      expect(after.recentPacks.length).toBeLessThanOrEqual(3);
+      expect(after.recentPacks.length).toBeLessThanOrEqual(8); // v2.1 自适应去重窗口（3-8）
       if (after.recentPacks.length) seen.push(after.recentPacks[after.recentPacks.length - 1]);
       while (s.chat?.awaiting === 'player') s = dispatch(s, { type: 'pick_option', optionIndex: 0 });
       s = dispatch(s, { type: 'end_chat' });

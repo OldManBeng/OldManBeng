@@ -422,7 +422,7 @@ function archetypeLabel(a: string): string {
     married_boss: '建材老板',
     cafe_owner_ninety: '网吧老板',
     lonely_engineer: '工程师',
-    night_guard: '小区保安',
+    night_guard: '小区保安', designated_driver: '代驾师傅',
     fisherman: '钓友',
     chess_uncle: '棋友',
     square_dancer: '广场舞大爷',

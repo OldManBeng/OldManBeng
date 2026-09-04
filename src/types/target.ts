@@ -18,6 +18,7 @@ export type TargetArchetype =
   | 'lonely_engineer'   // 独居老工程师
   // ---- v2.0 老头库：4 个新原型（45 人库按这些扩展）----
   | 'night_guard'       // 小区夜班保安：话说三句，烟买两包
+  | 'designated_driver' // 代驾师傅：折叠电动车、烧烤摊、听了一车醉话
   | 'fisherman'         // 钓友大叔：水库、鱼护、永远差一根竿
   | 'chess_uncle'       // 棋摊大爷：悔棋、观棋、输棋骂孙子
   | 'square_dancer'     // 广场舞大爷：音响、领队阿姨、腰不好
@@ -99,7 +100,7 @@ export interface TargetState {
   discoveredDay: number;
   /** v2.0：今天他来找过你（防重复投递）。 */
   pingedToday: boolean;
-  /** v2.0：近 3 套用过的话术组 id（去重轮换）。 */
+  /** v2.1：近 N 套用过的话术组 id（去重轮换，N 随话术库扩容自适应 3-8）。 */
   recentPacks: string[];
   blocked: boolean;
   /** Set when he stops being reachable forever. */

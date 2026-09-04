@@ -59,7 +59,7 @@ type ChatMsg = import('../types/chat').ChatMessage;
 function archetypeCN(a: string): string {
   const m: Record<string, string> = {
     divorced_driver: '出租车司机', widowed_teacher: '退休教师', married_boss: '个体老板',
-    cafe_owner_ninety: '网吧老板', lonely_engineer: '工程师', night_guard: '小区保安',
+    cafe_owner_ninety: '网吧老板', lonely_engineer: '工程师', night_guard: '小区保安', designated_driver: '代驾师傅',
     fisherman: '钓友', chess_uncle: '棋友', square_dancer: '广场舞大爷',
   };
   return m[a] ?? a;
@@ -119,7 +119,13 @@ function fillProfileVars(text: string, s: GameState): string {
     .replace(/\{trait\}/g, TRAIT_LABEL[s.profile.traitId] ?? '你');
 }
 
-/** v2.0：选话术组——近 3 套用过的去重，避免"每次都是同一套话术"。 */
+/** v2.1：选话术组——去重窗口随库扩容：池子越大，近期不再重复的套数越多。
+ *  10 套（旧库）窗口 3；60 套（主五人 v2.1）窗口 8——玩家连续 8 晚不见同一套话术。 */
+function recentPackWindow(packs: import('../types/script').ChatPack[]): number {
+  return Math.max(3, Math.min(8, Math.floor(packs.length / 4)));
+}
+
+/** v2.0：选话术组——近 N 套用过的去重，避免"每次都是同一套话术"。 */
 function pickPack(s: GameState, t: TargetState, def: Target): import('../types/script').ChatPack | null {
   const packs = scriptFor(t.targetId).packs ?? (def.archetype in ARCHETYPE_PACKS ? ARCHETYPE_PACKS[def.archetype] : undefined);
   if (!packs || packs.length === 0) return null;
@@ -131,7 +137,8 @@ function pickPack(s: GameState, t: TargetState, def: Target): import('../types/s
   let roll = rng.next() * totalW;
   let chosen = usable[0];
   for (const p of usable) { roll -= (p.weight ?? 1); if (roll <= 0) { chosen = p; break; } }
-  t.recentPacks = [...t.recentPacks, chosen.id].slice(-3);
+  const window = recentPackWindow(packs);
+  t.recentPacks = [...t.recentPacks, chosen.id].slice(-window);
   return chosen;
 }
 

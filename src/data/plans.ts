@@ -68,8 +68,8 @@ export const DAILY_PLANS: DailyPlan[] = [
   {
     id: 'plan_overnight',
     name: '夜班代驾蹲单',
-    description: '在酒吧街口等代驾单。凌晨的客人什么都有——包括话多的老板。',
-    meetArchetypes: ['married_boss', 'divorced_driver'],
+    description: '在酒吧街口等代驾单。凌晨的客人什么都有——包括话多的老板——还有一起等单的代驾师傅。',
+    meetArchetypes: ['married_boss', 'divorced_driver', 'designated_driver'],
     meetChance: 0.4,
     energyCost: 4,
     money: 120,
