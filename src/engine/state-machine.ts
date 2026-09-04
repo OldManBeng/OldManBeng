@@ -80,6 +80,7 @@ function freshTargetState(targetId: string): TargetState {
     discoveredDay: 0,
     pingedToday: false,
     recentPacks: [],
+    recentGreetingIdx: -1, // v2.1：上一条的 greeting 下标——连聊两晚不再同一句开场白
     blocked: false,
     ended: null,
   };
@@ -123,6 +124,17 @@ function fillProfileVars(text: string, s: GameState): string {
  *  10 套（旧库）窗口 3；60 套（主五人 v2.1）窗口 8——玩家连续 8 晚不见同一套话术。 */
 function recentPackWindow(packs: import('../types/script').ChatPack[]): number {
   return Math.max(3, Math.min(8, Math.floor(packs.length / 4)));
+}
+
+/** v2.1：台词池去重抽取——避开上一次选中的下标，连聊两晚不再同一句开场白。
+ *  池只有 1 条时直接返回那条（不更新下标）。池为空时回退 fallback。 */
+function pickVaryLine(rng: ReturnType<typeof makeRng>, pool: string[] | undefined, fallback: string, lastIdx: { val: number }): string {
+  if (!pool || pool.length === 0) return fallback;
+  if (pool.length === 1) return pool[0];
+  let idx = rng.int(0, pool.length - 1);
+  if (idx === lastIdx.val) idx = (idx + 1) % pool.length;
+  lastIdx.val = idx;
+  return pool[idx];
 }
 
 /** v2.0：选话术组——近 N 套用过的去重，避免"每次都是同一套话术"。 */
@@ -318,7 +330,7 @@ function runMorning(state: GameState) {
     if (t.trust <= 0 && t.stage !== 'stranger' && !t.ended) {
       t.ended = 'walked_away';
       t.blocked = true;
-      log(state, 'target_ending', `${def?.name ?? t.targetId} 没有再回复过你。`, rng.pick(lines.blocked ?? ['（头像灰了。）']));
+      log(state, 'target_ending', `${def?.name ?? t.targetId} 没有再回复过你。`, pickVaryLine(rng, lines.blocked, '（头像灰了。）', { val: -1 }));
     }
   }
 
@@ -339,7 +351,7 @@ function runMorning(state: GameState) {
           if (!other.blocked) other.wariness = clamp(other.wariness + 6, 0, 100);
         }
         state.riskLevel = clamp(state.riskLevel - 25, 0, 100);
-        log(state, 'flag', `穿帮了。${vdef?.name ?? '有个老头'} 在你的评论区看到了另一个人的留言——两个"哥哥"的世界，撞在一起。`, rng.pick(vlines.wariness_high ?? ['（他最近的回复，越来越短。）']));
+        log(state, 'flag', `穿帮了。${vdef?.name ?? '有个老头'} 在你的评论区看到了另一个人的留言——两个"哥哥"的世界，撞在一起。`, pickVaryLine(rng, vlines.wariness_high, '（他最近的回复，越来越短。）', { val: -1 }));
         if (victim.wariness >= 85) {
           victim.blocked = true;
           victim.ended = 'walked_away';
@@ -588,7 +600,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       transcript.push({ speaker: 'system' as const, text: `和 ${def.name} 的${phaseLabel}对话（他先找的你）`, stamp: msg.stamp });
       transcript.push({ speaker: 'target' as const, text: fillProfileVars(msg.opener, s), stamp: msg.stamp });
       if (t.wariness >= 50 && t.timesPaid > 0) {
-        transcript.push({ speaker: 'target' as const, text: rng01(s).pick(lines.wariness_high ?? ['（他回得越来越慢。）']), stamp: nightStamp(def.activeHour, 5) });
+        transcript.push({ speaker: 'target' as const, text: pickVaryLine(rng01(s), lines.wariness_high, '（他回得越来越慢。）', { val: -1 }), stamp: nightStamp(def.activeHour, 5) });
       }
       if (node) {
         for (const opener of node.openers) {
@@ -654,11 +666,14 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       const phaseLabel = def.activeHour >= 6 && def.activeHour <= 12 ? '上午' : '深夜';
       transcript.push({ speaker: 'system' as const, text: `和 ${def.name} 的${phaseLabel}对话`, stamp: nightStamp(def.activeHour, 0) });
       if (t.wariness >= 50 && t.timesPaid > 0) {
-        transcript.push({ speaker: 'target' as const, text: rng.pick(lines.wariness_high ?? ['（他回得越来越慢。）']), stamp: nightStamp(def.activeHour, 2) });
+        transcript.push({ speaker: 'target' as const, text: pickVaryLine(rng, lines.wariness_high, '（他回得越来越慢。）', { val: -1 }), stamp: nightStamp(def.activeHour, 2) });
       } else if (t.daysSilent >= 3) {
-        transcript.push({ speaker: 'target' as const, text: rng.pick(lines.silent_warning ?? ['（他安静了很多天。）']), stamp: nightStamp(def.activeHour, 1) });
+        transcript.push({ speaker: 'target' as const, text: pickVaryLine(rng, lines.silent_warning, '（他安静了很多天。）', { val: -1 }), stamp: nightStamp(def.activeHour, 1) });
       } else {
-        transcript.push({ speaker: 'target' as const, text: rng.pick(lines.greeting ?? ['（他来了。）']), stamp: nightStamp(def.activeHour, 1) });
+        const gIdx = { val: t.recentGreetingIdx };
+        const greeting = pickVaryLine(rng, lines.greeting, '（他来了。）', gIdx);
+        t.recentGreetingIdx = gIdx.val;
+        transcript.push({ speaker: 'target' as const, text: greeting, stamp: nightStamp(def.activeHour, 1) });
       }
       if (node) {
         for (const opener of node.openers) {

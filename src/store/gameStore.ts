@@ -32,6 +32,7 @@ function migrate(saved: GameState): GameState {
       discoveredDay: old.discoveredDay ?? 1,
       pingedToday: old.pingedToday ?? false,
       recentPacks: old.recentPacks ?? [],
+      recentGreetingIdx: old.recentGreetingIdx ?? -1,
     };
   });
   // 2) 顶层 v2 新字段。

@@ -102,6 +102,8 @@ export interface TargetState {
   pingedToday: boolean;
   /** v2.1：近 N 套用过的话术组 id（去重轮换，N 随话术库扩容自适应 3-8）。 */
   recentPacks: string[];
+  /** v2.1：上一晚的 greeting 下标——连聊两晚不再同一句开场白（-1 = 无记录）。 */
+  recentGreetingIdx: number;
   blocked: boolean;
   /** Set when he stops being reachable forever. */
   ended: TargetEndingId | null;

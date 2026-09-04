@@ -27,8 +27,9 @@ export const SCRIPTS: Record<string, TargetScript> = {
 };
 
 /** 库目标（45 人）没有专属脚本——按原型挂 ARCHETYPE_PACKS + 原型 incoming 台词。 */
-import { ARCHETYPE_PACKS, ARCHETYPE_INCOMING } from './archetype-packs';
+import { ARCHETYPE_PACKS, ARCHETYPE_INCOMING, ARCHETYPE_LINES } from './archetype-packs';
 import { LIBRARY } from './target-library';
+/** 兜底：未注册台词的原型（不应出现——类型完备性由 v2-systems 测试守卫）。 */
 const LIBRARY_FALLBACK_LINES: DialogueContextMap = {
   greeting: ['（他来了。）'],
   wariness_high: ['（他最近的回复，越来越短。）'],
@@ -41,12 +42,13 @@ for (const t of LIBRARY) {
   SCRIPTS[t.id] = {
     chain: {},
     free: [],
-    lines: LIBRARY_FALLBACK_LINES,
+    lines: ARCHETYPE_LINES[t.archetype] ?? LIBRARY_FALLBACK_LINES,
     packs: ARCHETYPE_PACKS[t.archetype],
     incoming: ARCHETYPE_INCOMING[t.archetype],
     archetype: t.archetype,
   };
 }
+
 
 /** Resolve with a hard error on missing content — a typo must fail loudly. */
 export function scriptFor(targetId: string): TargetScript {
