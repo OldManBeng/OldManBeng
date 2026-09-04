@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createInitialState, dispatch, ALL_TARGET_MAP, defaultProfile } from '../../engine/state-machine';
+import { createInitialState, dispatch, ALL_TARGET_MAP, defaultProfile, SELFIE_LABEL } from '../../engine/state-machine';
 import { ALL_TARGETS, LIBRARY_IDS } from '../../data/target-library';
 import { SCRIPTS } from '../../data/script-registry';
 import { DAILY_PLANS } from '../../data/plans';
@@ -340,5 +340,28 @@ describe('v2.0: profile 模块', () => {
     expect(lib).toBeDefined();
     // 占位符正确性由 fillProfileVars 保证——这里用 constants 的语义标签做契约。
     expect(['cake', 'gym', 'pool', 'cat'].length).toBe(4);
+  });
+
+  it('incoming 生成时占位符已填好——收件箱卡片不出现裸 {selfie}', () => {
+    // 王总 on_selfie 台词带 {selfie}，收件箱直出原文，生成时必须替换。
+    // 多种子扫一遍：既测"没有裸占位符"，也测 on_selfie 池确实被抽到过（防空转通过）。
+    let sawWangSelfie = false;
+    for (let seed = 200; seed < 260; seed++) {
+      let s = fresh(seed);
+      s.incoming = [];
+      s.profile.selfieDay = s.day; // 新鲜自拍 → on_selfie 池
+      const wang = s.targets.find((t) => t.targetId === 'boss_wang')!;
+      wang.trust = 60;
+      s = dispatch(s, { type: 'sleep' }); // runMorning 生成 incoming
+      for (const m of s.incoming) {
+        expect(m.opener).not.toMatch(/\{(selfie|age|trait)\}/);
+      }
+      const fromWang = s.incoming.find((m) => m.targetId === 'boss_wang');
+      if (fromWang && fromWang.reason === 'selfie') {
+        sawWangSelfie = true;
+        expect(fromWang.opener).toContain(SELFIE_LABEL[s.profile.selfieId]);
+      }
+    }
+    expect(sawWangSelfie).toBe(true); // 60 个种子里至少有一次王总念到你的照片
   });
 });

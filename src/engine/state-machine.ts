@@ -378,7 +378,8 @@ function runMorning(state: GameState) {
         targetId: t.targetId,
         day: state.day,
         reason,
-        opener: rng.pick(pool),
+        // 收件箱卡片直出原文（不再过 fillProfileVars），占位符必须在生成时就填好。
+        opener: fillProfileVars(rng.pick(pool), state),
         stamp: nightStamp(def.activeHour, rng.int(0, 25)),
       });
       t.pingedToday = true;
