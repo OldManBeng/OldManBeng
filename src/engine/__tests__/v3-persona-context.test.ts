@@ -170,3 +170,31 @@ describe('v3.0: 人设尾声（结局屏内容）', () => {
     void ALL_TARGET_MAP;
   });
 });
+
+describe('v3.1: 「新的一天」简报生命周期', () => {
+  it('开局弹出第 1 天简报，确认后清零', () => {
+    let s = fresh(81, 'wise_sister');
+    expect(s.briefingDay).toBe(1);
+    s = dispatch(s, { type: 'dismiss_briefing' });
+    expect(s.briefingDay).toBe(0);
+  });
+
+  it('睡觉跨天后重新弹出，当天 log 里有账单/偈语条目可组装', () => {
+    let s = fresh(82, 'wise_sister');
+    s = dispatch(s, { type: 'dismiss_briefing' });
+    s = dispatch(s, { type: 'sleep' });
+    expect(s.briefingDay).toBe(2);
+    const entries = s.log.filter((l) => l.day === 2);
+    expect(entries.some((l) => l.kind === 'bill')).toBe(true);
+    expect(entries.some((l) => l.kind === 'gatha')).toBe(true);
+  });
+
+  it('最后一天睡下直接进结局，不再弹简报', () => {
+    let s = fresh(83, 'wise_sister');
+    s = dispatch(s, { type: 'dismiss_briefing' });
+    s.day = s.daysLimit;
+    s = dispatch(s, { type: 'sleep' });
+    expect(s.phase).toBe('ended');
+    expect(s.briefingDay).toBe(0);
+  });
+});

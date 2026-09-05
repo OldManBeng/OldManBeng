@@ -170,6 +170,9 @@ export interface GameState {
   unseenMoments: number;
   /** v2.3 钱包商店库存（itemId → 数量；一次性道具买了即从可购列表消失）。 */
   inventory: Record<string, number>;
+  /** v3.1 待展示的"新的一天"简报（= 那一天的天数；0 = 无）。弹框确认后清零，
+   *  内容从当天 log（bill/event/gatha 条目）组装，不在 state 里重复存文案。 */
+  briefingDay: number;
 }
 
 export type GameAction =
@@ -193,4 +196,6 @@ export type GameAction =
   /** v2.3 打开朋友圈模块（清红点）。 */
   | { type: 'view_moments' }
   /** v2.3 钱包商店购买。钱不够/唯一道具已购 → no-op。 */
-  | { type: 'buy_item'; itemId: string };
+  | { type: 'buy_item'; itemId: string }
+  /** v3.1 关闭"新的一天"简报弹框（纯 UI 确认，无结算）。 */
+  | { type: 'dismiss_briefing' };

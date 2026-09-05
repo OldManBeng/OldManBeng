@@ -51,6 +51,8 @@ function migrate(saved: GameState): GameState {
     moments: saved.moments ?? [],
     unseenMoments: saved.unseenMoments ?? 0,
     inventory: saved.inventory ?? {},
+    // v3.1："新的一天"简报（旧档没有 → 不补弹，避免读档突袭）。
+    briefingDay: saved.briefingDay ?? 0,
   };
 }
 

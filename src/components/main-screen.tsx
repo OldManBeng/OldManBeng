@@ -86,6 +86,76 @@ const PLAN_ICONS: Record<string, string> = {
   plan_chess: '♟', plan_square: '🎶', plan_netbar: '🎮', plan_overnight: '🚕',
 };
 
+/** v3.1 「新的一天」简报弹框。
+ *  日期 pop → 余额三格 → 账单/事件逐行浮现 → 晨钟偈收音 → 确认后计划列表接管。
+ *  内容直接从当天 log 组装（bill/event/gatha 条目），不在 state 里重复存文案。 */
+function DayBriefingModal() {
+  const store = useGame();
+  const { state } = store;
+  const day = state.briefingDay;
+  const entries = state.log.filter((l) => l.day === day);
+  const bill = entries.find((l) => l.kind === 'bill');
+  const event = entries.find((l) => l.kind === 'event');
+  const gatha = entries.find((l) => l.kind === 'gatha');
+  // 偈语 details 是 `${verse}——${source}`，在最后一个破折号处拆开，署名右对齐。
+  let verse = '';
+  let source = '';
+  if (gatha?.details) {
+    const i = gatha.details.lastIndexOf('——');
+    if (i >= 0) { verse = gatha.details.slice(0, i); source = gatha.details.slice(i + 2); }
+    else verse = gatha.details;
+  }
+  const rows: { ico: string; label: string; text: string }[] = [];
+  if (bill) rows.push({ ico: '🧾', label: '今日开销', text: bill.details });
+  // "无事发生"不值得占一行——安静的早晨也是一种信息。
+  if (event && event.details !== '无事发生的一天。') rows.push({ ico: '🎲', label: '今天的事', text: event.details });
+  const step = 150;
+  const delay = (i: number) => `${300 + i * step}ms`;
+  let rowIdx = 0;
+
+  return (
+    <div className="briefing-overlay" onClick={() => store.dispatch({ type: 'dismiss_briefing' })}>
+      <div className="briefing-card" onClick={(e) => e.stopPropagation()}>
+        <div className="briefing-day">
+          <span className="briefing-day-num">第 {day} 天</span>
+          <span className="briefing-day-sub">睁眼，新的一天</span>
+        </div>
+        <div className="briefing-money">
+          <div><span>余额</span><strong>{formatMoney(state.money)}</strong></div>
+          <div><span>还差</span><strong className="neg">{formatMoney(Math.max(0, state.goal - state.stats.totalEarned))}</strong></div>
+          <div><span>风险</span><strong>{Math.round(state.riskLevel)}%</strong></div>
+        </div>
+        {rows.map((r) => {
+          const i = rowIdx++;
+          return (
+            <div key={r.label} className="briefing-row" style={{ animationDelay: delay(i) }}>
+              <span className="briefing-ico">{r.ico}</span>
+              <div className="briefing-row-body">
+                <div className="briefing-label">{r.label}</div>
+                <div className="briefing-text">{r.text}</div>
+              </div>
+            </div>
+          );
+        })}
+        {verse && (
+          <div className="briefing-row briefing-gatha" style={{ animationDelay: delay(rowIdx) }}>
+            <div className="gatha-verse">{verse}</div>
+            {source && <div className="gatha-source">——{source}</div>}
+            {gatha?.line && <div className="gatha-gloss">{gatha.line}</div>}
+          </div>
+        )}
+        <button
+          className="btn primary wide briefing-start"
+          style={{ animationDelay: delay(rowIdx + (verse ? 0.4 : 0.2)) }}
+          onClick={() => { playMorning(); store.dispatch({ type: 'dismiss_briefing' }); }}
+        >
+          开始今天
+        </button>
+      </div>
+    </div>
+  );
+}
+
 type ModuleTab = 'today' | 'contacts' | 'moments' | 'history' | 'wallet' | 'profile';
 
 export function MainScreen() {
@@ -143,6 +213,9 @@ export function MainScreen() {
         <span className="risk-meter"><i /></span>
         <span>{risk.text}（{Math.round(state.riskLevel)}%）</span>
       </div>
+
+      {/* v3.1 "新的一天"简报弹框——先看账单/事件/晨钟，再落到计划列表 */}
+      {state.phase === 'main' && state.briefingDay > 0 && <DayBriefingModal />}
 
       {/* 聊天会话永远全屏（模块无关） */}
       {state.dayPhase === 'chat' && state.chat && <ChatView />}

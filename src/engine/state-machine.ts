@@ -323,6 +323,7 @@ export function createInitialState(): GameState {
     moments: [],
     unseenMoments: 0,
     inventory: {},
+    briefingDay: 0,
   };
 }
 
@@ -647,6 +648,8 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       s.stats = { totalEarned: 0, redPacketsReceived: 0, asksMade: 0, asksFailed: 0, nightsWorked: 0, biggestPacket: 0 };
       runMorning(s);
       log(s, 'day', `第 1 天。你还差 ${s.goal} 元。通讯录里躺着五个"哥哥"：一个深夜的司机，一个上午的老师，一个凌晨的老板，一个网吧的阿豪，一个画图纸的陈工。你一个都还没回。`);
+      // v3.1：开局也弹"新的一天"简报（第 1 天的账单/事件/晨钟）。
+      s.briefingDay = s.day;
       return s;
     }
 
@@ -781,6 +784,12 @@ export function dispatch(state: GameState, action: GameAction): GameState {
     case 'view_moments': {
       // v2.3：打开朋友圈，红点清零。
       s.unseenMoments = 0;
+      return s;
+    }
+
+    case 'dismiss_briefing': {
+      // v3.1：关闭"新的一天"简报——纯 UI 确认，之后计划列表才接管注意力。
+      s.briefingDay = 0;
       return s;
     }
 
@@ -1090,6 +1099,8 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       }
       runMorning(s);
       log(s, 'day', `第 ${s.day} 天。还差 ${Math.max(0, s.goal - s.stats.totalEarned)} 元。风险 ${Math.round(s.riskLevel)}%。`);
+      // v3.1：新的一天——先弹简报（账单/事件/晨钟），确认后再进入计划列表。
+      s.briefingDay = s.day;
       return s;
     }
 
