@@ -22,7 +22,7 @@ import { ALL_TARGETS, LIBRARY_IDS, libraryTargetById } from '../data/target-libr
 import { ARCHETYPE_PACKS } from '../data/archetype-packs';
 import {
   MOMENT_CAPTIONS, MOMENT_EFFECT, MOMENT_REACTIONS, MOMENT_SUSPICION, MOMENT_SUSPICION_EFFECT,
-  MOMENT_PLAYER_COMMENTS, MOMENTS_CAP, targetMomentPosts,
+  MOMENT_PLAYER_COMMENTS, MOMENTS_CAP, targetMomentPosts, hasReacted, SELFIE_REACTIONS,
 } from '../data/moments';
 import { SHOP_ITEMS } from '../data/items';
 import { DAILY_GATHAS, TRIGGER_GATHAS } from '../data/gathas';
@@ -327,6 +327,43 @@ export function createInitialState(): GameState {
   };
 }
 
+/** v3.1：一次朋友圈互动——起疑的留刺话；正常的六成点赞（沉默的大多数）、
+ *  四成留评论，评论 45% 用照片专属话术（他评的是这张照片本身）。
+ *  suspicious=false 的即时反应（刚发圈时）不记日志，只亮红点。 */
+function applyMomentReaction(
+  state: GameState,
+  rng: ReturnType<typeof makeRng>,
+  post: import('../types/game').MomentPost,
+  t: TargetState,
+  def: Target,
+  suspicious: boolean,
+): void {
+  if (suspicious) {
+    t.trust = clamp(t.trust + MOMENT_SUSPICION_EFFECT.trust, 0, 100);
+    t.wariness = clamp(t.wariness + MOMENT_SUSPICION_EFFECT.wariness, 0, 100);
+    post.comments.push({
+      by: 'target', targetId: t.targetId,
+      text: rng.pick(MOMENT_SUSPICION),
+    });
+    log(state, 'flag', `${def.name} 在你的朋友圈里翻了半天，留了句不太客气的话。`);
+  } else {
+    const eff = MOMENT_EFFECT[def.need] ?? { trust: 1, wariness: 0 };
+    t.trust = clamp(t.trust + eff.trust, 0, 100);
+    t.wariness = clamp(t.wariness + eff.wariness, 0, 100);
+    advanceStage(t);
+    if (rng.chance(0.6)) {
+      post.likes.push(t.targetId);
+    } else {
+      const selfieLines = post.selfieId ? SELFIE_REACTIONS[post.selfieId] : undefined;
+      const text = selfieLines?.length && rng.chance(0.45)
+        ? rng.pick(selfieLines)
+        : rng.pick(MOMENT_REACTIONS[def.need] ?? ['（他点了赞。）']);
+      post.comments.push({ by: 'target', targetId: t.targetId, text });
+    }
+  }
+  state.unseenMoments += 1;
+}
+
 /** Morning: roll event + bills + decay + risk. Called on each new day. */
 function runMorning(state: GameState) {
   const rng = makeRng(state.rngSeed);
@@ -496,44 +533,27 @@ function runMorning(state: GameState) {
     }
   }
 
-  // v2.3 朋友圈结算：昨晚发的圈，今早他们会来看。点赞的、评论的、起疑的——
+  // v3.1 朋友圈互动浪潮：你发的圈（近 3 天内）每天早上都会被他们刷到——
+  // 点赞的、评论的、起疑的。加了微信就会看到（不必先聊过天）；同一个人对
+  // 同一条圈只互动一次；一条圈可以连续几天陆续收到回音，像真的朋友圈那样发酵。
   // 评论区是所有"哥哥"共享的一面墙：同一条圈 ≥3 个人留下评论，风险自然涨。
-  const lastPlayerMoment = [...state.moments].reverse().find((m) => m.author === 'player');
-  if (lastPlayerMoment && lastPlayerMoment.momentDay === state.day - 1) {
-    const reactors = state.targets.filter(
-      (t) => !t.blocked && !t.ended && t.discoveredDay > 0 && t.lastChatDay !== 0,
-    );
+  for (const post of state.moments) {
+    if (post.author !== 'player') continue;
+    if (state.day - post.momentDay > SELFIE_LINGER_DAYS) continue;
+    if (post.lastWaveDay === state.day) continue;
+    post.lastWaveDay = state.day;
+    const reactors = state.targets.filter((t) => !t.blocked && !t.ended && t.discoveredDay > 0);
     for (const t of reactors) {
       const def = ALL_TARGET_MAP[t.targetId];
-      if (!def) continue;
+      if (!def || hasReacted(post, t.targetId)) continue;
       const suspicious = def.traits.includes('suspicious') || t.wariness >= 40;
       const reactChance = suspicious ? 0.4 : 0.45 + t.trust / 400;
       if (!rng.chance(reactChance)) continue;
-      if (suspicious) {
-        t.trust = clamp(t.trust + MOMENT_SUSPICION_EFFECT.trust, 0, 100);
-        t.wariness = clamp(t.wariness + MOMENT_SUSPICION_EFFECT.wariness, 0, 100);
-        lastPlayerMoment.comments.push({
-          by: 'target', targetId: t.targetId,
-          text: rng.pick(MOMENT_SUSPICION),
-        });
-        log(state, 'flag', `${def.name} 在你的朋友圈里翻了半天，留了句不太客气的话。`);
-      } else {
-        const eff = MOMENT_EFFECT[def.need] ?? { trust: 1, wariness: 0 };
-        t.trust = clamp(t.trust + eff.trust, 0, 100);
-        t.wariness = clamp(t.wariness + eff.wariness, 0, 100);
-        advanceStage(t);
-        // 六成点赞（沉默的大多数），四成留评论（忍不住想被看见的）。
-        if (rng.chance(0.6)) lastPlayerMoment.likes.push(t.targetId);
-        else lastPlayerMoment.comments.push({
-          by: 'target', targetId: t.targetId,
-          text: rng.pick(MOMENT_REACTIONS[def.need] ?? ['（他点了赞。）']),
-        });
-      }
-      state.unseenMoments += 1;
+      applyMomentReaction(state, rng, post, t, def, suspicious);
     }
     // 评论区撞车：≥3 个不同的人留下评论——他们迟早会看见彼此。
     const commenterCount = new Set(
-      lastPlayerMoment.comments.filter((c) => c.by === 'target').map((c) => c.targetId),
+      post.comments.filter((c) => c.by === 'target').map((c) => c.targetId),
     ).size;
     if (commenterCount >= 3) {
       state.riskLevel = clamp(state.riskLevel + 6, 0, 100);
@@ -741,19 +761,34 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       if (postedToday) return s;
       const captions = MOMENT_CAPTIONS[action.selfieId];
       if (!captions) return s;
-      s.moments.push({
+      const rng = rng01(s);
+      const post = {
         id: `m${s.day}`,
         momentDay: s.day,
-        author: 'player',
+        author: 'player' as const,
         selfieId: action.selfieId,
-        caption: rng01(s).pick(captions),
-        likes: [],
-        comments: [],
-      });
+        caption: rng.pick(captions),
+        likes: [] as string[],
+        comments: [] as import('../types/game').MomentComment[],
+      };
+      s.moments.push(post);
       if (s.moments.length > MOMENTS_CAP) s.moments.splice(0, s.moments.length - MOMENTS_CAP);
       s.profile.selfieId = action.selfieId;
       s.profile.selfieDay = s.day;
       log(s, 'flag', `你发了条朋友圈：${SELFIE_LABEL[action.selfieId] ?? '一张自拍'}。明早他们会来看的。`);
+      // v3.1：刚发的圈，此刻在线的人会立刻刷到——最多两个反应，朋友圈是活的。
+      // 起疑线同样生效（疑心重的人当场就会来翻）；hasReacted 保证不与早晨浪潮重复。
+      let instant = 0;
+      for (const t of s.targets) {
+        if (instant >= 2) break;
+        if (t.blocked || t.ended || !t.discoveredDay) continue;
+        const def = ALL_TARGET_MAP[t.targetId];
+        if (!def || hasReacted(post, t.targetId)) continue;
+        if (!rng.chance(0.3)) continue;
+        const suspicious = def.traits.includes('suspicious') || t.wariness >= 40;
+        applyMomentReaction(s, rng, post, t, def, suspicious);
+        instant += 1;
+      }
       return s;
     }
 

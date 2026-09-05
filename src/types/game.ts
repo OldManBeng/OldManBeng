@@ -80,6 +80,8 @@ export interface MomentPost {
   /** 点赞的人（targetId 列表；玩家的点赞记 'player'）。 */
   likes: string[];
   comments: MomentComment[];
+  /** v3.1：最近一次"早晨互动浪潮"扫过这条圈的日子（同一天不重复扫）。 */
+  lastWaveDay?: number;
 }
 
 /** 钱包流水（每一笔钱的进出都记账）。 */

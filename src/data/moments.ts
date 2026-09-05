@@ -1,4 +1,4 @@
-import type { SelfieId } from '../types/game';
+import type { SelfieId, MomentPost } from '../types/game';
 import type { Target } from '../types/target';
 
 /**
@@ -71,38 +71,91 @@ export function targetMomentPosts(targetId: string): { photoId: string; captions
     square_dancer: MOMENT_TARGET_POSTS[13],
     designated_driver: MOMENT_TARGET_POSTS[14],
   };
-  return [arch.night_guard, arch.fisherman, arch.chess_uncle, arch.square, arch.roadside];
+  return [arch.night_guard, arch.fisherman, arch.chess_uncle, arch.square_dancer, arch.designated_driver];
 }
 
 type Need = Target['need'];
 
-/** 老头评论你朋友圈的常规话术（按情感缺口分档，每种 4 条）。 */
+/** 老头评论你朋友圈的常规话术（按情感缺口分档）——比点赞走心。 */
 export const MOMENT_REACTIONS: Record<Need, string[]> = {
   daughter_figure: [
     '丫头，这是在哪拍的？一个人要注意安全。饭要按时吃。',
     '看到你在外面跑，我就想起我带的学生。天冷了加衣服。',
     '评论一个"好"字容易，我想说的话评论框装不下。',
     '丫头真会过日子。比我强——我这周吃的全是食堂。',
+    '发了照片也不说一声。叔这边看着就行。',
+    '拍得随性。日子就该这么过。',
   ],
   listened_to: [
     '照片我看了三遍。第 N 遍的时候，收音机里正好在放老歌。',
     '今晚就到这里。看到你的圈，今天就还算是好日子。',
     '我不太会评论。就是想说一句：今天有人看见你了。',
     '这条我截图存了。别问为什么，问就是手机相册太空。',
+    '看你的朋友圈，像听收音机。不用回话，声音在就行。',
+    '你的圈子，叔也算一个看客吧。挺好的。',
   ],
   desired: [
     '这张不错。下次发圈，先想想给谁看。',
     '你最近的照片越来越会拍了。谁教的？',
     '配文有点丧。改天带你去个不丧的地方。',
     '点赞点了三次，手机卡了两次。',
+    '这张比上张强。继续保持。',
+    '行，这条够气派。不愧是我看重的人。',
   ],
   respected: [
     '照片构图工整，光影尚可。配文情绪稳定。综合：优。',
     '已阅。保存。此操作犹豫了四十秒。',
     '记录生活是好习惯。数据留存要五十年起步。',
     '照片没问题。建议：下次加个时间水印。',
+    '已阅。构图较上张提升约 12%。继续。',
+    '内容健康，情绪稳定。转发就不必了。',
   ],
 };
+
+/** v3.1：照片专属评论——他评的是这张照片本身，不是泛泛的寒暄。
+ *  45% 概率优先从这里抽，剩下的落回按情感缺口的常规池。 */
+export const SELFIE_REACTIONS: Record<SelfieId, string[]> = {
+  cake: [
+    '又是自己给自己买的蛋糕？傻丫头。',
+    '奶油的。少吃点甜的，对胃不好。（叔说完了，该吃吃。）',
+  ],
+  gym: [
+    '夜跑是好，就是别跑得太晚。',
+    '五公里？叔年轻时候能跑十公里。（不信你问叔的老腰。）',
+  ],
+  pool: [
+    '游泳好。不伤膝盖。',
+    '这地方不便宜吧？你们年轻人是真会玩。',
+  ],
+  cat: [
+    '这猫有福气，遇上你了。',
+    '橘猫能吃。你养得起吗？（叔养过，深有体会。）',
+  ],
+  grind: [
+    '这个点还亮着灯？老板给你加班费吗。',
+    '别学叔。叔的腰，就是年轻时候这么熬坏的。',
+  ],
+  travel: [
+    '山里信号不好。别让叔找不着你。',
+    '替叔看看那座山。叔这辈子没出过省。',
+  ],
+  boba: [
+    '三分糖是对的。全糖太腻。',
+    '这一杯=叔半天的烟钱。叔戒了，你替叔喝。',
+  ],
+  sick: [
+    '输液？严不严重？怎么不吱一声。',
+    '一个人输液不行，得有人看着。叔隔空看着呢。',
+  ],
+};
+
+/** 这个人是否已经对这条圈互动过（点赞或评论过）——每人每条圈只互动一次。 */
+export function hasReacted(post: MomentPost, targetId: string): boolean {
+  return (
+    post.likes.includes(targetId) ||
+    post.comments.some((c) => c.by === 'target' && c.targetId === targetId)
+  );
+}
 
 /** 怀疑线——疑心重的老头（suspicious trait 或警惕 ≥ 40）看到你朋友圈的反应。 */
 export const MOMENT_SUSPICION: string[] = [

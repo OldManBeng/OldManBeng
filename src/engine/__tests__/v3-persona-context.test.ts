@@ -198,3 +198,60 @@ describe('v3.1: 「新的一天」简报生命周期', () => {
     expect(s.briefingDay).toBe(0);
   });
 });
+
+describe('v3.1: 朋友圈互动——他给你点赞/评论', () => {
+  const postAt = (s: GameState) => [...s.moments].reverse().find((m) => m.author === 'player')!;
+  const interactors = (p: ReturnType<typeof postAt>) => [
+    ...p.likes,
+    ...p.comments.filter((c) => c.by === 'target').map((c) => c.targetId ?? ''),
+  ];
+
+  it('刚发的圈当场就可能收到点赞或评论（即时反应）', () => {
+    let sawReaction = false;
+    for (let seed = 400; seed < 440 && !sawReaction; seed++) {
+      let s = fresh(seed, 'wise_sister');
+      s = dispatch(s, { type: 'dismiss_briefing' });
+      s = dispatch(s, { type: 'post_moment', selfieId: 'cat' });
+      const post = postAt(s);
+      if (interactors(post).length > 0) {
+        sawReaction = true;
+        const ids = interactors(post);
+        expect(new Set(ids).size).toBe(ids.length); // 每人每条圈只互动一次
+      }
+    }
+    expect(sawReaction).toBe(true); // 5 个已认识对象 × 0.3，40 个种子必中
+  });
+
+  it('没聊过天的人也会来互动（加了微信就看得见你的圈）', () => {
+    let sawReaction = false;
+    for (let seed = 500; seed < 560 && !sawReaction; seed++) {
+      let s = fresh(seed, 'wise_sister');
+      s = dispatch(s, { type: 'dismiss_briefing' });
+      // 只发圈，不开任何一场聊天——早晨浪潮仍应有人来
+      s = dispatch(s, { type: 'post_moment', selfieId: 'gym' });
+      s = dispatch(s, { type: 'sleep' });
+      if (interactors(postAt(s)).length > 0) sawReaction = true;
+    }
+    expect(sawReaction).toBe(true);
+  });
+
+  it('同一条圈发酵三天：不同的人陆续来互动', () => {
+    let sawGrowth = false;
+    for (let seed = 600; seed < 640 && !sawGrowth; seed++) {
+      let s = fresh(seed, 'wise_sister');
+      s = dispatch(s, { type: 'dismiss_briefing' });
+      s = dispatch(s, { type: 'post_moment', selfieId: 'boba' });
+      const count = (x: GameState) => {
+        const p = postAt(x);
+        return p.likes.length + p.comments.filter((c) => c.by === 'target').length;
+      };
+      const c0 = count(s);
+      s = dispatch(s, { type: 'sleep' });
+      const c1 = count(s);
+      s = dispatch(s, { type: 'sleep' });
+      const c2 = count(s);
+      if (c2 > c0 && c2 > c1) sawGrowth = true; // 第三天还有人陆续来
+    }
+    expect(sawGrowth).toBe(true);
+  });
+});
