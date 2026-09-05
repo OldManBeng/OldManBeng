@@ -255,3 +255,42 @@ describe('v3.1: 朋友圈互动——他给你点赞/评论', () => {
     expect(sawGrowth).toBe(true);
   });
 });
+
+describe('v3.2: 人设专属开场白', () => {
+  it('御姐和学妹听到的老李第一句话，来自各自的人设池', () => {
+    const seen = (personaId: PersonaId, seed: number) => {
+      let s = fresh(seed, personaId);
+      const tl = s.targets.find((x) => x.targetId === 'lao_li')!;
+      tl.wariness = 5;
+      tl.trust = 10;
+      s = nightChat(s, 'lao_li');
+      return s.chat!.transcript[1].text;
+    };
+    let ffHit = 0;
+    let sdHit = 0;
+    for (let seed = 700; seed < 750; seed++) {
+      if (LAO_LI_LINES.greet_ff.includes(seen('femme_fatale', seed))) ffHit += 1;
+      if (LAO_LI_LINES.greet_sd.includes(seen('sweet_daughter', seed))) sdHit += 1;
+    }
+    console.log(`人设开场白命中率：ff ${ffHit}/50，sd ${sdHit}/50（期望 ~55%）`);
+    expect(ffHit).toBeGreaterThan(5);
+    expect(sdHit).toBeGreaterThan(5);
+  });
+
+  it('进场白跨场去重：同一句"想你了"不连着来', () => {
+    const run = (seed: number) => {
+      let s = fresh(seed, 'wise_sister');
+      s = dispatch(s, { type: 'dismiss_briefing' });
+      const tl = s.targets.find((x) => x.targetId === 'lao_li')!;
+      tl.daysSilent = 3; // 断联的人憋不住——第二天大概率来找
+      s = dispatch(s, { type: 'sleep' });
+      return s.incoming.filter((m) => m.targetId === 'lao_li').map((m) => m.opener);
+    };
+    const dup = [700, 701, 702].some((seed) => {
+      const a = run(seed);
+      const b = run(seed);
+      return a.length >= 2 && a[0] === a[1];
+    });
+    expect(dup).toBe(false); // 去重窗口内不会自我重复
+  });
+});

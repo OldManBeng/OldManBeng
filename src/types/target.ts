@@ -146,6 +146,8 @@ export interface TargetState {
   recentGreetingIdx: number;
   /** v3.0：最近说过的开场白原文（近 3 条去重，跨档位生效）。 */
   recentGreetings?: string[];
+  /** v3.2：最近收到的"他来找你"原文（跨场去重，同一句想念不连发）。 */
+  recentIncoming?: string[];
   /** v3.0：上一场闲聊的话题标签——下一晚可能"接昨天的话"（语境连续性）。 */
   lastTopic?: string;
   /** v2.2：上一场他发过的照片下标——连发两张不重复（-1 = 无记录）。 */

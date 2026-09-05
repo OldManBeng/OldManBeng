@@ -150,9 +150,9 @@ function fillProfileVars(text: string, s: GameState): string {
 }
 
 /** v2.1：选话术组——去重窗口随库扩容：池子越大，近期不再重复的套数越多。
- *  10 套（旧库）窗口 3；60 套（主五人 v2.1）窗口 8——玩家连续 8 晚不见同一套话术。 */
+ *  10 套（旧库）窗口 3；60 套（主五人 v2.1）窗口 10——玩家连续 10 晚不见同一套话术。 */
 function recentPackWindow(packs: import('../types/script').ChatPack[]): number {
-  return Math.max(3, Math.min(8, Math.floor(packs.length / 4)));
+  return Math.max(3, Math.min(10, Math.floor(packs.length / 4)));
 }
 
 /** v2.1：台词池去重抽取——避开上一次选中的下标，连聊两晚不再同一句开场白。
@@ -522,8 +522,8 @@ function runMorning(state: GameState) {
         targetId: t.targetId,
         day: state.day,
         reason,
-        // 收件箱卡片直出原文（不再过 fillProfileVars），占位符必须在生成时就填好。
-        opener: fillProfileVars(rng.pick(pool), state),
+        // v3.2：进场白也跨场去重——同一句"就是想你了"不连着来。
+        opener: fillProfileVars(pickFreshLine(rng, pool, '（他发来一条消息。）', t.recentIncoming ?? (t.recentIncoming = [])), state),
         stamp: nightStamp(def.activeHour, rng.int(0, 25)),
       });
       t.pingedToday = true;
@@ -948,7 +948,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       const lines = scriptFor(t.targetId).lines;
       // v2.0：亲和结算——profile 性格/年龄 × 他的原型/缺口，先漂移再选话术。
       applyAffinity(s, t, def);
-      // v2.0：话术优先级 = 剧情节点 > 闲聊组（10套，去重轮换）> 空闲节点 > 两句话。
+      // v3.0：话术优先级 = 剧情节点 > 闲聊组（60套，去重轮换）> 空闲节点 > 两句话。
       // 老头库目标没有剧情链，直接走话术组。
       const chainNode = t.discoveredDay === 1 ? pickChainNode(s, def, t) : null;
       const prevTopic = t.lastTopic; // v3.0：pickPack 会覆盖 lastTopic，先留住昨晚的
@@ -960,15 +960,20 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       s.rngSeed = (s.rngSeed * 1664525 + 1013904223) >>> 0;
       const phaseLabel = def.activeHour >= 6 && def.activeHour <= 12 ? '上午' : '深夜';
       transcript.push({ speaker: 'system' as const, text: `和 ${def.name} 的${phaseLabel}对话`, stamp: nightStamp(def.activeHour, 0) });
+      // 近 3 条开场白原文去重（问候/警示/断联共用一个"最近说过"列表，谁说过谁让路）。
+      const recent = t.recentGreetings ?? (t.recentGreetings = []);
       if (t.wariness >= 50 && t.timesPaid > 0) {
-        transcript.push({ speaker: 'target' as const, text: pickVaryLine(rng, lines.wariness_high, '（他回得越来越慢。）', { val: -1 }), stamp: nightStamp(def.activeHour, 2) });
+        transcript.push({ speaker: 'target' as const, text: fillProfileVars(pickFreshLine(rng, lines.wariness_high, '（他回得越来越慢。）', recent), s), stamp: nightStamp(def.activeHour, 2) });
       } else if (t.daysSilent >= 3) {
-        transcript.push({ speaker: 'target' as const, text: pickVaryLine(rng, lines.silent_warning, '（他安静了很多天。）', { val: -1 }), stamp: nightStamp(def.activeHour, 1) });
+        transcript.push({ speaker: 'target' as const, text: fillProfileVars(pickFreshLine(rng, lines.silent_warning, '（他安静了很多天。）', recent), s), stamp: nightStamp(def.activeHour, 1) });
       } else {
-        // v3.0：信任够深换 greeting_close 池（关系深了，语气就变了）；近 3 条原文去重。
-        const recent = t.recentGreetings ?? (t.recentGreetings = []);
-        const closePool = t.trust >= GREETING_CLOSE_TRUST && lines.greeting_close?.length ? lines.greeting_close : lines.greeting;
-        const greeting = fillProfileVars(pickFreshLine(rng, closePool, '（他来了。）', recent), s);
+        // v3.2：人设专属开场白优先——他开口第一句就带着"你是谁"的印记
+        // （55% 走人设池，其余按关系深浅走 greeting_close / 通用池，保底多样性）。
+        const short = s.personaId === 'femme_fatale' ? 'ff' : s.personaId === 'sweet_daughter' ? 'sd' : s.personaId === 'wise_sister' ? 'ws' : 'art';
+        const personaPool = lines[`greet_${short}`];
+        let pool = t.trust >= GREETING_CLOSE_TRUST && lines.greeting_close?.length ? lines.greeting_close : lines.greeting;
+        if (personaPool?.length && rng.chance(0.55)) pool = personaPool;
+        const greeting = fillProfileVars(pickFreshLine(rng, pool, '（他来了。）', recent), s);
         transcript.push({ speaker: 'target' as const, text: greeting, stamp: nightStamp(def.activeHour, 1) });
       }
       // v3.0 语境连续性：昨晚聊过带话题标签的闲聊，今晚有概率先"接昨天的话"。

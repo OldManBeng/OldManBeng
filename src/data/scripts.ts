@@ -463,7 +463,10 @@ export const LAO_LI_FREE: FreeNode[] = [
     options: [
       { text: '「那我以后少烦你」', style: 'caring', trust: -2, replies: ['不是那个意思！', '（他打字都急了）我就随口一算。你爱发，我爱听。'] },
       { text: '「李叔，我给你充话费吧」', style: 'sweet', trust: 6, wariness: -3, conscience: 3, replies: ['不用不用。', '（他真的不要。这个人的钱，他只肯往外掏。）'] },
-      { text: '（要红包）「那叔叔请我喝奶茶呀，都聊这么久」', style: 'sweet', trust: -2, wariness: 5, isAsk: true, replies: [] },
+      { text: '（要红包）「那叔叔请我喝奶茶呀，都聊这么久」', personaText: {
+        sweet_daughter: '（要红包）「叔叔~都聊这么久了，请我喝杯奶茶嘛~」',
+        wise_sister: '（要红包）「李叔，姐很少开口——一杯奶茶，你请。」',
+      }, style: 'sweet', trust: -2, wariness: 5, isAsk: true, replies: [] },
     ],
   },
 ];

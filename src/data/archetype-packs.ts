@@ -586,34 +586,29 @@ for (const packs of Object.values(ARCHETYPE_PACKS)) {
 /** 接昨天的话（{topic} 由引擎填上昨晚的话题标签）。 */
 const ARCHETYPE_RECALL: Record<string, string[]> = {
   night_guard: [
-    '先说{topic}。昨晚巡逻路过，多看了两眼。',
-    '（交接班记事本翻开）昨晚的事项里有{topic}。跟你同步一下。',
-    '{topic}——这事我搁心里一晚上了。得跟你说说。',
-    '上岗第一件事就是想跟你讲{topic}。结果你还没上线。',
+    '{topic}——昨晚巡逻时想了一遍。夜里的事，天亮就该放下。',
+    '交接班记事本里，{topic}后面画了个句号。',
+    '{topic}这事，我跟交班的兄弟提了一句。说了，就算过去了。',
   ],
   designated_driver: [
-    '（电动车支好，先发一句）昨晚{topic}有后续。你想不想听。',
-    '{topic}——收工路上我想了一路。得跟你汇报。',
-    '今天等单的时候想起{topic}。等单的时间全是想事的时间。',
-    '先不说睡了没。先说{topic}。说完你再睡。',
+    '{topic}——收工路上想明白了。送到了，就是好事。',
+    '昨晚{topic}之后，我多睡了两个小时。跟你说一声。',
+    '{topic}这事翻篇了。翻篇也是本事。',
   ],
   fisherman: [
-    '（水边坐定，第一件事）跟你说{topic}。昨晚到今早，一直惦记。',
-    '{topic}——鱼没开口，我先跟你开了口。',
-    '今天打窝的时候想起{topic}。水边安静，人就想跟你说话。',
-    '补一句昨天的{topic}。钓友之间没有过夜的事——你算钓友吧。',
+    '{topic}——跟鱼一样，咬不咬钩都有它的道理。放下了。',
+    '昨晚{topic}之后，今早打窝格外顺手。心静了。',
+    '{topic}这事，我想了半天，最后想明白：想它干嘛。',
   ],
   chess_uncle: [
-    '（棋摊还没支起来，先发消息）先说{topic}。这个比棋急。',
-    '{topic}——昨天下棋的时候老走神，就是想着这事。',
-    '上午好。{topic}有下文了。你要先问，我才好讲。',
-    '昨天那盘棋输赢不记得了，{topic}倒记得清楚。',
+    '{topic}——昨天下棋时想通了。棋如人生，悔不得。',
+    '{topic}这事我记在本子上了。记下了，就不惦记了。',
+    '上午摆残局的时候想起{topic}。想通了，棋都顺了。',
   ],
   square_dancer: [
-    '（音响还没开机，先发）{topic}——昨晚跳舞都在想这个。',
-    '先说{topic}。队里没人懂，就你能懂。',
-    '早。昨晚收完音响，站着想了会儿{topic}。',
-    '{topic}这事，白天干活的空档全在想它。',
+    '{topic}——昨晚跳舞时想开了。曲子会停，日子不停。',
+    '{topic}这事翻篇了。领队说，会翻篇的人才跳得动。',
+    '收音响的时候想起{topic}。想通了，脚步都轻了。',
   ],
 };
 
@@ -652,9 +647,35 @@ const ARCHETYPE_GREETING_CLOSE: Record<string, string[]> = {
   ],
 };
 
+
+/** 拉黑/不再回复的收束台词——库人物也各有各的沉默方式。 */
+const ARCHETYPE_BLOCKED: Record<string, string[]> = {
+  night_guard: [
+    '（他把你删了。交接班记事本上，你的名字那行划得很轻。）',
+    '（监控还亮着。他没再看手机——手机那头的事，他按规矩办完了。）',
+  ],
+  designated_driver: [
+    '（他再没回过消息。城市很大，等单的人很多。）',
+    '（等单区老位置空了。他换了条街等。）',
+  ],
+  fisherman: [
+    '（水面很静。他没再发过浮漂的照片。）',
+    '（鱼护空着。他也不解释了。）',
+  ],
+  chess_uncle: [
+    '（棋摊上还留着你的位置。但他不往这边看了。）',
+    '（他把记着你的那页从本子上撕了。撕得很整齐。）',
+  ],
+  square_dancer: [
+    '（音响还响着。队伍里少了一个看你消息的人。）',
+    '（他退到了队尾。队尾的人不看手机。）',
+  ],
+};
+
 for (const key of Object.keys(ARCHETYPE_LINES) as TargetArchetype[]) {
   const lines = ARCHETYPE_LINES[key];
   if (!lines) continue;
   if (ARCHETYPE_RECALL[key]) lines.recall = ARCHETYPE_RECALL[key];
   if (ARCHETYPE_GREETING_CLOSE[key]) lines.greeting_close = ARCHETYPE_GREETING_CLOSE[key];
+  if (ARCHETYPE_BLOCKED[key]) lines.blocked = ARCHETYPE_BLOCKED[key];
 }
