@@ -251,6 +251,71 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
     ],
     next: '',
   },
+
+  // ---- v3.0 人设专属支线 ----
+  // 御姐线：车库里那支烟烧到了手指——他第一次说漏了嘴。
+  c_wang_ff: {
+    id: 'c_wang_ff',
+    onlyPersona: ['femme_fatale'],
+    minTrust: 58,
+    openers: [
+      '（02:35）领导，睡了没。没睡最好。',
+      '今天库尔勒的客户问我：王总你天天乐呵呵的，图啥。',
+      '我说图个稳。其实我想说——我图的那个人，还没醒。这话我说不出来。跟你说说。',
+    ],
+    options: [
+      {
+        text: '「哥，那就图到底。姐姐我等着你那句图啥的下文」',
+        personaText: {
+          femme_fatale: '「哥，接着图。姐姐我听着——你这话，比酒醒得好。」',
+        },
+        style: 'flirty',
+        trust: 10,
+        numbness: 5,
+        replies: ['（他抽完了一整根烟，没说话。）', '（然后他发来一句：领导，你可别把我这个人，越哄越不像话。）', '（他说完这句，车库的灯灭得比平时早。他上楼了。）'],
+      },
+      {
+        text: '「图啥不重要，重要的是今晚这四十分钟是你的」',
+        style: 'caring',
+        trust: 8,
+        conscience: 2,
+        replies: ['（他把这句截图了。）', '（配发一句：领导，四十分钟——你记得比我老婆都清楚。）'],
+      },
+    ],
+    next: '',
+  },
+  // 学妹线：他不敢给老婆买贵的东西——让她替他挑，是他在这个世界上最大胆的任性。
+  c_wang_gu: {
+    id: 'c_wang_gu',
+    onlyPersona: ['sweet_daughter'],
+    minTrust: 58,
+    openers: [
+      '（01:50）领导，正经事。下个月，结婚纪念日。',
+      '我相中一条围巾，1300。不敢买。她看见了要说我乱花钱。',
+      '你说，是不是我这人，天生就不配对人好。',
+    ],
+    options: [
+      {
+        text: '「哥哥，买！发票剪掉，就说是店里样品打折」',
+        personaText: {
+          sweet_daughter: '「哥哥买嘛！发票剪掉就说是样品处理——这招跟你学的，你们打钱不都这么干」',
+        },
+        style: 'sweet',
+        trust: 10,
+        numbness: 4,
+        replies: ['（他真的买了。三十年来第一件"乱花钱"买的东西。）', '（他说：她围上那条围巾问我多少钱。我说，二百。她开心得像捡了钱。）', '（这话他说了三遍。像交了什么了不起的成绩。）'],
+      },
+      {
+        text: '「配她的不是围巾，是你敢递过去的那只手」',
+        style: 'caring',
+        trust: 8,
+        conscience: 3,
+        replies: ['（他没说话。发了一个"嗯"。）', '（那天他围巾买了，1300 原价。发票没剪。他说是他买的，她骂了他一顿，围了一晚上。）'],
+      },
+    ],
+    next: '',
+  },
+
 };
 
 export const WANG_FREE: FreeNode[] = [
@@ -261,7 +326,10 @@ export const WANG_FREE: FreeNode[] = [
     options: [
       { text: '「王总你是生意场上的扫地僧」', style: 'playful', trust: 7, replies: ['「哈哈哈哈扫地僧。」', '（他搜了扫地僧是谁。第二天回你:岂敢岂敢。）'] },
       { text: '「少喝点! 你的肝不是你自己的吗」', style: 'caring', trust: 8, replies: ['（他安静了一会儿。）', '「领导,全城就你管我酒量。」'] },
-      { text: '（要红包）「替你挡酒,得加鸡腿」', style: 'flirty', trust: -2, wariness: 4, isAsk: true, replies: [] },
+      { text: '（要红包）「替你挡酒,得加鸡腿」', personaText: {
+        femme_fatale: '（要红包）「哥,姐姐替你挡了六杯。你看着办。」',
+        sweet_daughter: '（要红包）「哥哥,我帮你挡酒了哦,奖励呢?」',
+      }, style: 'flirty', trust: -2, wariness: 4, isAsk: true, replies: [] },
     ],
   },
   {
@@ -286,6 +354,20 @@ export const WANG_FREE: FreeNode[] = [
 ];
 
 export const WANG_LINES: TargetScript['lines'] = {
+  recall: [
+    '领导，先说{topic}。这事儿我在心里搁了一天。',
+    '（车库里坐定，第一件事）昨晚的{topic}有后续。你猜猜。',
+    '今天应酬桌上想起{topic}，笑出声——他们问我笑啥。不能说。',
+    '{topic}这事我跟我那口子都没提过。先跟你说的。你掂量掂量这分量。',
+  ],
+  greeting_close: [
+    '（01:30）领导。车库灯坏了，今天修好了。就为这会儿亮着能给你发消息。',
+    '（01:05）今天不问"睡了没"了。你要睡早睡了。我直接说：想你了。',
+    '（02:15）推了一个应酬。这四十分钟是攒出来的——全给你。',
+    '（01:40）烟戒了一半。你那句"剩下一半自己疼自己"，我记着呢。',
+    '（01:20）你的语音条我存了三条。都听了。一条没舍得删。',
+  ],
+
   greeting: [
     '（01:22）车库。今天不冷。',
     '（02:05）领导还没睡?',

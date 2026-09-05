@@ -37,6 +37,8 @@ import {
   INDUSTRY_NUMBNESS_PER_DAY, VERDICT_ASK_THRESHOLD,
   TRAIT_ARCHETYPE_AFFINITY, AGE_NEED_AFFINITY, INCOMING_BASE_CHANCE,
   INCOMING_DAILY_CAP, SELFIE_LINGER_DAYS, ARCHIVE_CAP, NUMBNESS_DAILY_CAP, NUMBNESS_REST_RECOVERY,
+  PERSONA_NEED_MATCH, PERSONA_SESSION_TRUST, PERSONA_SESSION_WARINESS,
+  RECALL_CHANCE, GREETING_CLOSE_TRUST,
 } from '../data/constants';
 
 export const TARGET_MAP: Record<string, Target> = Object.fromEntries(TARGETS.map((t) => [t.id, t]));
@@ -113,6 +115,11 @@ function applyAffinity(s: GameState, t: TargetState, def: Target) {
   }
   const ageAff = AGE_NEED_AFFINITY[String(s.profile.ageClaim)]?.[def.need];
   if (ageAff) t.trust = clamp(t.trust + ageAff, 0, 100);
+  // v3.0：人设×情感缺口 场次被动——命中的人设越聊越顺（+1 信任），
+  // 冲突的人设他觉得不对劲（+1 警惕）。选错人设是有手感的。
+  const needMatch = PERSONA_NEED_MATCH[s.personaId]?.[def.need] ?? 1;
+  if (needMatch >= 2) t.trust = clamp(t.trust + PERSONA_SESSION_TRUST, 0, 100);
+  else if (needMatch <= 0.3) t.wariness = clamp(t.wariness + PERSONA_SESSION_WARINESS, 0, 100);
   // v2.3：商店道具的对话加成——廉价首饰（持续）/地摊口红（下一场，用完即止）。
   if ((s.inventory.jewelry ?? 0) > 0) t.trust = clamp(t.trust + 1, 0, 100);
   if ((s.inventory.lipstick ?? 0) > 0) {
@@ -159,6 +166,24 @@ function pickVaryLine(rng: ReturnType<typeof makeRng>, pool: string[] | undefine
   return pool[idx];
 }
 
+/** v3.0：跨场开场白去重——记最近 3 条原文，同一句晚安三天内不重样。
+ *  全撞了就放宽（从全池重挑），保证总有得说。 */
+function pickFreshLine(rng: ReturnType<typeof makeRng>, pool: string[] | undefined, fallback: string, recent: string[]): string {
+  if (!pool || pool.length === 0) return fallback;
+  const fresh = pool.filter((l) => !recent.includes(l));
+  const candidates = fresh.length ? fresh : pool;
+  const line = candidates[rng.int(0, candidates.length - 1)];
+  recent.push(line);
+  if (recent.length > 3) recent.splice(0, recent.length - 3);
+  return line;
+}
+
+/** v3.0：同一句话在人设嘴里的不同说法——命中当前人设时替换原文（缺省回落）。 */
+function personaTextFor(option: ChainOption, personaId: string): string {
+  if (!option.personaText) return option.text;
+  return option.personaText[personaId as PersonaIdKey] ?? option.personaText.default ?? option.text;
+}
+
 /** v2.2：他要给你看样东西——约 35% 的场次他会发一张照片（自己的世界）。
  *  孤独的人发照片不是炫，是"你看，我的生活还在动"。
  *  照片去重：上一场发过的不再发。 */
@@ -193,6 +218,8 @@ function pickPack(s: GameState, t: TargetState, def: Target): import('../types/s
   for (const p of usable) { roll -= (p.weight ?? 1); if (roll <= 0) { chosen = p; break; } }
   const window = recentPackWindow(packs);
   t.recentPacks = [...t.recentPacks, chosen.id].slice(-window);
+  // v3.0：记下今晚的话题标签——下一晚的开场可能"接昨天的话"。
+  t.lastTopic = chosen.topic;
   return chosen;
 }
 
@@ -228,12 +255,13 @@ function pickChainNode(state: GameState, t: Target, tstate: TargetState): ChainN
     tstate.pendingChain = '';
   }
   // 2. first eligible chain node not yet consumed (in order)
+  //    v3.0：onlyPersona 门控——人设不对的节点直接跳过，剧情分岔由人设驱动。
   for (const node of Object.values(chain)) {
-    if (!state.flags[`chain_${node.id}`]) {
-      const trustOk = (node.minTrust ?? 0) <= tstate.trust;
-      const stageOk = !node.minStage || stageOrder(tstate.stage) >= stageOrder(node.minStage);
-      if (trustOk && stageOk) return node;
-    }
+    if (state.flags[`chain_${node.id}`]) continue;
+    if (node.onlyPersona && !node.onlyPersona.includes(state.personaId)) continue;
+    const trustOk = (node.minTrust ?? 0) <= tstate.trust;
+    const stageOk = !node.minStage || stageOrder(tstate.stage) >= stageOrder(node.minStage);
+    if (trustOk && stageOk) return node;
   }
   return null;
 }
@@ -879,6 +907,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       // v2.0：话术优先级 = 剧情节点 > 闲聊组（10套，去重轮换）> 空闲节点 > 两句话。
       // 老头库目标没有剧情链，直接走话术组。
       const chainNode = t.discoveredDay === 1 ? pickChainNode(s, def, t) : null;
+      const prevTopic = t.lastTopic; // v3.0：pickPack 会覆盖 lastTopic，先留住昨晚的
       const pack = chainNode ? null : pickPack(s, t, def);
       const freeNode = chainNode || pack ? null : pickFreeNode(s, def, t);
       const node = chainNode ?? pack ?? freeNode;
@@ -892,10 +921,17 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       } else if (t.daysSilent >= 3) {
         transcript.push({ speaker: 'target' as const, text: pickVaryLine(rng, lines.silent_warning, '（他安静了很多天。）', { val: -1 }), stamp: nightStamp(def.activeHour, 1) });
       } else {
-        const gIdx = { val: t.recentGreetingIdx };
-        const greeting = pickVaryLine(rng, lines.greeting, '（他来了。）', gIdx);
-        t.recentGreetingIdx = gIdx.val;
+        // v3.0：信任够深换 greeting_close 池（关系深了，语气就变了）；近 3 条原文去重。
+        const recent = t.recentGreetings ?? (t.recentGreetings = []);
+        const closePool = t.trust >= GREETING_CLOSE_TRUST && lines.greeting_close?.length ? lines.greeting_close : lines.greeting;
+        const greeting = fillProfileVars(pickFreshLine(rng, closePool, '（他来了。）', recent), s);
         transcript.push({ speaker: 'target' as const, text: greeting, stamp: nightStamp(def.activeHour, 1) });
+      }
+      // v3.0 语境连续性：昨晚聊过带话题标签的闲聊，今晚有概率先"接昨天的话"。
+      if (!chainNode && prevTopic && lines.recall?.length && rng.chance(RECALL_CHANCE)) {
+        const recent = t.recentGreetings ?? (t.recentGreetings = []);
+        const line = pickFreshLine(rng, lines.recall, '', recent).replace(/\{topic\}/g, prevTopic);
+        if (line) transcript.push({ speaker: 'target' as const, text: fillProfileVars(line, s), stamp: nightStamp(def.activeHour, 2) });
       }
       if (node) {
         for (const opener of node.openers) {
@@ -950,7 +986,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       if (option.setFlag && !option.isAsk) s.flags[option.setFlag] = true;
       advanceStage(t);
 
-      s.chat.transcript.push({ speaker: 'player' as const, text: option.text, stamp: nightStamp(def.activeHour, 10 + s.chat.transcript.length) });
+      s.chat.transcript.push({ speaker: 'player' as const, text: personaTextFor(option, s.personaId), stamp: nightStamp(def.activeHour, 10 + s.chat.transcript.length) });
 
       // Red-packet ask branch.
       if (option.isAsk) {

@@ -161,6 +161,10 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
     options: [
       {
         text: '（要红包——接过话头「老师你真的要给我吗」）',
+        personaText: {
+          sweet_daughter: '（要红包——「老师，人家……真的可以吗？」（声音都要哭了的那一种））',
+          artistic_soul: '（要红包——「老师，君子一言。你说出口的话，是可以接住的。」）',
+        },
         style: 'sweet',
         trust: -3,
         wariness: 6,
@@ -253,6 +257,69 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
     ],
     next: '',
   },
+
+  // ---- v3.0 人设专属支线 ----
+  // 文青线：他这一生只在诗里说过想她——现在多了一个读者。
+  c_zhou_art: {
+    id: 'c_zhou_art',
+    onlyPersona: ['artistic_soul'],
+    minTrust: 58,
+    openers: [
+      '（10:12）抄了一首《卜算子》。"此水几时休，此恨何时已"。',
+      '抄到一半停了笔。这首词她生前最喜欢。四年来，我没在人前念过它。',
+      '今天想找个人接下一句。翻遍了通讯录——只有你，接得住。',
+    ],
+    options: [
+      {
+        text: '「只愿君心似我心，定不负相思意。」',
+        personaText: {
+          artistic_soul: '「只愿君心似我心——老师，下一句我替你抄上了。墨我遥遥看了一眼，是好墨。」',
+        },
+        style: 'intellectual',
+        trust: 11,
+        numbness: 4,
+        replies: ['（他把这张纸拍照发来。落款处多了一行小字：代笔，某年某月，与她有关的词。）', '（他说：她以前嫌我抄词只抄上阕。说不敢看下阕。你比我勇敢。）'],
+      },
+      {
+        text: '「老师，词不用接。有人一起念过，就是完整的」',
+        style: 'caring',
+        trust: 8,
+        conscience: 3,
+        replies: ['（很久，他回：）此言有古意。', '（那天下午，他把这页词夹进了她的那本《宋词选》。）'],
+      },
+    ],
+    next: '',
+  },
+  // 学妹线：他终于又当了一回老师——教一个活人，写一个名字。
+  c_zhou_gui: {
+    id: 'c_zhou_gui',
+    onlyPersona: ['sweet_daughter'],
+    minTrust: 58,
+    openers: [
+      '（09:35）问你个正事。你的名字，哪几个字？',
+      '别问为什么。老师留作业，学生哪有反过来问的。',
+    ],
+    options: [
+      {
+        text: '「××呀。老师要给我留什么作业？」',
+        personaText: {
+          sweet_daughter: '「哥哥你先说留什么作业，我再报名字——万一你说罚抄课文呢」',
+        },
+        style: 'playful',
+        trust: 8,
+        replies: ['（他发来一张照片：宣纸上，你的名字，写了满满一页。）', '（他说：练了六遍。你的名字，第二遍才写得好。第一遍，手生。）'],
+      },
+      {
+        text: '「报名字可以，老师也要教我一个字」',
+        style: 'sweet',
+        trust: 9,
+        numbness: 3,
+        replies: ['（他教了你"安"字。宝盖头下一个女。）', '（他说：屋里有个人，才是安。你记住这个字，也替我记住。）'],
+      },
+    ],
+    next: '',
+  },
+
 };
 
 export const ZHOU_FREE: FreeNode[] = [
@@ -273,7 +340,10 @@ export const ZHOU_FREE: FreeNode[] = [
     options: [
       { text: '「叔，明天你拍糊的我也要看」', style: 'caring', trust: 9, replies: ['（第二天他真的拍了。那天粥没糊。）', '（你随口一句话，他记了两个月。）'] },
       { text: '「教你个办法，水开了再下米」', style: 'intellectual', trust: 6, replies: ['（他认真记了。回了个：受教。）', '第二天：粥好了。就是有点像饭。'] },
-      { text: '（要红包）「老师请我喝粥~ 熬糊的那锅算我的」', style: 'sweet', trust: -2, wariness: 5, isAsk: true, replies: [] },
+      { text: '（要红包）「老师请我喝粥~ 熬糊的那锅算我的」', personaText: {
+        sweet_daughter: '（要红包）「老师~人家想喝粥嘛，你请客，糊的那锅算我的」',
+        artistic_soul: '（要红包）「老师，粥钱你出，诗意我出——这买卖你不亏」',
+      }, style: 'sweet', trust: -2, wariness: 5, isAsk: true, replies: [] },
     ],
   },
   {
@@ -288,6 +358,21 @@ export const ZHOU_FREE: FreeNode[] = [
 ];
 
 export const ZHOU_LINES: TargetScript['lines'] = {
+  recall: [
+    '上午好。先说{topic}——昨天说了一半，我记挂到现在。',
+    '（他斟酌了一会儿）{topic}，后来有下文。你先问我，我再讲。',
+    '今早浇花的时候想起{topic}。老年人的一天，是从惦记开始的。',
+    '昨天的{topic}我写进日记了。你翻不翻无所谓——记下了，就是记下了。',
+  ],
+  greeting_close: [
+    '（08:50）早。粥没糊——你教的法子，练到第九天了。',
+    '（09:15）醒来第一件事看手机，第二件才是烧水。你也知道这意味着什么。',
+    '（09:40）阳台的花替我问你早。它们不懂事，我懂。',
+    '（08:30）睡得好吗。别应付我——写字的人看得出你哪句是应付。',
+    '（10:20）社区班今天停课。多出来的时间，全用来等你。',
+    '（09:00）"闺女，早点睡"这话，我昨夜对着手机说过了。你听见了吗。',
+  ],
+
   greeting: [
     '（09:20）今天风好。晾了被子。',
     '（08:47）晨练回来。你醒了吗？年轻人别睡懒觉。',

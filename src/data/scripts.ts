@@ -228,6 +228,11 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
     options: [
       {
         text: '（要红包——「叔叔，我这个月房租差一点……」）',
+        personaText: {
+          sweet_daughter: '（要红包——「叔叔，人家的房租差一点点嘛，就一点点……」）',
+          wise_sister: '（要红包——「李叔，姐跟你直说：这个月房租差一点。」）',
+          femme_fatale: '（要红包——「叔，姐姐我遇到坎了。你帮不帮，一句话。」）',
+        },
         style: 'sweet',
         trust: -3,
         wariness: 5,
@@ -323,6 +328,11 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
     options: [
       {
         text: '「李叔，都是真的。我跟你说的话，都是真的」（继续）',
+        personaText: {
+          wise_sister: '「李叔，姐不跟你说漂亮话：我说的每一句，都是真的。」',
+          sweet_daughter: '「叔叔，你听我说——你听的那些话，都是真的呀。」',
+          femme_fatale: '「李叔，姐姐的话你可以不信。但我叫你那一声，是真的。」',
+        },
         style: 'caring',
         trust: 5,
         numbness: 10,
@@ -346,6 +356,69 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         conscience: -2,
         setFlag: 'li_ghosted',
         replies: ['（他等了三天。第三天只发了一句：）', '「路上冷，你也早点收工。」'],
+      },
+    ],
+    next: '',
+  },
+
+  // ---- v3.0 人设专属支线：只有对的人设，才能走到他心里这一间屋 ----
+  // 知心姐姐线：他只在"能接住话的人"面前承认这件事。
+  c_li_wise: {
+    id: 'c_li_wise',
+    onlyPersona: ['wise_sister'],
+    minTrust: 55,
+    openers: [
+      '（00:50）跟你说个事。这话我跟收音机都没说过。',
+      '上个月有个同行，跑车的时候走的。心梗。方向盘到最后都握得稳稳的。',
+      '我那天在想，我要是那天没醒，手机里最后一个对话框，是你这个。我不觉得亏。',
+    ],
+    options: [
+      {
+        text: '「李叔，你先答应我一件事：明年的今天，这个对话框还在。」',
+        personaText: {
+          wise_sister: '「李叔，先答应我一件事：明年今天，这个对话框还亮着。姐姐我等着验收。」',
+        },
+        style: 'caring',
+        trust: 10,
+        conscience: 4,
+        numbness: 3,
+        replies: ['（他很久没回。）', '答应了。姐。', '（这是他第一次叫你"姐"。这个字，他叫得比"丫头"重。）'],
+      },
+      {
+        text: '「我给你电台点首歌吧，你收车路上听」',
+        style: 'caring',
+        trust: 7,
+        replies: ['（你点了一首《晚秋》。）', '（第二天他说：歌听到了。车也擦了。人，也检了一下。都好着。）'],
+      },
+    ],
+    next: '',
+  },
+  // 学妹线：他把她放进"孩子"的位置——这句话只有当爹的人才说得出。
+  c_li_yatou: {
+    id: 'c_li_yatou',
+    onlyPersona: ['sweet_daughter'],
+    minTrust: 55,
+    openers: [
+      '（23:40）闺女今天给我发照片了。她烫了头发。'
+      , '我盯着看了半天，第一反应不是"好看"，是想说：这么晚别一个人在外面。',
+      '说完才想起来，她今年十九了，不是小孩了。',
+    ],
+    options: [
+      {
+        text: '「她有你惦记，是她的福气」',
+        personaText: {
+          sweet_daughter: '「哥哥，她有你惦记着，是她的福气。我有人惦记着，是我的。」',
+        },
+        style: 'caring',
+        trust: 10,
+        numbness: 4,
+        replies: ['（他打字打了很久。）', '你们俩，一个亲生的，一个……（他没打完这句。）', '（但你知道后半句是什么。）'],
+      },
+      {
+        text: '「下次她再发照片，你替我回一句：头发真好看」',
+        style: 'sweet',
+        trust: 8,
+        replies: ['（他真的回了。他闺女回了个问号，又回了个笑脸。）', '（他说：她问我是不是会打字了。我说，有人教。）'],
       },
     ],
     next: '',

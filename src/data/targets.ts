@@ -29,7 +29,7 @@ export const TARGETS: Target[] = [
       glasses: 0,
       beard: 1,
       cheeks: 0.55,
-      shirtColor: '#4a5d6e',
+      shirtColor: '#4a5d6e', skin: 2, brow: 1,
       bgScene: 'night_road',
       accessory: 'steering_wheel',
       accent: '#4a5d6e',
@@ -59,7 +59,7 @@ export const TARGETS: Target[] = [
       glasses: 1, // square
       beard: 0,
       cheeks: 0.3,
-      shirtColor: '#7a6f5f',
+      shirtColor: '#7a6f5f', skin: 0, brow: 0,
       bgScene: 'study',
       accessory: 'calligraphy_brush',
       accent: '#7a6f5f',
@@ -89,7 +89,7 @@ export const TARGETS: Target[] = [
       glasses: 0,
       beard: 0,
       cheeks: 0.8, // well-fed
-      shirtColor: '#8a4a3a',
+      shirtColor: '#8a4a3a', skin: 1, brow: 1,
       bgScene: 'garage',
       accessory: 'cigarette',
       accent: '#8a4a3a',
@@ -119,7 +119,7 @@ export const TARGETS: Target[] = [
       glasses: 0,
       beard: 2, // light stubble
       cheeks: 0.4,
-      shirtColor: '#3d6b5e',
+      shirtColor: '#3d6b5e', skin: 0, brow: 0,
       bgScene: 'internet_cafe',
       accessory: 'gamepad',
       accent: '#3d6b5e',
@@ -149,7 +149,7 @@ export const TARGETS: Target[] = [
       glasses: 1, // square
       beard: 0,
       cheeks: 0.35,
-      shirtColor: '#5a6d7a',
+      shirtColor: '#5a6d7a', skin: 1, brow: 0,
       bgScene: 'balcony',
       accessory: 'wrench',
       accent: '#5a6d7a',

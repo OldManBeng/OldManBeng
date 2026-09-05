@@ -544,3 +544,117 @@ export const ARCHETYPE_LINES: Partial<Record<TargetArchetype, DialogueContextMap
     ],
   },
 };
+
+/** ---------------------------------------------------------------------------
+ * v3.0 语境连续性层（库人物）：
+ *  1) 话题标签——昨晚聊过的话题，今晚他可能"接昨天的话"（recall 池 + {topic} 填充）。
+ *  2) recall / greeting_close 池——与主五人同构，库老头不再是每晚从零开始的人。
+ * ------------------------------------------------------------------------- */
+const ARCHETYPE_PACK_TOPICS: Record<string, string> = {
+  g_patrol: '3 楼那盏加班的灯', g_health: '那篇"毁胃早餐"的文章', g_monitor: '那两个发传单的',
+  g_breakfast: '你那个吃了十一年的早点摊', g_weather: '那场把对讲机下进水的雨', g_kettle: '你那个磕了瓷的搪瓷缸',
+  g_radio: '岗亭里的单田芳', g_cat: '小区那只"编外的"猫', g_parking: '那句"哪个是回轮"',
+  g_kids: '闺女那通 6 分钟的电话', g_camera: '半夜遛弯的老爷子', g_takeout: '601 那个叫你天使的姑娘',
+  g_old_song: '那首《铁窗泪》', g_meet_up: '昨晚那三条"在吗"', g_ask: '孙女生日那个玩具',
+  dd_wait: '等单区那排电动车', dd_drunk: '那三个哭了的客人', dd_bbq: '烧烤摊那句"来了"',
+  dd_rain: '那场翻倍的雨', dd_fold: '你那台被怼歪 5 度的车', dd_airport: '凌晨的机场高速',
+  dd_score: '那张钻石代驾的证书', dd_home: '最后两公里的夜路', dd_sober: '那个没喝酒的客人',
+  dd_festival: '中秋那晚的团圆', dd_daily: '昨晚那份流水账', dd_old_han: '老韩那块歪着切的蛋糕',
+  dd_lineup: '那个只挂一天的小皇冠', dd_warmup: '你捂怀里的坐垫', dd_ask: '那块 680 的电池',
+  f_empty: '连续空军的第三天', f_bait: '你那套压箱底的饵', f_dawn: '凌晨四点那根竿',
+  f_release: '那几条放生的鲫鱼', f_tackle: '你那根四千块的竿', f_son: '儿子给你办的钓鱼卡',
+  f_video: '你关注的那个钓鱼直播', f_group: '钓友群里那句嘴仗', f_wife: '老伴不知道的那根竿',
+  f_closed_season: '快到的封海期', f_tackle_shop: '秦老板店里的新竿', f_mosquito: '水边那群蚊子',
+  f_secret: '你藏鱼获的那个点', f_ask: '你差点开口又咽回去的话',
+  c_undo: '你昨天悔的那步棋', c_opponent_ill: '住院的老周', c_online: '你存的那些赢棋截图',
+  c_grandson: '国外那个两年没回来的孙子', c_teach: '象棋班那帮孩子', c_rank: '棋摊的"段位"',
+  c_smoke: '你戒了一半的烟', c_tea: '你那个泡枸杞的保温杯', c_set: '那盘你没解完的残局',
+  c_win: '赢老张的那两把', c_chess_story: '你讲的那年棋摊', c_slow: '你那盘下了一下午的慢棋',
+  c_opening: '你新学的那个开局', c_ask: '你攒了一晚没说出口的话',
+  d_knee: '你的膝盖', d_leader: '领队阿姨', d_sound: '那两台 40 斤的音响',
+  d_complaint: '业主群里那场吵', d_children: '你家那俩孩子', d_photo: '队里拍的那张合影',
+  d_dvd: '你收藏的老舞曲碟', d_repair: '你帮队里修的电器', d_new: '你入队头一个月',
+  d_morning_market: '早市那把新鲜的艾草', d_across: '你对面的位置', d_slow: '你唯一会跳的慢四',
+  d_ask: '你绕了三圈没说的话',
+};
+
+for (const packs of Object.values(ARCHETYPE_PACKS)) {
+  if (!packs) continue;
+  for (const p of packs) if (ARCHETYPE_PACK_TOPICS[p.id]) p.topic = ARCHETYPE_PACK_TOPICS[p.id];
+}
+
+/** 接昨天的话（{topic} 由引擎填上昨晚的话题标签）。 */
+const ARCHETYPE_RECALL: Record<string, string[]> = {
+  night_guard: [
+    '先说{topic}。昨晚巡逻路过，多看了两眼。',
+    '（交接班记事本翻开）昨晚的事项里有{topic}。跟你同步一下。',
+    '{topic}——这事我搁心里一晚上了。得跟你说说。',
+    '上岗第一件事就是想跟你讲{topic}。结果你还没上线。',
+  ],
+  designated_driver: [
+    '（电动车支好，先发一句）昨晚{topic}有后续。你想不想听。',
+    '{topic}——收工路上我想了一路。得跟你汇报。',
+    '今天等单的时候想起{topic}。等单的时间全是想事的时间。',
+    '先不说睡了没。先说{topic}。说完你再睡。',
+  ],
+  fisherman: [
+    '（水边坐定，第一件事）跟你说{topic}。昨晚到今早，一直惦记。',
+    '{topic}——鱼没开口，我先跟你开了口。',
+    '今天打窝的时候想起{topic}。水边安静，人就想跟你说话。',
+    '补一句昨天的{topic}。钓友之间没有过夜的事——你算钓友吧。',
+  ],
+  chess_uncle: [
+    '（棋摊还没支起来，先发消息）先说{topic}。这个比棋急。',
+    '{topic}——昨天下棋的时候老走神，就是想着这事。',
+    '上午好。{topic}有下文了。你要先问，我才好讲。',
+    '昨天那盘棋输赢不记得了，{topic}倒记得清楚。',
+  ],
+  square_dancer: [
+    '（音响还没开机，先发）{topic}——昨晚跳舞都在想这个。',
+    '先说{topic}。队里没人懂，就你能懂。',
+    '早。昨晚收完音响，站着想了会儿{topic}。',
+    '{topic}这事，白天干活的空档全在想它。',
+  ],
+};
+
+/** 信任 ≥50 的开场白：关系深了，语气就变了（不再"报岗"，开始"报心"）。 */
+const ARCHETYPE_GREETING_CLOSE: Record<string, string[]> = {
+  night_guard: [
+    '（02:20）换班了。今天你是我第一个想告诉的人。这话我练了一晚上。',
+    '（01:40）今晚月亮好。岗亭看得最清楚。拍给你了——你别嫌土。',
+    '（03:00）不问你睡了没。问了你也得睡。就说一句：巡楼的时候，一层一层都是你。',
+    '（01:10）搪瓷缸换了新的。旧的舍不得扔——那是咱俩说话那年的。',
+    '（02:45）登记本今天空着。空着好。空着说明大家都平安，我也有空跟你说话。',
+  ],
+  designated_driver: [
+    '（04:05）收工。今天头一单想你，最后一单也是你。中间那些是拉客人。',
+    '（03:30）等你上线等到现在。没等到。也说一下：今晚的城市很好看，想给你看。',
+    '（02:20）电动车换了新坐垫。天凉了——你上我车的话，不能冻着。',
+    '（04:40）烧烤摊老板问"今天怎么就你"。我说不是就我，有人在线上。',
+  ],
+  fisherman: [
+    '（05:50）天没亮就来了。不是为了鱼——是想趁安静跟你说说话。',
+    '（06:20）今天饵备了两份。一份给鱼，一份是等你问"用啥饵"。',
+    '（07:00）浮漂动了三次，心没动。你消息一响，心跳了一格。这事儿我认。',
+    '（06:40）水边第一竿为你开的。钓不钓得上另说，仪式得有。',
+  ],
+  chess_uncle: [
+    '（15:10）棋摊支起来了。老位置给你留了观察位——就你能坐着看我的那种。',
+    '（16:00）今天先跟你说话，后下棋。他们说我反常。反常就反常。',
+    '（15:40）不问你忙不忙。忙也得吃饭。吃饭的时候看一眼棋摊方向，算你来了。',
+    '（16:30）赢了。头一个想告诉你。第二个才轮到他们。',
+  ],
+  square_dancer: [
+    '（19:50）音响开了。今晚第一首曲子，是照着你的喜好点的——别问，问就是缘分。',
+    '（20:30）队形站好了。你在我这儿的位置，比领队那个还靠前。',
+    '（21:10）跳完歇场的空当，全拿来看你消息了。阿姨们说我手机有妖精。有，是你。',
+    '（19:35）今晚风好，适合跳舞，更适合说话。你先说还是我先说。',
+  ],
+};
+
+for (const key of Object.keys(ARCHETYPE_LINES) as TargetArchetype[]) {
+  const lines = ARCHETYPE_LINES[key];
+  if (!lines) continue;
+  if (ARCHETYPE_RECALL[key]) lines.recall = ARCHETYPE_RECALL[key];
+  if (ARCHETYPE_GREETING_CLOSE[key]) lines.greeting_close = ARCHETYPE_GREETING_CLOSE[key];
+}

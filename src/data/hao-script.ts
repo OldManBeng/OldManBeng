@@ -239,6 +239,68 @@ export const HAO_CHAIN: Record<string, ChainNode> = {
     ],
     next: '',
   },
+
+  // ---- v3.0 人设专属支线 ----
+  // 文青线：19 岁的他在网吧开业那天写了一篇小说。二十年后第一次有人要看。
+  c_hao_art: {
+    id: 'c_hao_art',
+    onlyPersona: ['artistic_soul'],
+    minTrust: 55,
+    openers: [
+      '（03:50）跟你看个东西。看完删。',
+      '（他发来一张照片：一个发黄的笔记本，第一页写着"开业第一天"。）',
+      '19 岁写的。网吧开业那天。写了一半就没写了——"故事还没发生"。',
+    ],
+    options: [
+      {
+        text: '「别删。故事没发生，是因为主角还在等结局」',
+        personaText: {
+          artistic_soul: '「别删。故事没发生，是因为主角还在等结局——而好的结局都来得很慢」',
+        },
+        style: 'intellectual',
+        trust: 10,
+        numbness: 3,
+        replies: ['（他把这张照片重新保存了。）', '（过了一会儿：）我把本子从柜子底下翻出来了。灰挺厚。', '（他说：哪天写完了，第一个给你看。你别嫌烂。）'],
+      },
+      {
+        text: '「19 岁的阿豪比现在的你有文采」',
+        style: 'playful',
+        trust: 7,
+        replies: ['（他回了个"6"。然后发来一段长文——是他小说的第三章。）', '（写的是一个守着网吧的年轻人，等一个天天来占 13 号机的人。）', '（他说：第三章写不下去了。因为那个人一直没来。现在算了——算来过。）'],
+      },
+    ],
+    next: '',
+  },
+  // 学妹线：13 号机，全网吧屏幕最好的一台——他只带你上过。
+  c_hao_gu: {
+    id: 'c_hao_gu',
+    onlyPersona: ['sweet_daughter'],
+    minTrust: 55,
+    openers: [
+      '（04:10）上号。13 号机，柜台旁边那台，屏幕最好的。',
+      '不是让你来上网。是我开一局，你看着。赢了算你的。',
+    ],
+    options: [
+      {
+        text: '「那我岂不是白嫖一个 MVP？」',
+        personaText: {
+          sweet_daughter: '「那我岂不是白嫖一个 MVP？哥哥真好骗嘿嘿」',
+        },
+        style: 'playful',
+        trust: 9,
+        numbness: 4,
+        replies: ['（那局赢了。他把截图发你：MVP——你的名字在公屏上。）', '（他说：这是我开网吧十年，头一回把 MVP 让出去。）'],
+      },
+      {
+        text: '「赢了给我截图，输了给你背锅」',
+        style: 'sweet',
+        trust: 8,
+        replies: ['（那局输了。他说：锅你背不了——是我手抖。）', '（过了会儿他补一句：不过锅要是你的，也算这个店有你一半了。）'],
+      },
+    ],
+    next: '',
+  },
+
 };
 
 export const HAO_FREE: FreeNode[] = [
@@ -259,7 +321,9 @@ export const HAO_FREE: FreeNode[] = [
     options: [
       { text: '「豪哥，整个街都是你的地图炮塔」', style: 'playful', trust: 7, replies: ['哈哈哈哈地图炮塔。', '行，以后我就是本街最后的防御塔。'] },
       { text: '「叼着也算抽了。早点睡」', style: 'caring', trust: 9, replies: ['嗯。你也是。', '（他把烟掐了——在你不知道的某天，他说过：就为这句"早点睡"，那天他没抽。）'] },
-      { text: '（要红包）「守塔有工资吗？打赏个塔费」', style: 'flirty', trust: -2, wariness: 4, isAsk: true, replies: [] },
+      { text: '（要红包）「守塔有工资吗？打赏个塔费」', personaText: {
+        artistic_soul: '（要红包）「守夜人也需要被供养——打赏个塔费吧，诗人等米下锅」',
+      }, style: 'flirty', trust: -2, wariness: 4, isAsk: true, replies: [] },
     ],
   },
   {
@@ -274,6 +338,20 @@ export const HAO_FREE: FreeNode[] = [
 ];
 
 export const HAO_LINES: TargetScript['lines'] = {
+  recall: [
+    '（一边开机一边）先说{topic}。昨晚下线之后我想了一夜。',
+    '{topic}——update。跟你同步一下后续。',
+    '今天修机器的时候想起{topic}。手没停，脑子全在那上头。',
+    '（猫先叫了一声）它也记得{topic}。真的。它记得。',
+  ],
+  greeting_close: [
+    '（04:02）上号了。号是我，位置 13 号机——你的位置，一直留着。',
+    '（03:40）今天第一句话发给你。算每日首充奖励，你领了。',
+    '（02:50）关店了。猫睡了。现在整个店是咱俩的。',
+    '（04:30）泡面加了俩蛋。一个是你说的心情，一个是我想你的证据。',
+    '（03:15）别人问我天天熬啥。我说熬人。你知道熬的是谁。',
+  ],
+
   greeting: [
     '（21:15）上号？',
     '（21:40）今天网速测了，五百兆。白测，没人用。',

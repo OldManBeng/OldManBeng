@@ -30,6 +30,62 @@ function riskLabel(risk: number): { text: string; cls: string } {
   return { text: '评论区快烧起来了', cls: 'risk-burn' };
 }
 
+/** v3.0 底部导航 SVG 图标（细线条，深夜 App 质感）。 */
+function NavIcon({ name }: { name: ModuleTab }) {
+  const s = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  switch (name) {
+    case 'today':
+      return (
+        <svg viewBox="0 0 20 20" {...s}>
+          <circle cx="10" cy="11" r="4" />
+          <path d="M 10 3.5 L 10 5.5 M 4.4 5.4 L 5.8 6.8 M 15.6 5.4 L 14.2 6.8 M 2.5 15.5 L 17.5 15.5" />
+        </svg>
+      );
+    case 'contacts':
+      return (
+        <svg viewBox="0 0 20 20" {...s}>
+          <circle cx="10" cy="6.6" r="3.1" />
+          <path d="M 3.8 16.5 Q 4.6 11.4 10 11.4 Q 15.4 11.4 16.2 16.5" />
+        </svg>
+      );
+    case 'moments':
+      return (
+        <svg viewBox="0 0 20 20" {...s}>
+          <circle cx="10" cy="10" r="2.1" />
+          <path d="M 10 3.2 Q 11.6 6.4 10 8 M 16.8 10 Q 13.6 11.6 12 10 M 10 16.8 Q 8.4 13.6 10 12 M 3.2 10 Q 6.4 8.4 8 10 M 14.8 5.2 Q 12.7 7.3 11.5 8.5 M 14.8 14.8 Q 12.7 12.7 11.5 11.5 M 5.2 14.8 Q 7.3 12.7 8.5 11.5 M 5.2 5.2 Q 7.3 7.3 8.5 8.5" />
+        </svg>
+      );
+    case 'history':
+      return (
+        <svg viewBox="0 0 20 20" {...s}>
+          <path d="M 3.5 9.2 Q 3.5 4.6 10 4.6 Q 16.5 4.6 16.5 9.2 Q 16.5 13.8 10 13.8 Q 8.6 13.8 7.4 13.4 L 4.6 15.4 L 5.2 12.7 Q 3.5 11.4 3.5 9.2 Z" />
+          <path d="M 7 9.2 L 13 9.2" />
+        </svg>
+      );
+    case 'wallet':
+      return (
+        <svg viewBox="0 0 20 20" {...s}>
+          <rect x="3" y="5.4" width="14" height="10.4" rx="2" />
+          <path d="M 3 8.2 L 17 8.2 M 13.2 12.2 L 14.8 12.2" />
+        </svg>
+      );
+    case 'profile':
+      return (
+        <svg viewBox="0 0 20 20" {...s}>
+          <circle cx="10" cy="7" r="3" />
+          <path d="M 4.4 16.4 Q 5.2 11.8 10 11.8 Q 14.8 11.8 15.6 16.4" />
+          <path d="M 12.6 4.2 Q 14 3.4 14.8 4.8" />
+        </svg>
+      );
+  }
+}
+
+/** 计划图标（今天去哪）。 */
+const PLAN_ICONS: Record<string, string> = {
+  plan_home: '🏠', plan_park: '🌳', plan_gym: '🏃', plan_market: '🛵',
+  plan_chess: '♟', plan_square: '🎶', plan_netbar: '🎮', plan_overnight: '🚕',
+};
+
 type ModuleTab = 'today' | 'contacts' | 'moments' | 'history' | 'wallet' | 'profile';
 
 export function MainScreen() {
@@ -51,6 +107,15 @@ export function MainScreen() {
   }, [state.log]);
   // 聊天中强制回"今天"，聊天是全屏体验。
   const activeTab: ModuleTab = state.dayPhase === 'chat' ? 'today' : tab;
+  // v3.0 昼夜氛围：白天掺暖光，深夜更沉，聊天跟随对象时区。
+  const phaseCls =
+    state.dayPhase === 'chat'
+      ? state.chat && isMorningTarget(ALL_TARGET_MAP[state.chat.targetId])
+        ? 'screen-morning'
+        : 'screen-night'
+      : state.dayPhase === 'morning'
+        ? 'screen-morning'
+        : 'screen-night';
   // HUD label survives the chat phase (dayPhase === 'chat').
   const phaseLabel =
     state.dayPhase === 'chat'
@@ -62,7 +127,7 @@ export function MainScreen() {
         : '深夜';
 
   return (
-    <div className="screen main-screen app-shell">
+    <div className={`screen main-screen app-shell ${phaseCls}`}>
       <header className="hud">
         <div className="hud-left">
           <span className="day-chip">第 {state.day}/{state.daysLimit} 天</span>
@@ -73,7 +138,11 @@ export function MainScreen() {
           <span className="goal">还差 {formatMoney(Math.max(0, state.goal - state.stats.totalEarned))}</span>
         </div>
       </header>
-      <div className={`risk-strip ${risk.cls}`}>朋友圈：{risk.text}（{Math.round(state.riskLevel)}%）</div>
+      <div className={`risk-strip ${risk.cls}`}>
+        <span>朋友圈</span>
+        <span className="risk-meter"><i /></span>
+        <span>{risk.text}（{Math.round(state.riskLevel)}%）</span>
+      </div>
 
       {/* 聊天会话永远全屏（模块无关） */}
       {state.dayPhase === 'chat' && state.chat && <ChatView />}
@@ -109,27 +178,27 @@ export function MainScreen() {
             </div>
           )}
 
-          {/* v2.3 底部六模块导航（今天/通讯录/朋友圈/聊天记录/钱包/人设）——手机 App 式固定底栏 */}
+          {/* v3.0 底部六模块导航（SVG 图标 + 活动指示条） */}
           <nav className="module-nav">
             <button className={activeTab === 'today' ? 'nav-btn on' : 'nav-btn'} onClick={() => setTab('today')}>
-              <span className="nav-ico">◐</span>今天
+              <span className="nav-ico"><NavIcon name="today" /></span>今天
               {state.incoming.length > 0 && <span className="nav-badge">{state.incoming.length}</span>}
             </button>
             <button className={activeTab === 'contacts' ? 'nav-btn on' : 'nav-btn'} onClick={() => setTab('contacts')}>
-              <span className="nav-ico">☰</span>通讯录
+              <span className="nav-ico"><NavIcon name="contacts" /></span>通讯录
             </button>
             <button className={activeTab === 'moments' ? 'nav-btn on' : 'nav-btn'} onClick={() => { setTab('moments'); store.dispatch({ type: 'view_moments' }); }}>
-              <span className="nav-ico">⊛</span>朋友圈
+              <span className="nav-ico"><NavIcon name="moments" /></span>朋友圈
               {state.unseenMoments > 0 && <span className="nav-badge">{state.unseenMoments}</span>}
             </button>
             <button className={activeTab === 'history' ? 'nav-btn on' : 'nav-btn'} onClick={() => setTab('history')}>
-              <span className="nav-ico">❝</span>聊天记录
+              <span className="nav-ico"><NavIcon name="history" /></span>聊天记录
             </button>
             <button className={activeTab === 'wallet' ? 'nav-btn on' : 'nav-btn'} onClick={() => setTab('wallet')}>
-              <span className="nav-ico">¥</span>钱包
+              <span className="nav-ico"><NavIcon name="wallet" /></span>钱包
             </button>
             <button className={activeTab === 'profile' ? 'nav-btn on' : 'nav-btn'} onClick={() => setTab('profile')}>
-              <span className="nav-ico">☺</span>人设
+              <span className="nav-ico"><NavIcon name="profile" /></span>人设
             </button>
           </nav>
         </>
@@ -148,10 +217,13 @@ function TodayPanel({ phaseLabel }: { phaseLabel: string }) {
   return (
     <section className="today-panel">
       <div className="persona-row">
-        <PersonaAvatar personaId={state.personaId} size={40} />
-        <div>
+        <PersonaAvatar personaId={state.personaId} size={44} />
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div className="persona-line">{state.playerName} · 人设「{persona.name}」</div>
-          <div className="muted small">精力 {state.energy}/{state.energyMax}（一天最多 {Math.floor(state.energyMax / CHAT_SESSION_COST)} 场对话） · 麻木 {state.numbness}% · 良心 {state.conscience}</div>
+          <div className="bars" style={{ margin: '5px 0 3px' }}>
+            <div className="bar energy"><span style={{ width: `${(state.energy / state.energyMax) * 100}%` }} />精力 {state.energy}/{state.energyMax}（一场 {CHAT_SESSION_COST} 点）</div>
+            <div className="bar numb"><span style={{ width: `${state.numbness}%` }} />麻木 {state.numbness}% · 良心 {state.conscience}</div>
+          </div>
           {state.industryCourse && <div className="industry-badge">代聊群运行中 · 话术共用 · 判决书线已激活</div>}
         </div>
       </div>
@@ -244,7 +316,7 @@ function PlanPanel() {
       <div className="plan-grid">
         {DAILY_PLANS.map((p) => (
           <button key={p.id} className="plan-card" onClick={() => store.dispatch({ type: 'choose_plan', planId: p.id })}>
-            <div className="plan-name">{p.name}</div>
+            <div className="plan-name"><span className="plan-ico">{PLAN_ICONS[p.id] ?? '📍'}</span>{p.name}</div>
             <div className="plan-desc">{p.description}</div>
             <div className="plan-meta muted small">
               精力 -{p.energyCost}
@@ -526,8 +598,9 @@ function TargetList({ dayPhase }: { dayPhase: 'morning' | 'night' }) {
             <div className="target-info">
               <div className="target-name">
                 {def.name} <span className="muted small">{def.age}岁 · {archetypeLabel(def.archetype)}</span>
+                {!t.blocked && awake && !chatted && <span className="online-dot" title="在线" />}
               </div>
-              <div className="stage-chip">{STAGE_LABEL[t.stage]}</div>
+              <div className={`stage-chip stage-${t.stage}`}>{STAGE_LABEL[t.stage]}</div>
               <div className="bars">
                 <div className="bar trust"><span style={{ width: `${t.trust}%` }} />信任</div>
                 <div className="bar wariness"><span style={{ width: `${t.wariness}%` }} />警惕</div>
@@ -687,7 +760,10 @@ function ChatView() {
               }}
             >
               {o.text}
-              <span className="muted small option-meta">{styleTag(o.style)}{o.isAsk ? ' · 要开口了' : ''}</span>
+              <span className="muted small option-meta">
+                <span className={`style-chip style-${o.style}`}>{styleTag(o.style)}</span>
+                {o.isAsk && <span className="ask-chip">· 要开口了</span>}
+              </span>
             </button>
           ))}
         </div>
@@ -729,16 +805,27 @@ const TRAIT_OPTIONS: { value: PlayerProfile['traitId']; label: string; note: str
 ];
 
 /** 人设：头像/自称年龄/性格——全部影响他的话术与好感走向。
- *  v2.3：朋友圈自拍迁去朋友圈模块（每天一条动态，能引来反应与互动）。 */
+ *  v3.0：人设不只是皮肤——被动/剧情分岔/代价写在卡上，换人设前看得见后果。 */
 function ProfilePanel() {
   const store = useGame();
   const { state } = store;
   const p = state.profile;
+  const persona = PERSONA_MAP[state.personaId];
   const setProfile = (patch: Partial<PlayerProfile>) => store.dispatch({ type: 'update_profile', ...patch });
   return (
     <section className="profile-panel">
       <h3>人设档案</h3>
       <p className="muted small">你对外呈现的这个人。换头像、改年龄、调性格——他记住的是同一个你。</p>
+
+      <div className="profile-current">
+        <PersonaAvatar personaId={state.personaId} size={56} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="profile-current-name">{persona.name} <span className="muted small">{persona.tagline}</span></div>
+          {persona.passiveNote && <div className="profile-current-note">被动 · {persona.passiveNote}</div>}
+          {persona.hook && <div className="muted small">剧情 · {persona.hook}</div>}
+          {persona.risk && <div className="muted small" style={{ color: 'var(--danger)', opacity: 0.85 }}>代价 · {persona.risk}</div>}
+        </div>
+      </div>
 
       <h4>头像</h4>
       <div className="choice-grid avatars">

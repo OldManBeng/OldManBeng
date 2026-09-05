@@ -104,6 +104,10 @@ export interface Target {
     accessory: Accessory;
     /** v2.2：头像色调（背景渐变 / 装饰用）。 */
     accent: string;
+    /** v3.0：肤色档 0 白皙 / 1 常年风吹 / 2 黝黑（缺省 1）。 */
+    skin?: 0 | 1 | 2;
+    /** v3.0：眉型 0 细眉 / 1 浓眉（缺省 0）。 */
+    brow?: 0 | 1;
   };
 }
 
@@ -138,6 +142,10 @@ export interface TargetState {
   recentPacks: string[];
   /** v2.1：上一晚的 greeting 下标——连聊两晚不再同一句开场白（-1 = 无记录）。 */
   recentGreetingIdx: number;
+  /** v3.0：最近说过的开场白原文（近 3 条去重，跨档位生效）。 */
+  recentGreetings?: string[];
+  /** v3.0：上一场闲聊的话题标签——下一晚可能"接昨天的话"（语境连续性）。 */
+  lastTopic?: string;
   /** v2.2：上一场他发过的照片下标——连发两张不重复（-1 = 无记录）。 */
   recentPhotoIdx: number;
   blocked: boolean;

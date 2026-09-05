@@ -2,7 +2,8 @@ import { useGame } from '../store/gameStore';
 import { ENDINGS } from '../data/endings';
 import { formatMoney } from '../utils/format';
 import { playEnding } from '../utils/sound';
-import { TARGET_MAP } from '../engine/state-machine';
+import { TARGET_MAP, PERSONA_MAP } from '../engine/state-machine';
+import { PERSONA_EPILOGUE } from '../data/personas';
 import { ENDING_EPIGRAPHS, TRIGGER_GATHAS } from '../data/gathas';
 import { GathaBlock } from './gatha-block';
 import { useEffect } from 'react';
@@ -103,6 +104,12 @@ export function EndingScreen() {
           <div><span>麻木</span><strong>{state.numbness}%</strong></div>
           <div><span>良心</span><strong>{state.conscience}</strong></div>
         </div>
+      </div>
+
+      {/* v3.0 人设尾声——同一个月，不同人设的人是怎么走过来的。 */}
+      <div className="persona-epilogue">
+        <h3>这个月，你演的是谁</h3>
+        {(PERSONA_EPILOGUE[state.personaId] ?? []).map((line, i) => <p key={i}>{line}</p>)}
       </div>
 
       <div className="target-epilogue">

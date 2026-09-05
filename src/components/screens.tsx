@@ -9,6 +9,60 @@ import { PersonaAvatar } from './character-art';
 import { PROLOGUE_GATHAS } from '../data/gathas';
 import { GathaBlock } from './gatha-block';
 
+/** v3.0 标题屏背景：凌晨三点的城市天际线——月亮、星、楼影、几扇还没睡的窗。 */
+function TitleBackdrop() {
+  return (
+    <div className="title-backdrop" aria-hidden>
+      <svg viewBox="0 0 480 800" preserveAspectRatio="xMidYMax slice">
+        <defs>
+          <linearGradient id="tbSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#0a1020" />
+            <stop offset="62%" stopColor="#0c1524" />
+            <stop offset="100%" stopColor="#060a10" />
+          </linearGradient>
+          <radialGradient id="tbMoonGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#e8e4d0" stopOpacity="0.32" />
+            <stop offset="60%" stopColor="#e8e4d0" stopOpacity="0.08" />
+            <stop offset="100%" stopColor="#e8e4d0" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <rect width="480" height="800" fill="url(#tbSky)" />
+        {/* 月亮 + 月晕 */}
+        <circle cx="368" cy="118" r="86" fill="url(#tbMoonGlow)" className="title-moon" />
+        <circle cx="368" cy="118" r="34" fill="#e8e4d0" opacity="0.85" className="title-moon" />
+        <circle cx="356" cy="108" r="5" fill="#c9c8b8" opacity="0.35" />
+        <circle cx="378" cy="128" r="3.4" fill="#c9c8b8" opacity="0.3" />
+        {/* 星 */}
+        {[[44, 92], [110, 60], [180, 130], [262, 78], [320, 200], [80, 210], [420, 240], [30, 320]].map(([x, y], i) => (
+          <circle key={i} cx={x} cy={y} r={i % 3 === 0 ? 1.4 : 1} fill="#e8e4d0" opacity={0.35 + (i % 3) * 0.18} className={i % 2 ? 'title-win w2' : 'title-win'} />
+        ))}
+        {/* 远景楼影 */}
+        <g fill="#0b1220">
+          <rect x="0" y="430" width="70" height="370" />
+          <rect x="58" y="470" width="56" height="330" />
+          <rect x="330" y="452" width="66" height="348" />
+          <rect x="404" y="500" width="76" height="300" />
+        </g>
+        {/* 近景楼群（带窗灯，三扇会呼吸） */}
+        <g fill="#0e1523">
+          <rect x="120" y="392" width="88" height="408" />
+          <rect x="208" y="452" width="72" height="348" />
+          <rect x="276" y="416" width="60" height="384" />
+        </g>
+        <g>
+          {[[136, 412], [160, 440], [188, 412], [136, 470], [176, 502], [222, 470], [246, 540], [292, 436], [292, 500], [208, 560]].map(([x, y], i) => (
+            <rect key={i} x={x} y={y} width="9" height="6.4" rx="0.8" fill={i % 3 === 0 ? '#e8b45c' : '#f4d03f'}
+              opacity={i % 4 === 0 ? 0.5 : 0.8} className={i % 5 === 2 ? 'title-win' : i % 5 === 4 ? 'title-win w2' : i % 7 === 3 ? 'title-win w3' : ''} />
+          ))}
+        </g>
+        {/* 地平线灯带雾光 */}
+        <rect x="0" y="760" width="480" height="40" fill="#e8b45c" opacity="0.04" />
+        <rect x="0" y="796" width="480" height="4" fill="#f4d03f" opacity="0.08" />
+      </svg>
+    </div>
+  );
+}
+
 export function TitleScreen() {
   const store = useGame();
   const [muted, setM] = useState(isMuted());
@@ -17,6 +71,7 @@ export function TitleScreen() {
 
   return (
     <div className="screen title-screen">
+      <TitleBackdrop />
       <div className="title-block">
         <h1>凌晨三点，哥哥</h1>
         <p className="subtitle">一个关于「崩老头」的游戏</p>
@@ -78,10 +133,13 @@ export function NewGameScreen({ onStart }: { onStart: (name: string, personaId: 
             <div className="persona-name">{p.name}</div>
             <div className="persona-tag">{p.tagline}</div>
             <div className="persona-bio">{p.bio}</div>
+            {p.passiveNote && <div className="persona-passive">{p.passiveNote}</div>}
+            {p.hook && <div className="persona-hook">剧情 · {p.hook}</div>}
+            {p.risk && <div className="persona-risk">代价 · {p.risk}</div>}
           </button>
         ))}
       </div>
-      <p className="muted small">人设决定了他吃哪一套。选错了，你的每一句晚安都像诈骗。</p>
+      <p className="muted small">人设决定他跟你走哪条故事线、吃哪一套话。选错了，你的每一句晚安都像诈骗。</p>
       <div className="newgame-start">
         <button className="btn primary" onClick={() => onStart(name || '小满', persona)}>
           开始这个月

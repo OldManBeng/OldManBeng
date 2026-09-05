@@ -7,6 +7,8 @@ export interface ChainNode {
   /** Minimum trust to fire; 'harvest' nodes also require stage gate. */
   minTrust?: number;
   minStage?: import('./target').TargetStage;
+  /** v3.0：人设门控——只有当前人设命中时该节点才会推进（剧情分岔：不同人设走出不同的关系线）。 */
+  onlyPersona?: import('./persona').PersonaId[];
   /** His opening lines (played sequentially with typewriter). */
   openers: string[];
   /** Player reply options. */
@@ -17,6 +19,8 @@ export interface ChainNode {
 
 export interface ChainOption {
   text: string;
+  /** v3.0：同一句话在人设嘴里的不同说法——命中当前人设时替换 text（缺省回落 text）。 */
+  personaText?: { default?: string } & Partial<Record<import('./persona').PersonaId, string>>;
   style: TalkStyle;
   /** Base trust delta before persona match multiplier. */
   trust: number;
@@ -48,6 +52,8 @@ export interface ChatPack {
   id: string;
   /** 相对权重（话题冷热）。 */
   weight?: number;
+  /** v3.0：话题标签——聊过之后存进记忆，下一晚的开场可能"接昨天的话"。 */
+  topic?: string;
   /** 他的开场 2-4 条（第一句引用 profile 时按 selfie/age/_trait 变体）。 */
   openers: string[];
   options: ChainOption[];
