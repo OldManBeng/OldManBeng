@@ -25,6 +25,7 @@ import {
   MOMENT_PLAYER_COMMENTS, MOMENTS_CAP, targetMomentPosts,
 } from '../data/moments';
 import { SHOP_ITEMS } from '../data/items';
+import { DAILY_GATHAS, TRIGGER_GATHAS } from '../data/gathas';
 import {
   START_MONEY, MONTHLY_GOAL, DAYS_LIMIT, ENERGY_MAX, CHAT_SESSION_COST,
   TRUST_DECAY_PER_DAY, WARINESS_DECAY_PER_DAY, SILENT_TRUST_PENALTY,
@@ -338,6 +339,14 @@ function runMorning(state: GameState) {
   state.ledger.push({ day: state.day, amount: -Math.round(dailyBills), note: '房租/话费/会员/伙食（日摊）', kind: 'bill' });
   log(state, 'bill', `今日开销 ${Math.round(dailyBills)} 元（房租/话费/会员/伙食摊到每天）`);
 
+  // v2.4 晨钟月轮：每天早上敲一条偈。三十天一轮按五幕递进（因缘→贪欲→痴面具→业渐盈→归悟），
+  // day 31+ 取模回卷——字面意义上的轮回。不消耗 RNG（保护种子确定性测试），
+  // 释义走 line 字段，复用 .log-line 渲染。
+  {
+    const g = DAILY_GATHAS[(state.day - 1) % DAILY_GATHAS.length];
+    log(state, 'gatha', `${g.verse}——${g.source}`, g.gloss);
+  }
+
   // Trust/wariness drift + silent penalty + spontaneous gifts.
   for (const t of state.targets) {
     // v2.0：全量名单（库里 50 人也在 drift 循环里，但未认识的不吃断联惩罚）。
@@ -396,6 +405,11 @@ function runMorning(state: GameState) {
         }
         state.riskLevel = clamp(state.riskLevel - 25, 0, 100);
         log(state, 'flag', `穿帮了。${vdef?.name ?? '有个老头'} 在你的评论区看到了另一个人的留言——两个"哥哥"的世界，撞在一起。`, pickVaryLine(rng, vlines.wariness_high, '（他最近的回复，越来越短。）', { val: -1 }));
+        // v2.4：穿帮是因果账本翻开的那一页——紧跟着敲一偈。
+        {
+          const g = TRIGGER_GATHAS.risk_exposed;
+          log(state, 'gatha', `${g.verse}——${g.source}`, g.gloss);
+        }
         if (victim.wariness >= 85) {
           victim.blocked = true;
           victim.ended = 'walked_away';
@@ -623,10 +637,20 @@ export function dispatch(state: GameState, action: GameAction): GameState {
         s.riskLevel = clamp(s.riskLevel + 20, 0, 100);
         s.numbness = clamp(s.numbness + 10, 0, 100);
         log(s, 'flag', '你把 300 块转给了那位"姐"。进了群。群里四百多个头像，置顶是三套话术文档，所有人共用。你的号，从今晚开始不再只属于你一个人。');
+        // v2.4：进了流水线的那一刻，华严偈跟着落地。
+        {
+          const g = TRIGGER_GATHAS.industry_accept;
+          log(s, 'gatha', `${g.verse}——${g.source}`, g.gloss);
+        }
       } else {
         s.conscience = clamp(s.conscience + 5, 0, 100);
         s.flags.industry_rejected = true;
         log(s, 'flag', '你把那条私信删了。删之前你盯着"一人一天带三个号"看了很久——原来这门生意，连你自己都只是个可以批量的"号"。');
+        // v2.4：这一按，是本月最干净的一笔——知足偈。
+        {
+          const g = TRIGGER_GATHAS.industry_reject;
+          log(s, 'gatha', `${g.verse}——${g.source}`, g.gloss);
+        }
       }
       return s;
     }

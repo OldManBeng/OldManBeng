@@ -39,7 +39,7 @@ export const MOMENTS_CAP = 80;
 export const MOMENT_TARGET_POSTS: { photoId: string; captions: string[] }[] = [
   { photoId: 'lao_li_radio_night', captions: ['这台收音机比车龄都大。今晚放的是《夜半歌声》。', '收车了。空车灯还亮着——忘了关，也懒得关。'] },
   { photoId: 'lao_li_taxi_night', captions: ['今晚跑了十六单。最后一位客人下车说了句"师傅慢点开"。', '凌晨的高架，路灯一根一根往后退。'] },
-  { photoId: 'zhou_calligraphy', captions: ['今日习字：宁静致远。第四十个年头，还是写不好那个"远"。', '退休第七年。字越写越多，说话的人越写越少。'] },
+  { photoId: 'zhou_calligraphy', captions: ['今日习字：宁静致远。第四十个年头，还是写不好那个"远"。', '今日习字：观自在。三个字写了一上午——「观」字最难。', '退休第七年。字越写越多，说话的人越写越少。'] },
   { photoId: 'zhou_flower_balcony', captions: ['茉莉开了。老伴在的时候，这时候该她浇水。', '阳台的花都活着。浇花的人换了一个。'] },
   { photoId: 'wang_garage_smoke', captions: ['这个点，车库里就我和这盏灯。', '应酬散了。没人知道我在车库坐了一小时。'] },
   { photoId: 'wang_store_front', captions: ['卷帘门修了三次。第四次我打算自己上。', '店是十年前盘下来的，梦是去年做的。'] },
@@ -48,7 +48,7 @@ export const MOMENT_TARGET_POSTS: { photoId: string; captions: string[] }[] = [
   { photoId: 'chen_balcony_vise', captions: ['台钳夹着一个旧闹钟。1974 年出厂，比我儿子大。', '修东西这行，讲究一个"还有救"。'] },
   { photoId: 'chen_blueprint_desk', captions: ['今晚画一张根本没人要的图纸。睡不着，手要动。', '尺寸都标完了。甲方是我自己。'] },
   { photoId: 'arch_guard_booth', captions: ['监控室，凌晨两点。荧幕里的世界安安静静。', '值夜班第 N 年。门口那只流浪狗都认识我了。'] },
-  { photoId: 'arch_fishing', captions: ['今天终于不是空军。三两鲫鱼，放生了。', '水边坐了一天，鱼没来，风来了。'] },
+  { photoId: 'arch_fishing', captions: ['今天终于不是空军。三两鲫鱼，放生了。', '放生了三两鲫鱼。放它的时候想：鱼也有家人。', '水边坐了一天，鱼没来，风来了。'] },
   { photoId: 'arch_chess', captions: ['棋摊赢了老张两把。他说明天找我算账。', '观棋的人比下棋的多，都挺急。'] },
   { photoId: 'arch_square', captions: ['音响是新换的，曲子是老掉牙的。', '今天队形走齐了三回。不容易。'] },
   { photoId: 'arch_roadside', captions: ['代驾到凌晨。最后一单的车主在车上睡着了。', '夜里的城市，方向盘是别人的，路是自己的。'] },

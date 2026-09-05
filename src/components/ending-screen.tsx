@@ -3,6 +3,8 @@ import { ENDINGS } from '../data/endings';
 import { formatMoney } from '../utils/format';
 import { playEnding } from '../utils/sound';
 import { TARGET_MAP } from '../engine/state-machine';
+import { ENDING_EPIGRAPHS, TRIGGER_GATHAS } from '../data/gathas';
+import { GathaBlock } from './gatha-block';
 import { useEffect } from 'react';
 import type { Target } from '../types/target';
 import type { TargetState } from '../types/target';
@@ -83,6 +85,10 @@ export function EndingScreen() {
   return (
     <div className="screen ending-screen">
       <h2 className="ending-title">{ending.title}</h2>
+      {/* v2.4 结局卷首偈——标题与正文之间，善恶各有其报的一句。 */}
+      {ENDING_EPIGRAPHS[ending.id] && (
+        <GathaBlock gatha={ENDING_EPIGRAPHS[ending.id]} className="ending-epigraph" />
+      )}
       <div className="ending-body">
         {ending.body.map((p, i) => <p key={i}>{p}</p>)}
       </div>
@@ -159,6 +165,8 @@ export function EndingScreen() {
           在这些河床修好之前，凌晨三点，还会有下一个「哥哥」——
           也还会有下一个不得不按下「接受」的手指。
         </p>
+        {/* v2.4 编者按收音——河床不会自己长出来，灯得有人点。 */}
+        <GathaBlock gatha={TRIGGER_GATHAS.essay_close} className="essay-gatha" />
       </div>
 
       <div className="ending-actions">

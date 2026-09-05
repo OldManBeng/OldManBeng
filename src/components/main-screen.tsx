@@ -214,6 +214,10 @@ function TodayPanel({ phaseLabel }: { phaseLabel: string }) {
           <button className="btn small muted-btn" onClick={() => store.dispatch({ type: 'retire' })}>
             这个游戏让你不舒服了？结束这一个月。
           </button>
+          {/* v2.4 回头是岸——不劝退，只是放在这里。 */}
+          <p className="muted small center retire-note">
+            苦海无边，回头是岸——这句偈不劝你，只是放在这里。
+          </p>
         </div>
       )}
     </section>

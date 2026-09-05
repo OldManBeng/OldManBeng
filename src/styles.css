@@ -84,6 +84,44 @@ body {
 }
 .prologue-actions { display: flex; gap: 10px; justify-content: center; align-items: center; }
 
+/* ---------- v2.4 偈语（晨钟月轮 / 序章 / 结局 / 终章共用一副面孔） ---------- */
+.gatha-block {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-top: 1px dashed var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.gatha-verse {
+  color: var(--warm);
+  font-style: italic;
+  letter-spacing: 1px;
+  font-size: 14px;
+  line-height: 1.8;
+  margin: 0;
+}
+.gatha-source { color: var(--muted); font-size: 12px; text-align: right; margin: 0; }
+.gatha-gloss { color: var(--muted); font-size: 13px; line-height: 1.7; margin: 2px 0 0; }
+/* 结局卷首偈：标题与正文之间的一张窄卡片 */
+.ending-epigraph {
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  max-width: 500px;
+  width: fit-content;
+  margin: 0 auto;
+}
+/* 终章收尾偈：编者按最后一段后的收音——灯，得有人点 */
+.ending-essay .essay-gatha { margin-top: 16px; }
+.ending-essay .gatha-verse { font-size: 13.5px; }
+.ending-essay .gatha-gloss { font-size: 12.5px; }
+/* 动态流里的晨钟：诗句斜体带暖金边，释义压暗（叙述感） */
+.log-gatha { border-left: 3px solid var(--warm); font-style: italic; }
+.log-gatha .log-line { color: var(--muted); font-style: normal; }
+/* 深夜「结束这一个月」按钮下的那行小字——不劝退，只是放在这里（p. 前缀抬高特异性，压过 .muted） */
+p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
+
 /* ---------- buttons ---------- */
 .btn {
   background: var(--panel-2);

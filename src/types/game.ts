@@ -16,6 +16,7 @@ export type EventKind =
   | 'plan'
   | 'bill'
   | 'event'
+  | 'gatha'
   | 'packet'
   | 'ask_fail'
   | 'blocked'

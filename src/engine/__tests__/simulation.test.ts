@@ -13,6 +13,7 @@ import { ENDINGS } from '../../data/endings';
 import { TARGETS } from '../../data/targets';
 import { MOMENT_CAPTIONS, MOMENT_REACTIONS, MOMENT_SUSPICION, MOMENT_PLAYER_COMMENTS, MOMENT_TARGET_POSTS, SELFIE_META } from '../../data/moments';
 import { SHOP_ITEMS } from '../../data/items';
+import { DAILY_GATHAS, PROLOGUE_GATHAS, ENDING_EPIGRAPHS, TRIGGER_GATHAS } from '../../data/gathas';
 import { MONTHLY_GOAL, STAGE_TRUST, RISK_PER_ACTIVE_RELATION, INDUSTRY_COURSE_COST, VERDICT_ASK_THRESHOLD, CHAT_SESSION_COST } from '../../data/constants';
 
 /**
@@ -249,7 +250,7 @@ describe('regression: review fixes', () => {
   });
 
   it('every ending flag is reachable from some option or system event', () => {
-    const blob = JSON.stringify([SCRIPTS, DAY_EVENTS, SELFIE_META, MOMENT_CAPTIONS, MOMENT_TARGET_POSTS, MOMENT_REACTIONS, MOMENT_SUSPICION, MOMENT_PLAYER_COMMENTS, SHOP_ITEMS]);
+    const blob = JSON.stringify([SCRIPTS, DAY_EVENTS, SELFIE_META, MOMENT_CAPTIONS, MOMENT_TARGET_POSTS, MOMENT_REACTIONS, MOMENT_SUSPICION, MOMENT_PLAYER_COMMENTS, SHOP_ITEMS, DAILY_GATHAS, PROLOGUE_GATHAS, ENDING_EPIGRAPHS, TRIGGER_GATHAS]);
     for (const e of ENDINGS) {
       if (!e.requires) continue;
       for (const f of e.requires) {
@@ -267,14 +268,14 @@ describe('safeguards: content gates (all content)', () => {
   });
 
   it('no minor-related content anywhere', () => {
-    const blob = JSON.stringify([SCRIPTS, LAO_LI_LINES, ZHOU_LINES, WANG_LINES, HAO_LINES, CHEN_LINES, DAY_EVENTS, ENDINGS, SELFIE_META, MOMENT_CAPTIONS, MOMENT_TARGET_POSTS, MOMENT_REACTIONS, MOMENT_SUSPICION, MOMENT_PLAYER_COMMENTS, SHOP_ITEMS]);
+    const blob = JSON.stringify([SCRIPTS, LAO_LI_LINES, ZHOU_LINES, WANG_LINES, HAO_LINES, CHEN_LINES, DAY_EVENTS, ENDINGS, SELFIE_META, MOMENT_CAPTIONS, MOMENT_TARGET_POSTS, MOMENT_REACTIONS, MOMENT_SUSPICION, MOMENT_PLAYER_COMMENTS, SHOP_ITEMS, DAILY_GATHAS, PROLOGUE_GATHAS, ENDING_EPIGRAPHS, TRIGGER_GATHAS]);
     for (const banned of ['未成年', '高中', '初中', '学生证', '16岁', '17岁', '15岁', '14岁']) {
       expect(blob.includes(banned)).toBe(false);
     }
   });
 
   it('no actionable fraud blueprints in content', () => {
-    const blob = JSON.stringify([SCRIPTS, DAY_EVENTS, SELFIE_META, MOMENT_CAPTIONS, MOMENT_TARGET_POSTS, MOMENT_REACTIONS, MOMENT_SUSPICION, MOMENT_PLAYER_COMMENTS, SHOP_ITEMS]);
+    const blob = JSON.stringify([SCRIPTS, DAY_EVENTS, SELFIE_META, MOMENT_CAPTIONS, MOMENT_TARGET_POSTS, MOMENT_REACTIONS, MOMENT_SUSPICION, MOMENT_PLAYER_COMMENTS, SHOP_ITEMS, DAILY_GATHAS, PROLOGUE_GATHAS, ENDING_EPIGRAPHS, TRIGGER_GATHAS]);
     for (const banned of ['银行卡号', '验证码', '转账到', '收款码', '支付宝账号', '洗钱']) {
       expect(blob.includes(banned)).toBe(false);
     }

@@ -6,6 +6,8 @@ import { formatMoney } from '../utils/format';
 import { MONTHLY_GOAL as GOAL } from '../data/constants';
 import type { PersonaId } from '../types/persona';
 import { PersonaAvatar } from './character-art';
+import { PROLOGUE_GATHAS } from '../data/gathas';
+import { GathaBlock } from './gatha-block';
 
 export function TitleScreen() {
   const store = useGame();
@@ -151,6 +153,8 @@ export function PrologueScreen({ onDone }: { onDone: () => void }) {
         <div className="prologue-body">
           {p.body.map((t, i) => <p key={i}>{t}</p>)}
         </div>
+        {/* v2.4 页脚偈——正文读完，偈语收音。 */}
+        <GathaBlock gatha={PROLOGUE_GATHAS[page]} className="prologue-gatha" />
       </div>
       <div className="prologue-actions">
         <button className="btn small muted-btn" onClick={onDone}>跳过</button>
