@@ -490,6 +490,15 @@ function AccessoryLayer({ accessory }: { accessory: Accessory }) {
 //  - 胡茬两档（青灰胡茬点阵 / 山羊胡）；
 //  - 衣领：翻领 V 领 + 领尖 + 纽扣，翻领阴影。
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// v3.2 老头头像重绘：脸型五档——刻板印象的脸，一眼认出谁是谁。
+//  0 国字方脸：下颌垂直、下巴平宽、咬肌鼓（出租车司机/保安——吃方向盘饭的脸）
+//  1 富态圆脸：颅宽颌宽、双下巴、脸颊鼓（建材老板——酒桌养出来的脸）
+//  2 清瘦尖脸：下颌收窄到尖下巴、面颊凹陷、颧骨高（退休教师——书生的脸）
+//  3 瘦长脸：脸长颌窄、人中长、额头高（工程师/钓友—— drawings 的脸）
+//  4 年轻短圆脸：脸短、下巴圆、五官紧凑（网吧老板——熬夜的 90 后）
+// 每档配专属阴影（咬肌/双下巴/凹颊/颧骨），肤色三档、发际线三档、胡茬两档照旧。
+// ---------------------------------------------------------------------------
 export function OldManAvatar({ target, state, size = 44 }: { target: Target; state?: TargetState; size?: number }) {
   const spec = target.portraitSpec;
   const wary = (state?.wariness ?? 10) >= 45;
@@ -506,13 +515,29 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
   const sk = SKIN[spec.skin ?? 1];
   const hairFrost = '#cfd0ce';
 
-  // 脸型：cheeks 0-1 → 下颌半宽/下巴位置
-  const rx = 10.4 + spec.cheeks * 1.4;          // 颅骨半宽
-  const jawW = 7.2 + spec.cheeks * 3.0;         // 下颌半宽（富态脸更接近颅宽）
-  const chinY = 37.4 + spec.cheeks * 0.8;       // 下巴底
+  // ---- 脸型五档：颅骨宽高 / 下颌半宽 / 下巴位置 / 轮廓类型 / 嘴位移 / 脖宽 ----
+  const FACE: Record<number, { rx: number; ry: number; jaw: number; chin: number; type: 'square' | 'round' | 'point' | 'long'; mouthDy: number; neckW: number }> = {
+    0: { rx: 11.3, ry: 11.0, jaw: 9.7, chin: 38.0, type: 'square', mouthDy: 0, neckW: 4.3 },
+    1: { rx: 11.9, ry: 11.5, jaw: 9.9, chin: 39.6, type: 'round', mouthDy: 0.5, neckW: 4.7 },
+    2: { rx: 10.2, ry: 11.2, jaw: 8.0, chin: 37.6, type: 'point', mouthDy: -0.4, neckW: 3.7 },
+    3: { rx: 10.7, ry: 12.2, jaw: 8.4, chin: 40.2, type: 'long', mouthDy: 1.0, neckW: 3.8 },
+    4: { rx: 10.9, ry: 10.6, jaw: 8.8, chin: 37.8, type: 'round', mouthDy: -0.6, neckW: 3.9 },
+  };
+  const F = FACE[spec.face ?? 1];
+  const rx = F.rx + spec.cheeks * 0.4;
+  const jawW = F.jaw + spec.cheeks * 0.7;
+  const chinY = F.chin + spec.cheeks * 0.5;
+  const mDy = F.mouthDy;
   const hairStyle = spec.hair;                  // 0 密发 / 1 稀疏 / 2 退发
   const bushyBrow = (spec.brow ?? 0) === 1;
-  const hairlineY = hairStyle === 2 ? 15 : hairStyle === 1 ? 12.6 : 10.8;
+
+  // 下颌轮廓：四种剪影（方/圆/尖/长）
+  const JAW_PATH: Record<string, string> = {
+    square: `M ${27 - jawW} 24.4 L ${27 - jawW} 31.6 Q ${27 - jawW + 0.1} ${chinY - 2.4} ${27 - 3.3} ${chinY - 0.3} Q ${27} ${chinY + 0.6} ${27 + 3.3} ${chinY - 0.3} Q ${27 + jawW - 0.1} ${chinY - 2.4} ${27 + jawW} 31.6 L ${27 + jawW} 24.4 Z`,
+    round: `M ${27 - jawW} 24.4 Q ${27 - jawW - 0.7} ${chinY - 7.5} ${27 - 4.6} ${chinY - 1.1} Q ${27} ${chinY + 1.2} ${27 + 4.6} ${chinY - 1.1} Q ${27 + jawW + 0.7} ${chinY - 7.5} ${27 + jawW} 24.4 Z`,
+    point: `M ${27 - jawW} 24.4 Q ${27 - jawW + 0.8} ${chinY - 7.6} ${27 - 1.7} ${chinY - 0.5} Q ${27} ${chinY + 0.5} ${27 + 1.7} ${chinY - 0.5} Q ${27 + jawW - 0.8} ${chinY - 7.6} ${27 + jawW} 24.4 Z`,
+    long: `M ${27 - jawW} 24.4 Q ${27 - jawW - 0.1} ${chinY - 7.8} ${27 - 2.7} ${chinY - 0.2} Q ${27} ${chinY + 0.7} ${27 + 2.7} ${chinY - 0.2} Q ${27 + jawW + 0.1} ${chinY - 7.8} ${27 + jawW} 24.4 Z`,
+  };
 
   // 眼睛几何：警惕 → 上睑压低（眯眼审视）；含笑 → 换成月牙眼
   const eyeY = 24.6;
@@ -527,11 +552,10 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
       <g clipPath={`url(#clip-${uid})`}>
         <BgLayer scene={spec.bgScene ?? 'default'} accent={spec.accent ?? spec.shirtColor} />
 
-        {/* ---- 肩颈（在脸后面） ---- */}
-        <path d={`M 23.2 35.5 L 30.8 35.5 L 30.4 43 L 23.6 43 Z`} fill={sk.shade} />
-        <path d={`M 23.2 35.5 L 30.8 35.5 L 30.7 38.2 Q 27 40.4 23.3 38.2 Z`} fill="#00000030" />
+        {/* ---- 脖颈与肩（脖宽随脸型：老板的脖子壮，书生的脖子细） ---- */}
+        <path d={`M ${27 - F.neckW} 35.5 L ${27 + F.neckW} 35.5 L ${27 + F.neckW - 0.3} 43 L ${27 - F.neckW + 0.3} 43 Z`} fill={sk.shade} />
+        <path d={`M ${27 - F.neckW} 35.5 L ${27 + F.neckW} 35.5 L ${27 + F.neckW - 0.1} 38.2 Q 27 40.4 ${27 - F.neckW + 0.1} 38.2 Z`} fill="#00000030" />
         <path d={`M 9.5 54 Q 10.5 45.4 17.5 43.2 Q 22.5 41.6 27 41.6 Q 31.5 41.6 36.5 43.2 Q 43.5 45.4 44.5 54 Z`} fill={spec.shirtColor} />
-        {/* 翻领 V 领：两片领面 + 领窝三角（露一点内搭的暗色） */}
         <path d={`M 20.2 42.4 L 27 47.4 L 33.8 42.4 L 35.6 43.4 L 27 49.6 L 18.4 43.4 Z`} fill="#00000038" />
         <path d={`M 20.4 42.6 L 24.4 41.4 L 26.4 45.4 L 27 47.4 Z`} fill={spec.shirtColor} />
         <path d={`M 33.6 42.6 L 29.6 41.4 L 27.6 45.4 L 27 47.4 Z`} fill={spec.shirtColor} />
@@ -540,7 +564,7 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
         <circle cx="27" cy="51.2" r="0.9" fill="#00000045" />
         <circle cx="27" cy="47.9" r="0.9" fill="#00000045" />
 
-        {/* ---- 耳朵 ---- */}
+        {/* ---- 耳朵（随颅宽展开） ---- */}
         <ellipse cx={27 - rx - 0.2} cy="27.8" rx="2.1" ry="3.5" fill={sk.base} />
         <ellipse cx={27 + rx + 0.2} cy="27.8" rx="2.1" ry="3.5" fill={sk.base} />
         <path d={`M ${27 - rx + 0.5} 26.8 q 0.9 0.9 0.1 2.3`} stroke={sk.line} strokeWidth="0.6" fill="none" />
@@ -548,52 +572,151 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
         <ellipse cx={27 - rx - 0.2} cy="30.6" rx="1" ry="0.8" fill={sk.shade} opacity="0.5" />
         <ellipse cx={27 + rx + 0.2} cy="30.6" rx="1" ry="0.8" fill={sk.shade} opacity="0.5" />
 
-        {/* ---- 脸基座：颅骨 + 下颌拼合 ---- */}
-        <ellipse cx="27" cy="24.8" rx={rx} ry="11.2" fill={sk.base} />
-        <path
-          d={`M ${27 - jawW} 25.4 Q ${27 - jawW - 0.6} 32.6 27 ${chinY} Q ${27 + jawW + 0.6} 32.6 ${27 + jawW} 25.4 Z`}
-          fill={sk.base}
-        />
-        {/* 下颌两侧阴影 + 下巴反光 */}
-        <path d={`M ${27 - jawW} 25.4 Q ${27 - jawW - 0.5} 32.2 ${27 - jawW + 1.6} 34.6 Q ${27 - jawW + 1} 28.6 ${27 - jawW + 1.4} 25.6 Z`} fill={sk.shade} opacity="0.4" />
-        <path d={`M ${27 + jawW} 25.4 Q ${27 + jawW + 0.5} 32.2 ${27 + jawW - 1.6} 34.6 Q ${27 + jawW - 1} 28.6 ${27 + jawW - 1.4} 25.6 Z`} fill={sk.shade} opacity="0.4" />
-        <ellipse cx="27" cy={chinY - 1.4} rx="2.2" ry="1.1" fill={sk.hi} opacity="0.35" />
-        {/* 额头顶光 + 太阳穴阴影 */}
+        {/* ---- 脸基座：颅骨椭圆 + 按脸型的下颌剪影 ---- */}
+        <ellipse cx="27" cy="24.8" rx={rx} ry={F.ry} fill={sk.base} />
+        <path d={JAW_PATH[F.type]} fill={sk.base} />
+        {/* 下颌两侧阴影（沿各自的轮廓线走） */}
+        {F.type === 'square' && (
+          <g>
+            <path d={`M ${27 - jawW + 0.5} 26 L ${27 - jawW + 0.5} 31.6 Q ${27 - jawW + 0.6} ${chinY - 3} ${27 - 4.4} ${chinY - 1.6}`} stroke={sk.shade} strokeWidth="0.8" fill="none" opacity="0.5" />
+            <path d={`M ${27 + jawW - 0.5} 26 L ${27 + jawW - 0.5} 31.6 Q ${27 + jawW - 0.6} ${chinY - 3} ${27 + 4.4} ${chinY - 1.6}`} stroke={sk.shade} strokeWidth="0.8" fill="none" opacity="0.5" />
+          </g>
+        )}
+        {F.type === 'round' && (
+          <g>
+            <path d={`M ${27 - jawW + 0.7} 25.8 Q ${27 - jawW + 0.2} ${chinY - 6.4} ${27 - 4.8} ${chinY - 2}`} stroke={sk.shade} strokeWidth="0.8" fill="none" opacity="0.45" />
+            <path d={`M ${27 + jawW - 0.7} 25.8 Q ${27 + jawW - 0.2} ${chinY - 6.4} ${27 + 4.8} ${chinY - 2}`} stroke={sk.shade} strokeWidth="0.8" fill="none" opacity="0.45" />
+          </g>
+        )}
+        {F.type === 'point' && (
+          <g>
+            {/* 凹颊：书生瘦脸上的两道凹陷 */}
+            <ellipse cx={27 - jawW + 1.2} cy="30.6" rx="1.3" ry="3" fill={sk.shade} opacity="0.4" />
+            <ellipse cx={27 + jawW - 1.2} cy="30.6" rx="1.3" ry="3" fill={sk.shade} opacity="0.4" />
+          </g>
+        )}
+        {F.type === 'long' && (
+          <g>
+            <path d={`M ${27 - jawW + 0.6} 26 Q ${27 - jawW + 0.4} ${chinY - 6} ${27 - 3.2} ${chinY - 1.6}`} stroke={sk.shade} strokeWidth="0.7" fill="none" opacity="0.45" />
+            <path d={`M ${27 + jawW - 0.6} 26 Q ${27 + jawW - 0.4} ${chinY - 6} ${27 + 3.2} ${chinY - 1.6}`} stroke={sk.shade} strokeWidth="0.7" fill="none" opacity="0.45" />
+          </g>
+        )}
+        {/* 下巴反光 + 额头顶光 + 太阳穴阴影 */}
+        <ellipse cx="27" cy={chinY - 1.6} rx="2.2" ry="1.1" fill={sk.hi} opacity="0.35" />
         <ellipse cx="25" cy="19.6" rx={rx * 0.62} ry="4.2" fill={sk.hi} opacity="0.4" />
         <ellipse cx={27 - rx + 1.4} cy="23.4" rx="1.5" ry="2.6" fill={sk.shade} opacity="0.3" />
         <ellipse cx={27 + rx - 1.4} cy="23.4" rx="1.5" ry="2.6" fill={sk.shade} opacity="0.3" />
+        {/* 脸型专属的辨识记号 */}
+        {F.type === 'square' && (
+          <g>
+            {/* 咬肌：吃方向盘饭的脸 */}
+            <ellipse cx={27 - jawW + 1.9} cy="29.8" rx="1.7" ry="1.2" fill={sk.hi} opacity="0.3" />
+            <ellipse cx={27 + jawW - 1.9} cy="29.8" rx="1.7" ry="1.2" fill={sk.hi} opacity="0.3" />
+          </g>
+        )}
+        {F.type === 'round' && (
+          <g>
+            {/* 脸颊鼓 + 双下巴：酒桌养出来的脸 */}
+            <ellipse cx={27 - jawW + 1.8} cy="32.4" rx="2.4" ry="1.6" fill={sk.hi} opacity="0.4" />
+            <ellipse cx={27 + jawW - 1.8} cy="32.4" rx="2.4" ry="1.6" fill={sk.hi} opacity="0.4" />
+            {spec.cheeks > 0.6 && (
+              <path d={`M ${27 - 3.7} ${chinY - 3.6} Q 27 ${chinY - 2} ${27 + 3.7} ${chinY - 3.6}`} stroke={sk.shade} strokeWidth="0.65" fill="none" opacity="0.5" />
+            )}
+          </g>
+        )}
+        {F.type === 'point' && (
+          <g>
+            {/* 高颧骨：清瘦但骨相分明 */}
+            <ellipse cx={27 - 4.9} cy="26.3" rx="1.7" ry="1" fill={sk.hi} opacity="0.4" />
+            <ellipse cx={27 + 4.9} cy="26.3" rx="1.7" ry="1" fill={sk.hi} opacity="0.4" />
+          </g>
+        )}
 
-        {/* ---- 发型三档 ---- */}
+                {/* ---- 发型八档：发型也是身份（0 蓬乱密发 / 1 三七分厚发 / 2 板寸 / 3 中年短发 / 4 重地中海 / 5 油头背头 / 6 花白背头 / 7 稀疏分头） ---- */}
         {hairStyle === 0 && (
           <g>
-            <path d={`M 16.8 25.6 Q 16.2 9.8 27 9.6 Q 37.8 9.8 37.2 25.6 L 34 25.6 Q 33.8 15.4 27 14.6 Q 20.2 15.4 20 25.6 Z`} fill={spec.hairColor} />
-            <path d={`M 16.8 25.6 Q 16.6 21.4 18.4 18.2 L 19.6 19 Q 18.2 22 18.2 25.6 Z`} fill={spec.hairColor} />
-            <path d={`M 37.2 25.6 Q 37.4 21.4 35.6 18.2 L 34.4 19 Q 35.8 22 35.8 25.6 Z`} fill={spec.hairColor} />
-            <path d={`M 20 13.4 Q 27 10.2 34 13.4`} stroke="#ffffff" strokeWidth="1.1" opacity="0.16" fill="none" />
-            <path d={`M 19 16.8 Q 20.4 20.2 20.2 24.8`} stroke={spec.hairColor} strokeWidth="0.8" opacity="0.6" fill="none" />
+            {/* 蓬乱密发：年轻、熬夜、没心思打理 */}
+            <path d="M 16.6 25.8 Q 15.8 9 27 8.8 Q 38.2 9 37.4 25.8 L 33.9 25.8 Q 34.1 14.8 27 13.9 Q 19.9 14.8 20.1 25.8 Z" fill={spec.hairColor} />
+            <path d="M 20.4 12.2 Q 22 9.6 24.4 10.2 M 27.6 9.4 Q 29.8 9 31.4 10.4" stroke={spec.hairColor} strokeWidth="1.4" fill="none" strokeLinecap="round" />
+            <path d="M 21.6 17.4 Q 24.4 14.8 27.2 15.2 Q 30.4 14.8 32.6 17.2" stroke={spec.hairColor} strokeWidth="1.1" fill="none" strokeLinecap="round" opacity="0.75" />
+            <path d="M 19.6 14.6 Q 27 10.6 34.4 14.6" stroke="#ffffff" strokeWidth="1.1" opacity="0.16" fill="none" />
+            <path d="M 16.9 24 Q 16.7 21.4 17.7 19.3 L 19 20.1 Q 18.2 22 18.3 24.6 Z" fill={spec.hairColor} />
+            <path d="M 37.1 24 Q 37.3 21.4 36.3 19.3 L 35 20.1 Q 35.8 22 35.7 24.6 Z" fill={spec.hairColor} />
           </g>
         )}
         {hairStyle === 1 && (
           <g>
-            <path d={`M 17.4 25.8 Q 17 11.6 27 11.2 Q 37 11.6 36.6 25.8 L 33.8 25.8 Q 33.8 16.6 27 15.8 Q 20.2 16.6 20.2 25.8 Z`} fill={spec.hairColor} />
-            <path d={`M 21.6 13.8 Q 27 12 32.4 13.8`} stroke="#ffffff" strokeWidth="1.2" opacity="0.2" fill="none" />
-            {/* 霜白两鬓 */}
-            <path d={`M 17.6 22.4 L 19.4 22.6 L 18.8 25.8 L 17.4 25.8 Z`} fill={hairFrost} opacity="0.55" />
-            <path d={`M 36.4 22.4 L 34.6 22.6 L 35.2 25.8 L 36.6 25.8 Z`} fill={hairFrost} opacity="0.55" />
-            {/* 额纹（发际线高的故事） */}
-            <path d={`M 21.6 17.4 Q 27 16.2 32.4 17.4`} stroke={sk.shade} strokeWidth="0.5" fill="none" opacity="0.5" />
-            <path d={`M 22.4 20 Q 27 19 31.6 20`} stroke={sk.shade} strokeWidth="0.4" fill="none" opacity="0.35" />
+            {/* 三七分厚发：规整的中年厚发，分缝在左 */}
+            <path d="M 16.9 25.7 Q 16.3 9.7 27 9.4 Q 37.7 9.7 37.1 25.7 L 33.9 25.7 Q 34.1 14.9 27 14 Q 19.9 14.9 20.1 25.7 Z" fill={spec.hairColor} />
+            <path d="M 22.8 12.4 Q 26.4 10.8 30.8 11.6 Q 34 12.4 35.4 15.2 L 33.6 16 Q 32 13.8 28.6 13.2 Q 25 12.8 22.8 14 Z" fill={spec.hairColor} />
+            <path d="M 22.7 12.7 Q 25 11.6 27.4 11.7" stroke="#ffffff" strokeWidth="0.9" opacity="0.28" fill="none" />
+            <path d="M 19.8 15 Q 27 11 34.2 15" stroke="#ffffff" strokeWidth="1" opacity="0.15" fill="none" />
           </g>
         )}
         {hairStyle === 2 && (
           <g>
-            {/* M 形退发：两侧发丘 + 中央退到 15 */}
-            <path d={`M 17 26 Q 16.6 12.4 23.2 11.6 Q 26.4 11.4 26.4 16.8 Q 26.4 11.4 30.8 11.6 Q 37.4 12.4 37 26 L 34.2 26 Q 34.2 16.4 30 15.4 Q 27.8 15 27.8 18.4 L 26.2 18.4 Q 26.2 15 24 15.4 Q 19.8 16.4 19.8 26 Z`} fill={spec.hairColor} />
+            {/* 板寸：贴着头皮的短茬，天不怕地不怕的发型 */}
+            <path d="M 17.2 24.6 Q 16.9 12.7 27 12.3 Q 37.1 12.7 36.8 24.6 L 34.5 24.6 Q 34.8 15.7 27 15.2 Q 19.2 15.7 19.5 24.6 Z" fill={spec.hairColor} />
+            <path d="M 17.6 22.6 L 17.2 25.7 L 19.3 25.7 L 19.5 23.2 Z" fill={spec.hairColor} />
+            <path d="M 36.4 22.6 L 36.8 25.7 L 34.7 25.7 L 34.5 23.2 Z" fill={spec.hairColor} />
+            <path d="M 20.6 14.2 L 20.2 15.4 M 25 13.3 L 24.8 14.5 M 30 13.4 L 30.2 14.6" stroke={spec.hairColor} strokeWidth="0.8" opacity="0.6" />
+            <path d="M 20.4 14.4 Q 27 11.9 33.6 14.4" stroke="#ffffff" strokeWidth="0.9" opacity="0.14" fill="none" />
+          </g>
+        )}
+        {hairStyle === 3 && (
+          <g>
+            {/* 中年短发：发际线略退，但头顶货真价实有头发 */}
+            <path d="M 17.1 25.7 Q 16.6 10.2 27 9.8 Q 37.4 10.2 36.9 25.7 L 33.9 25.7 Q 34.1 16.2 27 15.3 Q 19.9 16.2 20.1 25.7 Z" fill={spec.hairColor} />
+            <path d="M 21.2 13.2 Q 27 11.5 32.8 13.2" stroke="#ffffff" strokeWidth="1.1" opacity="0.2" fill="none" />
+            <path d="M 20.6 16.4 Q 26.8 15 33.2 16.4" stroke={sk.shade} strokeWidth="0.4" fill="none" opacity="0.3" />
+            <path d="M 17.4 22.6 L 17.1 25.7 L 19.2 25.7 L 19.4 23.6 Z" fill={spec.hairColor} />
+            <path d="M 36.6 22.6 L 36.9 25.7 L 34.8 25.7 L 34.6 23.6 Z" fill={spec.hairColor} />
+          </g>
+        )}
+        {hairStyle === 4 && (
+          <g>
+            {/* 重地中海：M 形退发 + 头顶秃亮——真正的秃顶才用这档 */}
+            <path d="M 17 26 Q 16.6 12.4 23.2 11.6 Q 26.4 11.4 26.4 16.8 Q 26.4 11.4 30.8 11.6 Q 37.4 12.4 37 26 L 34.2 26 Q 34.2 16.4 30 15.4 Q 27.8 15 27.8 18.4 L 26.2 18.4 Q 26.2 15 24 15.4 Q 19.8 16.4 19.8 26 Z" fill={spec.hairColor} />
+            <path d="M 18.6 13.8 Q 21 11.8 23.4 11.7" stroke="#ffffff" strokeWidth="1" opacity="0.14" fill="none" />
+            <path d="M 32.6 13.8 Q 30.8 11.9 28.8 11.7" stroke="#ffffff" strokeWidth="0.9" opacity="0.12" fill="none" />
             <ellipse cx="27" cy="13.8" rx="2.6" ry="1.6" fill={sk.hi} opacity="0.35" />
-            <path d={`M 18.6 13.8 Q 21 11.8 23.4 11.7`} stroke="#ffffff" strokeWidth="1" opacity="0.14" fill="none" />
-            <path d={`M 32.6 13.8 Q 30.8 11.9 28.8 11.7`} stroke="#ffffff" strokeWidth="0.9" opacity="0.12" fill="none" />
-            <path d={`M 17.2 21.8 L 19.2 22 L 18.8 25.8 L 17 25.8 Z`} fill={hairFrost} opacity="0.6" />
-            <path d={`M 36.8 21.8 L 34.8 22 L 35.2 25.8 L 37 25.8 Z`} fill={hairFrost} opacity="0.6" />
+            <path d="M 17.2 21.8 L 19.2 22 L 18.8 25.8 L 17 25.8 Z" fill={hairFrost} opacity="0.6" />
+            <path d="M 36.8 21.8 L 34.8 22 L 35.2 25.8 L 37 25.8 Z" fill={hairFrost} opacity="0.6" />
+          </g>
+        )}
+        {hairStyle === 5 && (
+          <g>
+            {/* 油头背头：全数后梳、额头发际平整、发量壮实——老板的头 */}
+            <path d="M 16.9 25.2 Q 16.2 9.9 27 9.6 Q 37.8 9.9 37.1 25.2 L 34.1 24.9 Q 34.4 15.2 30.2 14.1 Q 27 13.3 23.8 14.1 Q 19.6 15.2 19.9 24.9 Z" fill={spec.hairColor} />
+            <path d="M 27.2 13.7 Q 27.4 11 31.2 10.2" stroke={spec.hairColor} strokeWidth="1.3" fill="none" strokeLinecap="round" />
+            <path d="M 23 14.6 Q 22.2 11.8 24.6 10.4" stroke={spec.hairColor} strokeWidth="1" fill="none" strokeLinecap="round" opacity="0.8" />
+            <path d="M 19.6 13.6 Q 26.8 9.9 34.4 13.6" stroke="#ffffff" strokeWidth="1.6" opacity="0.22" fill="none" />
+            <path d="M 22.4 11.6 Q 27 10 31.8 11.6" stroke="#ffffff" strokeWidth="0.9" opacity="0.18" fill="none" />
+            <path d="M 17.5 22.8 L 17.2 25.4 L 19.3 25.4 L 19.5 23.6 Z" fill={spec.hairColor} />
+            <path d="M 36.5 22.8 L 36.8 25.4 L 34.7 25.4 L 34.5 23.6 Z" fill={spec.hairColor} />
+          </g>
+        )}
+        {hairStyle === 6 && (
+          <g>
+            {/* 花白背头：银丝后梳，服帖、体面、见岁月 */}
+            <path d="M 17.2 25.2 Q 16.6 10.4 27 10.1 Q 37.4 10.4 36.8 25.2 L 34 24.9 Q 34.2 15.8 30 14.8 Q 27 14 24 14.8 Q 19.8 15.8 20 24.9 Z" fill={spec.hairColor} />
+            <path d="M 19.2 13.4 Q 26.8 9.9 34.6 13.4" stroke={hairFrost} strokeWidth="1.2" opacity="0.7" fill="none" />
+            <path d="M 21.6 11.9 Q 27 10.1 32.6 12" stroke={hairFrost} strokeWidth="0.9" opacity="0.55" fill="none" />
+            <path d="M 20.4 17.8 Q 26.6 16.2 33 17.8" stroke={hairFrost} strokeWidth="0.7" opacity="0.4" fill="none" />
+            <path d="M 17.6 22.4 L 17.3 25.4 L 19.4 25.4 L 19.6 23.4 Z" fill={hairFrost} opacity="0.7" />
+            <path d="M 36.4 22.4 L 36.7 25.4 L 34.6 25.4 L 34.4 23.4 Z" fill={hairFrost} opacity="0.7" />
+          </g>
+        )}
+        {hairStyle === 7 && (
+          <g>
+            {/* 稀疏分头：发量薄、发际高，但梳理得一丝不苟 */}
+            <path d="M 17.4 25.8 Q 17 11.6 27 11.2 Q 37 11.6 36.6 25.8 L 33.8 25.8 Q 33.8 16.6 27 15.8 Q 20.2 16.6 20.2 25.8 Z" fill={spec.hairColor} />
+            <path d="M 21.6 13.8 Q 27 12 32.4 13.8" stroke="#ffffff" strokeWidth="1.2" opacity="0.2" fill="none" />
+            <path d="M 22.8 12.9 Q 26.6 12.1 30.6 13" stroke="#ffffff" strokeWidth="0.7" opacity="0.16" fill="none" />
+            <path d="M 17.6 22.4 L 19.4 22.6 L 18.8 25.8 L 17.4 25.8 Z" fill={hairFrost} opacity="0.55" />
+            <path d="M 36.4 22.4 L 34.6 22.6 L 35.2 25.8 L 36.6 25.8 Z" fill={hairFrost} opacity="0.55" />
+            <path d="M 21.6 17.4 Q 27 16.2 32.4 17.4" stroke={sk.shade} strokeWidth="0.5" fill="none" opacity="0.5" />
+            <path d="M 22.4 20 Q 27 19 31.6 20" stroke={sk.shade} strokeWidth="0.4" fill="none" opacity="0.35" />
           </g>
         )}
 
@@ -611,11 +734,7 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
             <path d={`M 29.8 ${wary ? 21.9 : 20.7} Q 31.8 ${wary ? 21.3 : 19.6} 33.8 ${wary ? 21.8 : 20.6}`} />
           </g>
         )}
-        {wary && (
-          <>
-            <path d="M 25.8 21.4 L 26.6 23 M 28.2 21.4 L 27.4 23" stroke={sk.shade} strokeWidth="0.7" strokeLinecap="round" />
-          </>
-        )}
+        {wary && <path d="M 25.8 21.4 L 26.6 23 M 28.2 21.4 L 27.4 23" stroke={sk.shade} strokeWidth="0.7" strokeLinecap="round" />}
 
         {/* ---- 眼：眼白 + 瞳仁 + 瞳孔 + 高光；含笑换月牙眼 ---- */}
         {smiling ? (
@@ -635,18 +754,16 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
             <circle cx="31.6" cy={eyeY + 0.1} r="0.5" fill="#1c1610" />
             <circle cx={22.8} cy={eyeY - 0.4} r="0.4" fill="#fff" opacity="0.95" />
             <circle cx={32} cy={eyeY - 0.4} r="0.4" fill="#fff" opacity="0.95" />
-            {/* 上睑 + 警惕下压 */}
             <path d={`M 20.3 ${lidY} Q 22.4 ${lidY - 0.5} 24.5 ${lidY + (wary ? 0.8 : 0.1)}`} stroke={sk.line} strokeWidth="0.7" fill="none" />
             <path d={`M 29.5 ${lidY + (wary ? 0.8 : 0.1)} Q 31.6 ${lidY - 0.5} 33.7 ${lidY}`} stroke={sk.line} strokeWidth="0.7" fill="none" />
           </g>
         )}
-        {/* 眼袋 + 鱼尾纹 */}
         <path d="M 20.8 26.6 Q 22.4 27.4 24 26.7" stroke={sk.shade} strokeWidth="0.5" fill="none" opacity="0.55" />
         <path d="M 30 26.7 Q 31.6 27.4 33.2 26.6" stroke={sk.shade} strokeWidth="0.5" fill="none" opacity="0.55" />
         <path d="M 19.6 24.2 L 18.6 23.8 M 19.7 25.2 L 18.7 25.3" stroke={sk.shade} strokeWidth="0.4" opacity="0.4" />
         <path d="M 34.4 24.2 L 35.4 23.8 M 34.3 25.2 L 35.3 25.3" stroke={sk.shade} strokeWidth="0.4" opacity="0.4" />
 
-        {/* ---- 鼻：鼻梁 + 鼻头 + 鼻翼 ---- */}
+        {/* ---- 鼻 ---- */}
         <path d="M 27.5 24.6 Q 26.7 27.4 26.3 29.4" stroke={sk.shade} strokeWidth="0.9" fill="none" strokeLinecap="round" />
         <path d="M 26.3 29.4 Q 27 30.1 28 29.5" stroke={sk.line} strokeWidth="0.7" fill="none" />
         <ellipse cx="25.6" cy="29.6" rx="0.9" ry="0.55" fill={sk.shade} opacity="0.65" />
@@ -654,48 +771,47 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
         <ellipse cx="27.2" cy="28.6" rx="1.3" ry="0.7" fill={sk.hi} opacity="0.3" />
 
         {/* ---- 法令纹 ---- */}
-        <path d="M 23.6 30.2 Q 23 32.2 23.4 33.8" stroke={sk.shade} strokeWidth="0.5" fill="none" opacity="0.45" />
-        <path d="M 30.4 30.2 Q 31 32.2 30.6 33.8" stroke={sk.shade} strokeWidth="0.5" fill="none" opacity="0.45" />
+        <path d={`M 23.6 ${30.2 + mDy} Q 23 ${32.2 + mDy} 23.4 ${33.8 + mDy}`} stroke={sk.shade} strokeWidth="0.5" fill="none" opacity="0.45" />
+        <path d={`M 30.4 ${30.2 + mDy} Q 31 ${32.2 + mDy} 30.6 ${33.8 + mDy}`} stroke={sk.shade} strokeWidth="0.5" fill="none" opacity="0.45" />
 
-        {/* ---- 嘴（三档表情） ---- */}
+        {/* ---- 嘴（三档表情 × 脸型的嘴位） ---- */}
         {smiling ? (
           <g>
-            <path d="M 23.2 32.4 Q 27 35.6 30.8 32.4" stroke="#7c4a38" strokeWidth="1.4" fill="none" strokeLinecap="round" />
-            <path d="M 24.4 34.4 Q 27 35.2 29.6 34.4" stroke={sk.shade} strokeWidth="0.6" fill="none" opacity="0.6" />
-            <circle cx="22" cy="32.4" r="0.7" fill={sk.shade} opacity="0.6" />
-            <circle cx="32" cy="32.4" r="0.7" fill={sk.shade} opacity="0.6" />
+            <path d={`M 23.2 ${32.4 + mDy} Q 27 ${35.6 + mDy} 30.8 ${32.4 + mDy}`} stroke="#7c4a38" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+            <path d={`M 24.4 ${34.4 + mDy} Q 27 ${35.2 + mDy} 29.6 ${34.4 + mDy}`} stroke={sk.shade} strokeWidth="0.6" fill="none" opacity="0.6" />
+            <circle cx="22" cy={32.4 + mDy} r="0.7" fill={sk.shade} opacity="0.6" />
+            <circle cx="32" cy={32.4 + mDy} r="0.7" fill={sk.shade} opacity="0.6" />
           </g>
         ) : wary ? (
-          <path d="M 24 33.6 Q 27 33 30 33.7" stroke="#7c4a38" strokeWidth="1.3" fill="none" strokeLinecap="round" />
+          <path d={`M 24 ${33.6 + mDy} Q 27 ${33 + mDy} 30 ${33.7 + mDy}`} stroke="#7c4a38" strokeWidth="1.3" fill="none" strokeLinecap="round" />
         ) : (
-          <path d="M 23.6 32.8 Q 27 34 30.4 32.8" stroke="#7c4a38" strokeWidth="1.3" fill="none" strokeLinecap="round" />
+          <path d={`M 23.6 ${32.8 + mDy} Q 27 ${34 + mDy} 30.4 ${32.8 + mDy}`} stroke="#7c4a38" strokeWidth="1.3" fill="none" strokeLinecap="round" />
         )}
 
-        {/* ---- 胡茬：1 青灰点阵 / 2 山羊胡 ---- */}
+        {/* ---- 胡茬：1 青灰点阵 / 2 山羊胡（随嘴位微移） ---- */}
         {spec.beard === 1 && (
           <g fill="#3a3026" opacity="0.26">
-            <ellipse cx="27" cy="35" rx="6.4" ry="3.4" opacity="0.5" />
-            <circle cx="22.2" cy="33.4" r="0.5" /><circle cx="23.4" cy="34.6" r="0.5" /><circle cx="24.4" cy="35.8" r="0.5" />
-            <circle cx="25.8" cy="36.6" r="0.5" /><circle cx="27.4" cy="37" r="0.5" /><circle cx="29" cy="36.4" r="0.5" />
-            <circle cx="30.4" cy="35.4" r="0.5" /><circle cx="31.6" cy="34" r="0.5" /><circle cx="32.4" cy="32.8" r="0.5" />
-            <circle cx="21.6" cy="31.8" r="0.5" /><circle cx="26.4" cy="34.8" r="0.5" /><circle cx="28.6" cy="34.9" r="0.5" />
+            <ellipse cx="27" cy={35 + mDy * 0.6} rx="6.4" ry="3.4" opacity="0.5" />
+            <circle cx="22.2" cy={33.4 + mDy * 0.6} r="0.5" /><circle cx="23.4" cy={34.6 + mDy * 0.6} r="0.5" /><circle cx="24.4" cy={35.8 + mDy * 0.6} r="0.5" />
+            <circle cx="25.8" cy={36.6 + mDy * 0.6} r="0.5" /><circle cx="27.4" cy={37 + mDy * 0.6} r="0.5" /><circle cx="29" cy={36.4 + mDy * 0.6} r="0.5" />
+            <circle cx="30.4" cy={35.4 + mDy * 0.6} r="0.5" /><circle cx="31.6" cy={34 + mDy * 0.6} r="0.5" /><circle cx="32.4" cy={32.8 + mDy * 0.6} r="0.5" />
+            <circle cx="21.6" cy={31.8 + mDy * 0.6} r="0.5" /><circle cx="26.4" cy={34.8 + mDy * 0.6} r="0.5" /><circle cx="28.6" cy={34.9 + mDy * 0.6} r="0.5" />
           </g>
         )}
         {spec.beard === 2 && (
           <g fill="#2e2620" opacity="0.5">
-            <path d={`M 24 31.6 Q 27 30.8 30 31.6 L 29.6 32.8 Q 27 32.2 24.4 32.8 Z`} />
-            <path d={`M 24.8 34.6 Q 27 34 29.2 34.6 Q 29 37.6 27 38.6 Q 25 37.6 24.8 34.6 Z`} />
+            <path d={`M 24 ${31.6 + mDy} Q 27 ${30.8 + mDy} 30 ${31.6 + mDy} L 29.6 ${32.8 + mDy} Q 27 ${32.2 + mDy} 24.4 ${32.8 + mDy} Z`} />
+            <path d={`M 24.8 ${34.6 + mDy} Q 27 ${34 + mDy} 29.2 ${34.6 + mDy} Q 29 ${37.6 + mDy} 27 ${38.6 + mDy} Q 25 ${37.6 + mDy} 24.8 ${34.6 + mDy} Z`} />
           </g>
         )}
 
-        {/* 双下巴（富态脸的坐标） */}
-        {spec.cheeks > 0.65 && (
-          <path d="M 23.4 36.9 Q 27 38.4 30.6 36.9" stroke={sk.shade} strokeWidth="0.6" fill="none" opacity="0.5" />
+        {/* ---- 颧骨高光（清瘦脸已单独画，这里给其余脸型） ---- */}
+        {F.type !== 'point' && (
+          <g>
+            <ellipse cx="21.6" cy="29.2" rx="2" ry="1.2" fill={sk.hi} opacity="0.32" />
+            <ellipse cx="32.4" cy="29.2" rx="2" ry="1.2" fill={sk.hi} opacity="0.32" />
+          </g>
         )}
-
-        {/* ---- 颧骨高光 ---- */}
-        <ellipse cx="21.6" cy="29.2" rx="2" ry="1.2" fill={sk.hi} opacity="0.32" />
-        <ellipse cx="32.4" cy="29.2" rx="2" ry="1.2" fill={sk.hi} opacity="0.32" />
 
         {/* ---- 眼镜（细金属框 + 斜向反光 + 鼻托） ---- */}
         {spec.glasses > 0 && (

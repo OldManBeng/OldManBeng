@@ -92,7 +92,7 @@ export interface Target {
   traits: TargetTraitId[];
   /** Programmatic avatar spec (drawn in components/character-art.tsx). */
   portraitSpec: {
-    hair: number;       // hairline style index
+    hair: number;       // 发型档位 0-7（蓬乱密发/三七分/板寸/中年短发/重地中海/油头背头/花白背头/稀疏分头）
     hairColor: string;
     glasses: number;
     beard: number;
@@ -108,6 +108,8 @@ export interface Target {
     skin?: 0 | 1 | 2;
     /** v3.0：眉型 0 细眉 / 1 浓眉（缺省 0）。 */
     brow?: 0 | 1;
+    /** v3.2：脸型 0 国字方脸 / 1 富态圆脸 / 2 清瘦尖脸 / 3 瘦长脸 / 4 年轻短圆脸（缺省 1）。 */
+    face?: 0 | 1 | 2 | 3 | 4;
   };
 }
 

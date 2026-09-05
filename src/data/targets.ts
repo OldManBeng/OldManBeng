@@ -24,12 +24,12 @@ export const TARGETS: Target[] = [
     activeHour: 23,
     traits: ['night_owl', 'loneliness'],
     portraitSpec: {
-      hair: 2, // receding
+      hair: 3, // 中年短发 劳作阶层的体面
       hairColor: '#3a3a3a',
       glasses: 0,
       beard: 1,
       cheeks: 0.55,
-      shirtColor: '#4a5d6e', skin: 2, brow: 1,
+      shirtColor: '#4a5d6e', skin: 2, brow: 1, face: 0,
       bgScene: 'night_road',
       accessory: 'steering_wheel',
       accent: '#4a5d6e',
@@ -54,12 +54,12 @@ export const TARGETS: Target[] = [
     activeHour: 9, // morning — 退休人的清晨从五点半开始
     traits: ['generous', 'clingy'],
     portraitSpec: {
-      hair: 1, // thinning combed-over
+      hair: 6, // 花白背头 老知识分子的体面
       hairColor: '#c9c2b8',
       glasses: 1, // square
       beard: 0,
       cheeks: 0.3,
-      shirtColor: '#7a6f5f', skin: 0, brow: 0,
+      shirtColor: '#7a6f5f', skin: 0, brow: 0, face: 2,
       bgScene: 'study',
       accessory: 'calligraphy_brush',
       accent: '#7a6f5f',
@@ -84,12 +84,12 @@ export const TARGETS: Target[] = [
     activeHour: 1, // 凌晨——太太睡着以后
     traits: ['suspicious', 'night_owl'],
     portraitSpec: {
-      hair: 2, // receding
+      hair: 5, // 油头背头 生意人的头
       hairColor: '#4a4038',
       glasses: 0,
       beard: 0,
       cheeks: 0.8, // well-fed
-      shirtColor: '#8a4a3a', skin: 1, brow: 1,
+      shirtColor: '#8a4a3a', skin: 1, brow: 1, face: 1,
       bgScene: 'garage',
       accessory: 'cigarette',
       accent: '#8a4a3a',
@@ -114,12 +114,12 @@ export const TARGETS: Target[] = [
     activeHour: 21, // 网吧黄金档
     traits: ['clingy'],
     portraitSpec: {
-      hair: 0, // full, casual
+      hair: 0, // 蓬乱密发 熬夜守店的乱发
       hairColor: '#2e2a26',
       glasses: 0,
       beard: 2, // light stubble
       cheeks: 0.4,
-      shirtColor: '#3d6b5e', skin: 0, brow: 0,
+      shirtColor: '#3d6b5e', skin: 0, brow: 0, face: 4,
       bgScene: 'internet_cafe',
       accessory: 'gamepad',
       accent: '#3d6b5e',
@@ -144,12 +144,12 @@ export const TARGETS: Target[] = [
     activeHour: 22, // 睡前刷一会儿手机
     traits: ['suspicious', 'generous'],
     portraitSpec: {
-      hair: 1, // thinning
+      hair: 1, // 三七分厚发 工程师的分头
       hairColor: '#9a948e',
       glasses: 1, // square
       beard: 0,
       cheeks: 0.35,
-      shirtColor: '#5a6d7a', skin: 1, brow: 0,
+      shirtColor: '#5a6d7a', skin: 1, brow: 0, face: 3,
       bgScene: 'balcony',
       accessory: 'wrench',
       accent: '#5a6d7a',
