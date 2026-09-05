@@ -39,7 +39,11 @@ export interface RunStats {
   biggestPacket: number;
 }
 
-/** 女主可编辑的自设资料——头像/年龄/性格/朋友圈自拍，全部影响他的话术。 */
+/** v2.3 朋友圈自拍的 8 种类型（全部成年向生活照）。 */
+export type SelfieId = 'cake' | 'gym' | 'pool' | 'cat' | 'grind' | 'travel' | 'boba' | 'sick';
+export const SELFIE_IDS: SelfieId[] = ['cake', 'gym', 'pool', 'cat', 'grind', 'travel', 'boba', 'sick'];
+
+/** 女主可编辑的自设资料——头像/年龄/性格，全部影响他的话术。 */
 export interface PlayerProfile {
   /** 头像预设 1-6（程序化 SVG 发型×发色组合）。 */
   avatarId: number;
@@ -47,10 +51,34 @@ export interface PlayerProfile {
   ageClaim: 20 | 24 | 28 | 32;
   /** 性格人设：话术触发 + 轻量机制钩子。 */
   traitId: 'sweet_mouth' | 'cold_queen' | 'straight_shooter' | 'soft_artsy';
-  /** 朋友圈最新一张自拍照的类型。 */
-  selfieId: 'cake' | 'gym' | 'pool' | 'cat';
+  /** 朋友圈最新一张自拍照的类型（v2.3：发朋友圈在朋友圈模块，此处是数据快照）。 */
+  selfieId: SelfieId;
   /** 那张照片发布于第几天（新发布才会引来"他来找你"）。 */
   selfieDay: number;
+}
+
+/** 朋友圈的一条评论——他能评你，你也能评他。 */
+export interface MomentComment {
+  by: 'player' | 'target';
+  targetId?: string;
+  text: string;
+}
+
+/** 朋友圈动态（v2.3）。玩家的圈=自拍类型；他的圈=复用 photoId 场景图。 */
+export interface MomentPost {
+  id: string;
+  momentDay: number;
+  author: 'player' | 'target';
+  /** 作者为老头时的 targetId。 */
+  targetId?: string;
+  /** 玩家圈：自拍类型（决定配图与老头的反应档位）。 */
+  selfieId?: SelfieId;
+  /** 老头圈：程序化照片场景 id。 */
+  photoId?: string;
+  caption: string;
+  /** 点赞的人（targetId 列表；玩家的点赞记 'player'）。 */
+  likes: string[];
+  comments: MomentComment[];
 }
 
 /** 钱包流水（每一笔钱的进出都记账）。 */
@@ -58,7 +86,7 @@ export interface LedgerEntry {
   day: number;
   amount: number;
   note: string;
-  kind: 'bill' | 'packet' | 'gift' | 'course' | 'event' | 'plan';
+  kind: 'bill' | 'packet' | 'gift' | 'course' | 'event' | 'plan' | 'shop';
 }
 
 /** 聊天记录归档——end_chat 时整场对话存档。 */
@@ -135,6 +163,12 @@ export interface GameState {
   todayPlan: string;
   /** 今日已累计的麻木（日上限用）。 */
   numbnessToday: number;
+  /** v2.3 朋友圈动态流（最新在后，容量封顶）。 */
+  moments: MomentPost[];
+  /** v2.3 你还没看过的老头评论/点赞数（朋友圈 tab 红点）。 */
+  unseenMoments: number;
+  /** v2.3 钱包商店库存（itemId → 数量；一次性道具买了即从可购列表消失）。 */
+  inventory: Record<string, number>;
 }
 
 export type GameAction =
@@ -150,4 +184,12 @@ export type GameAction =
   | { type: 'choose_plan'; planId: string }
   | { type: 'accept_incoming'; targetId: string }
   | { type: 'ignore_incoming'; targetId: string }
-  | { type: 'update_profile'; avatarId?: number; ageClaim?: PlayerProfile['ageClaim']; traitId?: PlayerProfile['traitId']; selfieId?: PlayerProfile['selfieId'] };
+  | { type: 'update_profile'; avatarId?: number; ageClaim?: PlayerProfile['ageClaim']; traitId?: PlayerProfile['traitId'] }
+  /** v2.3 发一条朋友圈自拍（每天最多一条；替代原 update_profile 的 selfieId 通道）。 */
+  | { type: 'post_moment'; selfieId: SelfieId }
+  /** v2.3 对朋友圈动态点赞/评论（他的圈：+信任；看你自己的圈不算）。 */
+  | { type: 'react_moment'; momentId: string; kind: 'like' | 'comment'; text?: string }
+  /** v2.3 打开朋友圈模块（清红点）。 */
+  | { type: 'view_moments' }
+  /** v2.3 钱包商店购买。钱不够/唯一道具已购 → no-op。 */
+  | { type: 'buy_item'; itemId: string };

@@ -590,6 +590,215 @@ const PHOTO_SCENES: Record<string, ReactElement> = {
 };
 
 // ---------------------------------------------------------------------------
+// v2.3：朋友圈自拍照——8 种程序化 SVG"手机随手拍"
+// ---------------------------------------------------------------------------
+export function MomentPhoto({ selfieId }: { selfieId: string }) {
+  const scene = SELFIE_SCENES[selfieId];
+  if (!scene) return null;
+  return (
+    <svg width="200" height="150" viewBox="0 0 200 150" role="img" aria-label="朋友圈自拍">
+      {scene}
+    </svg>
+  );
+}
+
+/** 自拍场景库——按 SelfieId 索引（200×150，与照片系统同规格）。 */
+const SELFIE_SCENES: Record<string, ReactElement> = {
+  // 蛋糕照：甜品店暖光 + 一块奶油蛋糕
+  cake: (
+    <>
+      <rect width="200" height="150" fill="#2a1a14" />
+      <rect x="0" y="105" width="200" height="45" fill="#3a2a1e" />
+      {/* 暖光 */}
+      <circle cx="170" cy="18" r="10" fill="#f4d03f" opacity="0.25" />
+      <circle cx="170" cy="18" r="4" fill="#f4d03f" opacity="0.7" />
+      {/* 蛋糕三层 */}
+      <rect x="70" y="70" width="60" height="12" fill="#5a3a24" />
+      <rect x="70" y="82" width="60" height="12" fill="#7a5a3a" />
+      <rect x="70" y="94" width="60" height="12" fill="#5a3a24" />
+      {/* 奶油顶 */}
+      <ellipse cx="100" cy="70" rx="30" ry="7" fill="#f0e8e0" />
+      <circle cx="100" cy="63" r="5" fill="#f0e8e0" />
+      {/* 草莓 */}
+      <path d="M 96 55 L 100 47 L 104 55 Z" fill="#c0392b" />
+      {/* 叉子 */}
+      <rect x="150" y="80" width="3" height="26" rx="1" fill="#aaa" transform="rotate(18 151 93)" />
+      <rect x="144" y="76" width="15" height="4" rx="1" fill="#aaa" transform="rotate(18 151 78)" />
+    </>
+  ),
+  // 夜跑照：深蓝操场 + 路灯 + 手环荧光
+  gym: (
+    <>
+      <rect width="200" height="150" fill="#0a1020" />
+      <rect x="0" y="100" width="200" height="50" fill="#1a2233" />
+      {/* 跑道白线 */}
+      <line x1="0" y1="112" x2="200" y2="112" stroke="#3a4a5a" strokeWidth="2" strokeDasharray="14 10" />
+      <line x1="0" y1="130" x2="200" y2="130" stroke="#2a3a4a" strokeWidth="1.5" strokeDasharray="10 8" />
+      {/* 路灯 */}
+      <rect x="150" y="10" width="3" height="80" fill="#3a3a3a" />
+      <path d="M 145 12 L 162 12 L 153 22 Z" fill="#f4d03f" opacity="0.85" />
+      <circle cx="153" cy="26" r="14" fill="#f4d03f" opacity="0.12" />
+      {/* 弯月 */}
+      <path d="M 40 22 A 12 12 0 1 0 52 36 A 9 9 0 1 1 40 22 Z" fill="#e8e4d0" opacity="0.8" />
+      {/* 手环荧光（近景） */}
+      <ellipse cx="55" cy="95" rx="26" ry="15" fill="#1a2a3a" opacity="0.9" />
+      <rect x="47" y="90" width="16" height="10" rx="5" fill="#2ecc71" opacity="0.8" />
+      <text x="50" y="97.5" font-size="6" fill="#0a1a0a" fontFamily="monospace">23:47</text>
+    </>
+  ),
+  // 泳池照：水波 + 泳圈 + 遮阳伞一角
+  pool: (
+    <>
+      <rect width="200" height="150" fill="#7ab8d4" />
+      <rect x="0" y="70" width="200" height="80" fill="#4a9ac4" />
+      {/* 水波 */}
+      <path d="M 0 82 Q 25 76 50 82 T 100 82 T 150 82 T 200 82" stroke="#cdeaf4" strokeWidth="2.5" fill="none" opacity="0.7" />
+      <path d="M 0 100 Q 25 94 50 100 T 100 100 T 150 100 T 200 100" stroke="#cdeaf4" strokeWidth="2" fill="none" opacity="0.5" />
+      <path d="M 0 118 Q 25 112 50 118 T 100 118 T 150 118 T 200 118" stroke="#cdeaf4" strokeWidth="1.5" fill="none" opacity="0.35" />
+      {/* 泳圈 */}
+      <ellipse cx="130" cy="85" rx="30" ry="13" fill="none" stroke="#e74c3c" strokeWidth="8" />
+      <ellipse cx="130" cy="85" rx="30" ry="13" fill="none" stroke="#fff" strokeWidth="2.5" strokeDasharray="8 8" />
+      {/* 遮阳伞一角 */}
+      <path d="M 0 0 L 60 0 Q 30 30 0 38 Z" fill="#f0e8d8" />
+      <path d="M 20 0 L 32 0 Q 26 22 18 30 Z" fill="#c0392b" opacity="0.7" />
+      {/* 水花点 */}
+      <circle cx="60" cy="92" r="2" fill="#fff" opacity="0.6" />
+      <circle cx="75" cy="78" r="1.5" fill="#fff" opacity="0.5" />
+      <circle cx="90" cy="95" r="2.5" fill="#fff" opacity="0.4" />
+    </>
+  ),
+  // 橘猫照：沙发 + 蜷成一团的橘猫
+  cat: (
+    <>
+      <rect width="200" height="150" fill="#2a2018" />
+      <rect x="0" y="110" width="200" height="40" fill="#4a3a28" />
+      {/* 沙发靠垫 */}
+      <rect x="20" y="70" width="160" height="50" rx="10" fill="#5a4632" />
+      <rect x="90" y="72" width="2" height="46" fill="#4a3a28" />
+      {/* 猫身体 */}
+      <ellipse cx="100" cy="100" rx="34" ry="18" fill="#e89a3a" />
+      {/* 猫头 */}
+      <circle cx="72" cy="92" r="15" fill="#e89a3a" />
+      {/* 耳朵 */}
+      <path d="M 60 84 L 63 72 L 70 80 Z" fill="#e89a3a" />
+      <path d="M 76 78 L 80 68 L 86 78 Z" fill="#e89a3a" />
+      {/* 尾巴 */}
+      <path d="M 130 100 Q 152 96 150 78" stroke="#e89a3a" strokeWidth="7" fill="none" strokeLinecap="round" />
+      {/* 闭眼 + 胡须 */}
+      <path d="M 64 90 Q 67 93 70 90" stroke="#1a1a1a" strokeWidth="1.5" fill="none" />
+      <path d="M 58 96 L 48 94 M 58 99 L 48 100" stroke="#f0d8b8" strokeWidth="1" />
+      {/* 猫爪垫 */}
+      <ellipse cx="94" cy="116" rx="7" ry="3.5" fill="#f0d8b8" />
+    </>
+  ),
+  // 加班照：深夜工位 + 电脑屏光 + 外卖盒
+  grind: (
+    <>
+      <rect width="200" height="150" fill="#12141a" />
+      {/* 窗外的城市灯 */}
+      <rect x="150" y="0" width="50" height="150" fill="#0a0c12" />
+      <rect x="158" y="12" width="6" height="6" fill="#f4d03f" opacity="0.5" />
+      <rect x="172" y="30" width="6" height="6" fill="#f4d03f" opacity="0.35" />
+      <rect x="162" y="52" width="6" height="6" fill="#5b8db8" opacity="0.5" />
+      <rect x="180" y="70" width="6" height="6" fill="#5b8db8" opacity="0.3" />
+      {/* 笔记本屏幕 */}
+      <rect x="30" y="35" width="110" height="65" rx="3" fill="#1a1f2a" />
+      <rect x="36" y="41" width="98" height="53" fill="#253246" />
+      {/* 代码行 */}
+      <rect x="42" y="47" width="40" height="3.5" rx="1" fill="#4a7aaa" />
+      <rect x="42" y="55" width="55" height="3.5" rx="1" fill="#3a6a7a" />
+      <rect x="50" y="63" width="35" height="3.5" rx="1" fill="#4a7a5a" />
+      <rect x="50" y="71" width="48" height="3.5" rx="1" fill="#3a5a7a" />
+      <rect x="42" y="79" width="30" height="3.5" rx="1" fill="#7a5a4a" />
+      {/* 光标 */}
+      <rect x="96" y="86" width="6" height="5" fill="#cdeaf4" opacity="0.9" />
+      {/* 屏幕底座 */}
+      <rect x="70" y="100" width="30" height="4" fill="#2a2f3a" />
+      {/* 咖啡杯 + 外卖盒 */}
+      <rect x="16" y="92" width="10" height="12" rx="2" fill="#d8d0c4" />
+      <rect x="26" y="88" width="3" height="8" rx="1" fill="#888" opacity="0.6" />
+      <rect x="148" y="98" width="34" height="20" rx="2" fill="#c9b892" />
+      <rect x="152" y="104" width="26" height="4" fill="#a89a6e" opacity="0.6" />
+      {/* 时间水印 */}
+      <text x="36" y="128" font-size="9" fill="#5a6a7a" fontFamily="monospace">01:47</text>
+    </>
+  ),
+  // 旅游照：车窗外的山与公路
+  travel: (
+    <>
+      <rect width="200" height="150" fill="#f0c898" />
+      {/* 落日 */}
+      <circle cx="150" cy="60" r="18" fill="#f4a03f" />
+      {/* 远山 */}
+      <path d="M 0 90 L 45 55 L 80 90 Z" fill="#7a5a4a" opacity="0.7" />
+      <path d="M 55 90 L 105 45 L 155 90 Z" fill="#5a4a3a" opacity="0.8" />
+      <path d="M 120 90 L 165 60 L 200 90 Z" fill="#7a5a4a" opacity="0.6" />
+      {/* 公路 */}
+      <path d="M 0 150 L 0 110 L 200 150 Z" fill="#6a5a4a" opacity="0.9" />
+      <path d="M 95 112 L 105 122 L 92 150 L 86 150 Z" fill="#f0e8d8" opacity="0.5" />
+      {/* 车窗框（近景，暗示在车上拍的） */}
+      <rect x="0" y="0" width="200" height="150" fill="none" stroke="#3a3026" strokeWidth="10" />
+      <line x1="0" y1="0" x2="200" y2="150" stroke="#3a3026" strokeWidth="6" opacity="0.35" />
+    </>
+  ),
+  // 奶茶咖啡照：一杯全糖去冰
+  boba: (
+    <>
+      <rect width="200" height="150" fill="#2a1a1a" />
+      <rect x="0" y="110" width="200" height="40" fill="#3a2a1e" />
+      {/* 店里的小灯 */}
+      <circle cx="40" cy="24" r="4" fill="#f4d03f" opacity="0.8" />
+      <circle cx="40" cy="24" r="10" fill="#f4d03f" opacity="0.15" />
+      {/* 杯身 */}
+      <path d="M 70 50 L 130 50 L 122 118 L 78 118 Z" fill="#c9a37a" />
+      <path d="M 72 66 L 128 66 L 122 118 L 78 118 Z" fill="#8a5a3a" />
+      {/* 奶盖 */}
+      <rect x="70" y="50" width="60" height="10" fill="#f0e8e0" />
+      {/* 珍珠 */}
+      <circle cx="92" cy="105" r="4" fill="#2a1a14" />
+      <circle cx="104" cy="110" r="4" fill="#2a1a14" />
+      <circle cx="112" cy="102" r="4" fill="#2a1a14" />
+      <circle cx="98" cy="96" r="3.5" fill="#3a2a1e" />
+      {/* 吸管 */}
+      <rect x="108" y="24" width="6" height="50" fill="#e74c3c" transform="rotate(12 111 49)" />
+      {/* 杯套 */}
+      <path d="M 76 84 L 124 84 L 122 100 L 78 100 Z" fill="#f0e8d8" opacity="0.85" />
+      <text x="90" y="95" font-size="8" fill="#5a3a24" fontFamily="serif">全糖</text>
+    </>
+  ),
+  // 病床输液照：病房夜灯 + 吊瓶 + 输液管
+  sick: (
+    <>
+      <rect width="200" height="150" fill="#3a4248" />
+      <rect x="0" y="118" width="200" height="32" fill="#4a5258" />
+      {/* 病房墙线 */}
+      <rect x="0" y="0" width="200" height="8" fill="#2a3238" />
+      <rect x="0" y="60" width="200" height="3" fill="#2a3238" opacity="0.6" />
+      {/* 吊瓶架 */}
+      <line x1="150" y1="10" x2="150" y2="130" stroke="#6a7278" strokeWidth="3" />
+      <line x1="128" y1="10" x2="172" y2="10" stroke="#6a7278" strokeWidth="3" />
+      {/* 吊瓶 */}
+      <rect x="140" y="18" width="20" height="34" rx="4" fill="#cde4ea" opacity="0.9" />
+      <rect x="143" y="34" width="14" height="15" fill="#8ab8c8" opacity="0.8" />
+      <rect x="147" y="52" width="6" height="10" fill="#8ab8c8" />
+      {/* 输液管 */}
+      <path d="M 150 62 Q 130 70 118 84 Q 108 96 104 106" stroke="#cde4ea" strokeWidth="1.8" fill="none" opacity="0.85" />
+      {/* 病床 */}
+      <rect x="20" y="92" width="90" height="12" rx="3" fill="#8a9298" />
+      <rect x="20" y="70" width="34" height="22" rx="4" fill="#dce4ea" />
+      <rect x="14" y="104" width="6" height="18" fill="#5a6268" />
+      <rect x="96" y="104" width="6" height="18" fill="#5a6268" />
+      {/* 手背上的胶布 */}
+      <rect x="98" y="104" width="14" height="5" rx="1" fill="#f0e8d8" />
+      {/* 挂钟 */}
+      <circle cx="46" cy="30" r="12" fill="#2a3238" stroke="#6a7278" strokeWidth="1.5" />
+      <line x1="46" y1="30" x2="46" y2="22" stroke="#cde4ea" strokeWidth="1.5" />
+      <line x1="46" y1="30" x2="52" y2="33" stroke="#cde4ea" strokeWidth="1" />
+    </>
+  ),
+};
+
+// ---------------------------------------------------------------------------
 // 女主角头像系统（保留不变）
 // ---------------------------------------------------------------------------
 const PERSONA_STYLE: Record<PersonaId, { bg: string; hair: string; hairStyle: 'long' | 'twin' | 'bob' | 'bun'; accent: string }> = {

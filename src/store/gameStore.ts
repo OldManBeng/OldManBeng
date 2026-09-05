@@ -47,6 +47,10 @@ function migrate(saved: GameState): GameState {
     todayPlan: saved.todayPlan ?? '',
     numbnessToday: saved.numbnessToday ?? 0,
     energyMax: saved.energyMax ?? base.energyMax,
+    // v2.3：朋友圈 + 商店。
+    moments: saved.moments ?? [],
+    unseenMoments: saved.unseenMoments ?? 0,
+    inventory: saved.inventory ?? {},
   };
 }
 

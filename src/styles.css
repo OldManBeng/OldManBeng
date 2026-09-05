@@ -493,6 +493,7 @@ body {
 /* ---------- v2.0 模块化导航 ---------- */
 .today-panel,
 .contacts-panel,
+.moments-panel,
 .wallet-panel,
 .history-panel,
 .profile-panel {
@@ -503,6 +504,7 @@ body {
 }
 .today-panel h3,
 .contacts-panel h3,
+.moments-panel h3,
 .wallet-panel h3,
 .history-panel h3,
 .profile-panel h3 { font-size: 15px; }
@@ -517,7 +519,28 @@ body {
   width: fit-content;
 }
 
-/* 底部五模块 tab 栏（今天/通讯录/钱包/聊天记录/人设） */
+/* v2.3 手机 App 式三段布局：HUD 在顶 / 只有中间内容区滚动 / 导航钉死底部不随滚动条动 */
+.app-shell { padding: 12px 12px 0; overflow: hidden; }
+.app-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 4px;
+}
+.app-shell .module-nav {
+  margin: 8px -12px 0;
+  border: none;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  padding: 6px 6px calc(8px + env(safe-area-inset-bottom));
+  flex-shrink: 0;
+  background: var(--panel);
+}
+.app-shell .stats-row { margin-top: auto; }
+
+/* 底部六模块 tab 栏（今天/通讯录/朋友圈/聊天记录/钱包/人设） */
 .module-nav {
   margin-top: 12px;
   display: flex;
@@ -739,3 +762,69 @@ body {
 .choice-tile .tile-label { font-weight: 600; }
 .choice-tile .tile-emoji { font-size: 20px; }
 .choice-tile .muted { font-size: 11px; line-height: 1.4; }
+
+/* ---------- v2.3 朋友圈 ---------- */
+.moment-poster h4 { font-size: 13px; margin-bottom: 6px; }
+.moment-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.moment-feed { display: flex; flex-direction: column; gap: 12px; }
+.moment-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.moment-card.player { border-left: 3px solid var(--accent); }
+.moment-head { display: flex; align-items: center; gap: 10px; }
+.moment-name { font-weight: 600; font-size: 13.5px; }
+.moment-photo {
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+  width: 200px;
+  max-width: 100%;
+}
+.moment-photo svg { display: block; width: 100%; height: auto; }
+.moment-caption { font-size: 13.5px; line-height: 1.6; color: var(--text); }
+.moment-likes {
+  font-size: 12.5px;
+  color: var(--danger);
+  border-top: 1px dashed var(--line);
+  padding-top: 6px;
+}
+.moment-comments {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(19, 26, 34, 0.6);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.moment-comment { font-size: 12.5px; line-height: 1.55; color: var(--muted); }
+.mc-author { color: var(--accent); font-weight: 600; }
+.moment-actions { display: flex; gap: 8px; }
+.moment-comment-options { display: flex; flex-direction: column; gap: 6px; }
+
+/* ---------- v2.3 钱包商店 ---------- */
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.shop-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+}
+.shop-name { font-weight: 600; color: var(--text); }
+.shop-desc { color: var(--text); font-size: 12.5px; }
+.shop-flavor { line-height: 1.5; font-size: 11.5px; }
+.shop-card .btn { margin-top: auto; }
+.shop-card .btn:disabled { opacity: 0.4; cursor: not-allowed; }

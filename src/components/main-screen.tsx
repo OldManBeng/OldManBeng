@@ -1,11 +1,13 @@
 import { useGame } from '../store/gameStore';
 import { ALL_TARGET_MAP, PERSONA_MAP, targetAwake, isMorningTarget, SELFIE_LABEL, TRAIT_LABEL } from '../engine/state-machine';
 import { formatMoney } from '../utils/format';
-import { OldManAvatar, PersonaAvatar, ProfileAvatar, AVATAR_PRESETS, PhotoRender } from './character-art';
+import { OldManAvatar, PersonaAvatar, ProfileAvatar, AVATAR_PRESETS, PhotoRender, MomentPhoto } from './character-art';
 import { playMessage, playSend, playPacket, playFail, playBlocked, playMorning } from '../utils/sound';
 import { useEffect, useRef, useState } from 'react';
 import { INDUSTRY_COURSE_COST, CHAT_SESSION_COST } from '../data/constants';
 import { DAILY_PLANS } from '../data/plans';
+import { SELFIE_META, MOMENT_PLAYER_COMMENTS } from '../data/moments';
+import { SHOP_ITEMS } from '../data/items';
 import type { PlayerProfile } from '../types/game';
 
 /** 打字机入场：每个气泡先露一个字，再逐字打完（收到新气泡时也走这个）。 */
@@ -28,7 +30,7 @@ function riskLabel(risk: number): { text: string; cls: string } {
   return { text: '评论区快烧起来了', cls: 'risk-burn' };
 }
 
-type ModuleTab = 'today' | 'contacts' | 'wallet' | 'history' | 'profile';
+type ModuleTab = 'today' | 'contacts' | 'moments' | 'history' | 'wallet' | 'profile';
 
 export function MainScreen() {
   const store = useGame();
@@ -60,7 +62,7 @@ export function MainScreen() {
         : '深夜';
 
   return (
-    <div className="screen main-screen">
+    <div className="screen main-screen app-shell">
       <header className="hud">
         <div className="hud-left">
           <span className="day-chip">第 {state.day}/{state.daysLimit} 天</span>
@@ -78,11 +80,20 @@ export function MainScreen() {
 
       {state.dayPhase !== 'chat' && (
         <>
-          {activeTab === 'today' && <TodayPanel phaseLabel={phaseLabel} />}
-          {activeTab === 'contacts' && <ContactsPanel />}
-          {activeTab === 'wallet' && <WalletPanel />}
-          {activeTab === 'history' && <HistoryPanel />}
-          {activeTab === 'profile' && <ProfilePanel />}
+          {/* v2.3 手机布局：只有这一块滚动，导航钉死在底部。 */}
+          <div className="app-scroll">
+            {activeTab === 'today' && <TodayPanel phaseLabel={phaseLabel} />}
+            {activeTab === 'contacts' && <ContactsPanel />}
+            {activeTab === 'moments' && <MomentsPanel />}
+            {activeTab === 'history' && <HistoryPanel />}
+            {activeTab === 'wallet' && <WalletPanel />}
+            {activeTab === 'profile' && <ProfilePanel />}
+            <footer className="stats-row">
+              <span>红包 {state.stats.redPacketsReceived} 个</span>
+              <span>开口 {state.stats.asksMade} 次</span>
+              <button className="log-toggle" onClick={() => setShowLog(!showLog)}>流水</button>
+            </footer>
+          </div>
 
           {showLog && (
             <div className="log-overlay" onClick={() => setShowLog(false)}>
@@ -98,7 +109,7 @@ export function MainScreen() {
             </div>
           )}
 
-          {/* v2.0 底部五模块导航 */}
+          {/* v2.3 底部六模块导航（今天/通讯录/朋友圈/聊天记录/钱包/人设）——手机 App 式固定底栏 */}
           <nav className="module-nav">
             <button className={activeTab === 'today' ? 'nav-btn on' : 'nav-btn'} onClick={() => setTab('today')}>
               <span className="nav-ico">◐</span>今天
@@ -107,21 +118,20 @@ export function MainScreen() {
             <button className={activeTab === 'contacts' ? 'nav-btn on' : 'nav-btn'} onClick={() => setTab('contacts')}>
               <span className="nav-ico">☰</span>通讯录
             </button>
-            <button className={activeTab === 'wallet' ? 'nav-btn on' : 'nav-btn'} onClick={() => setTab('wallet')}>
-              <span className="nav-ico">¥</span>钱包
+            <button className={activeTab === 'moments' ? 'nav-btn on' : 'nav-btn'} onClick={() => { setTab('moments'); store.dispatch({ type: 'view_moments' }); }}>
+              <span className="nav-ico">⊛</span>朋友圈
+              {state.unseenMoments > 0 && <span className="nav-badge">{state.unseenMoments}</span>}
             </button>
             <button className={activeTab === 'history' ? 'nav-btn on' : 'nav-btn'} onClick={() => setTab('history')}>
               <span className="nav-ico">❝</span>聊天记录
+            </button>
+            <button className={activeTab === 'wallet' ? 'nav-btn on' : 'nav-btn'} onClick={() => setTab('wallet')}>
+              <span className="nav-ico">¥</span>钱包
             </button>
             <button className={activeTab === 'profile' ? 'nav-btn on' : 'nav-btn'} onClick={() => setTab('profile')}>
               <span className="nav-ico">☺</span>人设
             </button>
           </nav>
-          <footer className="stats-row">
-            <span>红包 {state.stats.redPacketsReceived} 个</span>
-            <span>开口 {state.stats.asksMade} 次</span>
-            <button className="log-toggle" onClick={() => setShowLog(!showLog)}>流水</button>
-          </footer>
         </>
       )}
     </div>
@@ -278,9 +288,103 @@ function ContactsPanel() {
   );
 }
 
-/** 钱包：余额 + 全部流水。 */
+/** 朋友圈（v2.3）：发自拍 + 看他的动态 + 点赞评论。 */
+function MomentsPanel() {
+  const store = useGame();
+  const { state } = store;
+  const postedToday = state.moments.some((m) => m.author === 'player' && m.momentDay === state.day);
+  const [openComment, setOpenComment] = useState<string | null>(null);
+  const nameFor = (id?: string) => (id === 'player' || !id ? '你' : ALL_TARGET_MAP[id]?.name ?? '他');
+
+  return (
+    <section className="moments-panel">
+      <h3>朋友圈</h3>
+
+      <div className="moment-poster">
+        <h4>发一张自拍（每天一条）</h4>
+        {postedToday ? (
+          <p className="muted small">今天发过了。刷得太勤，看的人多——穿帮的也多。</p>
+        ) : (
+          <>
+            <div className="choice-grid moment-grid">
+              {SELFIE_META.map((o) => (
+                <button key={o.id} className="choice-tile" title={o.note} onClick={() => store.dispatch({ type: 'post_moment', selfieId: o.id })}>
+                  <div className="tile-emoji">{o.emoji}</div>
+                  <div className="tile-label">{o.label}</div>
+                </button>
+              ))}
+            </div>
+            <p className="muted small">新照片三天内，找你的人会变多。疑心重的，会去翻你的旧动态。</p>
+          </>
+        )}
+      </div>
+
+      <div className="moment-feed">
+        {state.moments.length === 0 && <p className="muted small">还没有动态。发一张自拍，或者等他们发。</p>}
+        {[...state.moments].reverse().map((m) => {
+          const def = m.targetId ? ALL_TARGET_MAP[m.targetId] : null;
+          const tstate = m.targetId ? state.targets.find((x) => x.targetId === m.targetId) : undefined;
+          const liked = m.likes.includes('player');
+          const commented = m.comments.some((c) => c.by === 'player');
+          const need = def ? def.need : null;
+          return (
+            <div key={m.id} className={`moment-card ${m.author}`}>
+              <div className="moment-head">
+                {m.author === 'player'
+                  ? <ProfileAvatar avatarId={state.profile.avatarId} size={36} />
+                  : def ? <OldManAvatar target={def} state={tstate} size={36} /> : null}
+                <div>
+                  <div className="moment-name">{m.author === 'player' ? state.playerName || '你' : def?.name ?? '他'}</div>
+                  <div className="muted small">第 {m.momentDay} 天</div>
+                </div>
+              </div>
+              <div className="moment-photo">
+                {m.author === 'player' && m.selfieId ? <MomentPhoto selfieId={m.selfieId} /> : m.photoId ? <PhotoRender photoId={m.photoId} /> : null}
+              </div>
+              <div className="moment-caption">{m.caption}</div>
+              {m.likes.length > 0 && <div className="moment-likes">♥ {m.likes.map(nameFor).join('、')}</div>}
+              {m.comments.length > 0 && (
+                <div className="moment-comments">
+                  {m.comments.map((c, i) => (
+                    <div key={i} className="moment-comment">
+                      <span className="mc-author">{nameFor(c.by === 'player' ? 'player' : c.targetId)}：</span>
+                      {c.text}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {m.author === 'target' && (
+                <div className="moment-actions">
+                  <button className="btn small" disabled={liked} onClick={() => store.dispatch({ type: 'react_moment', momentId: m.id, kind: 'like' })}>
+                    {liked ? '已赞' : '点赞'}
+                  </button>
+                  <button className="btn small" disabled={commented} onClick={() => setOpenComment(openComment === m.id ? null : m.id)}>
+                    {commented ? '已评论' : '评论'}
+                  </button>
+                </div>
+              )}
+              {m.author === 'target' && openComment === m.id && !commented && need && (
+                <div className="moment-comment-options">
+                  <p className="muted small">说点什么？（评论比点赞走心——被看见的人，记很久。）</p>
+                  {(MOMENT_PLAYER_COMMENTS[need] ?? []).map((text, i) => (
+                    <button key={i} className="option" onClick={() => { store.dispatch({ type: 'react_moment', momentId: m.id, kind: 'comment', text }); setOpenComment(null); }}>
+                      {text}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+/** 钱包：余额 + 商店 + 全部流水。 */
 function WalletPanel() {
-  const { state } = useGame();
+  const store = useGame();
+  const { state } = store;
   const income = state.ledger.filter((e) => e.amount > 0).reduce((s, e) => s + e.amount, 0);
   const spend = state.ledger.filter((e) => e.amount < 0).reduce((s, e) => s + e.amount, 0);
   return (
@@ -292,6 +396,31 @@ function WalletPanel() {
         <div><span>支出</span><strong className="neg">{formatMoney(spend)}</strong></div>
         <div><span>目标进度</span><strong>{Math.min(100, Math.round(state.stats.totalEarned / state.goal * 100))}%</strong></div>
       </div>
+
+      {/* v2.3 商店：廉价的道具，真实的代价。 */}
+      <h4>小卖部</h4>
+      <div className="shop-grid">
+        {SHOP_ITEMS.map((it) => {
+          const owned = it.unique && (state.inventory[it.id] ?? 0) > 0;
+          const afford = state.money >= it.price;
+          return (
+            <div key={it.id} className="shop-card">
+              <div className="shop-name">{it.name}</div>
+              <div className="shop-desc">{it.desc}</div>
+              <div className="muted small shop-flavor">{it.flavor}</div>
+              <button
+                className={`btn small ${afford && !owned ? 'primary' : ''}`}
+                disabled={owned || !afford}
+                onClick={() => store.dispatch({ type: 'buy_item', itemId: it.id })}
+              >
+                {owned ? '已入手' : formatMoney(it.price)}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+      <p className="muted small">买口红的钱，是两个 warming 红包；买那套声卡补光灯，是这个月的目标。花出去的每一块，都记在流水里。</p>
+
       <h4>流水</h4>
       <div className="ledger-list">
         {state.ledger.length === 0 && <p className="muted small">这个月还没有账。</p>}
@@ -595,14 +724,8 @@ const TRAIT_OPTIONS: { value: PlayerProfile['traitId']; label: string; note: str
   { value: 'soft_artsy', label: '文艺', note: '孤独成诗的人觉得遇到了知己，老板们看不懂。' },
 ];
 
-const SELFIE_OPTIONS: { value: PlayerProfile['selfieId']; label: string; emoji: string }[] = [
-  { value: 'cake', label: '蛋糕照', emoji: '🍰' },
-  { value: 'gym', label: '夜跑照', emoji: '🏃' },
-  { value: 'pool', label: '泳池照', emoji: '🏊' },
-  { value: 'cat', label: '橘猫照', emoji: '🐈' },
-];
-
-/** 人设：头像/自称年龄/性格/朋友圈自拍——全部影响他的话术与好感走向。 */
+/** 人设：头像/自称年龄/性格——全部影响他的话术与好感走向。
+ *  v2.3：朋友圈自拍迁去朋友圈模块（每天一条动态，能引来反应与互动）。 */
 function ProfilePanel() {
   const store = useGame();
   const { state } = store;
@@ -611,7 +734,7 @@ function ProfilePanel() {
   return (
     <section className="profile-panel">
       <h3>人设档案</h3>
-      <p className="muted small">你对外呈现的这个人。每换一张朋友圈自拍，最近几天他会更主动来找你。</p>
+      <p className="muted small">你对外呈现的这个人。换头像、改年龄、调性格——他记住的是同一个你。</p>
 
       <h4>头像</h4>
       <div className="choice-grid avatars">
@@ -641,18 +764,8 @@ function ProfilePanel() {
           </button>
         ))}
       </div>
-
-      <h4>朋友圈自拍</h4>
-      <div className="choice-grid">
-        {SELFIE_OPTIONS.map((o) => (
-          <button key={o.value} className={`choice-tile ${p.selfieId === o.value ? 'on' : ''}`} onClick={() => setProfile({ selfieId: o.value })}>
-            <div className="tile-emoji">{o.emoji}</div>
-            <div className="tile-label">{o.label}</div>
-          </button>
-        ))}
-      </div>
       <p className="muted small">
-        现在挂的是{SELFIE_LABEL[p.selfieId]}（第 {p.selfieDay || '—'} 天发布）。换照片会刷新发布日——新照片三天内，找你的人会变多。
+        朋友圈现在挂着{SELFIE_LABEL[p.selfieId]}（第 {p.selfieDay || '—'} 天发布）——发新照片去朋友圈模块。
       </p>
     </section>
   );

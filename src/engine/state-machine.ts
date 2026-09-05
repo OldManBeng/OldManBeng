@@ -21,6 +21,11 @@ import { DAILY_PLANS } from '../data/plans';
 import { ALL_TARGETS, LIBRARY_IDS, libraryTargetById } from '../data/target-library';
 import { ARCHETYPE_PACKS } from '../data/archetype-packs';
 import {
+  MOMENT_CAPTIONS, MOMENT_EFFECT, MOMENT_REACTIONS, MOMENT_SUSPICION, MOMENT_SUSPICION_EFFECT,
+  MOMENT_PLAYER_COMMENTS, MOMENTS_CAP, targetMomentPosts,
+} from '../data/moments';
+import { SHOP_ITEMS } from '../data/items';
+import {
   START_MONEY, MONTHLY_GOAL, DAYS_LIMIT, ENERGY_MAX, CHAT_SESSION_COST,
   TRUST_DECAY_PER_DAY, WARINESS_DECAY_PER_DAY, SILENT_TRUST_PENALTY,
   CLINGY_SILENT_MULTIPLIER, ASK_SUCCESS_WARINESS, ASK_FAIL_WARINESS,
@@ -107,10 +112,25 @@ function applyAffinity(s: GameState, t: TargetState, def: Target) {
   }
   const ageAff = AGE_NEED_AFFINITY[String(s.profile.ageClaim)]?.[def.need];
   if (ageAff) t.trust = clamp(t.trust + ageAff, 0, 100);
+  // v2.3：商店道具的对话加成——廉价首饰（持续）/地摊口红（下一场，用完即止）。
+  if ((s.inventory.jewelry ?? 0) > 0) t.trust = clamp(t.trust + 1, 0, 100);
+  if ((s.inventory.lipstick ?? 0) > 0) {
+    t.trust = clamp(t.trust + 4, 0, 100);
+    s.inventory.lipstick = (s.inventory.lipstick ?? 0) - 1;
+    if (s.inventory.lipstick <= 0) delete s.inventory.lipstick;
+  }
+}
+
+/** v2.3：一场对话的精力消耗——充电宝（本局持有）4 → 3。 */
+function chatCost(s: GameState): number {
+  return (s.inventory.powerbank ?? 0) > 0 ? CHAT_SESSION_COST - 1 : CHAT_SESSION_COST;
 }
 
 /** v2.0：话术里的 {selfie}/{age}/{trait} 占位符——他的台词会念到你的资料。 */
-export const SELFIE_LABEL: Record<string, string> = { cake: '那个蛋糕', gym: '夜跑那几张', pool: '泳池照', cat: '那只橘猫' };
+export const SELFIE_LABEL: Record<string, string> = {
+  cake: '那个蛋糕', gym: '夜跑那几张', pool: '泳池照', cat: '那只橘猫',
+  grind: '加班那几张', travel: '旅游照', boba: '那杯奶茶', sick: '输液那几张',
+};
 export const TRAIT_LABEL: Record<string, string> = {
   sweet_mouth: '嘴甜', cold_queen: '清冷', straight_shooter: '直性子', soft_artsy: '文艺',
 };
@@ -271,6 +291,9 @@ export function createInitialState(): GameState {
     incoming: [],
     todayPlan: '',
     numbnessToday: 0,
+    moments: [],
+    unseenMoments: 0,
+    inventory: {},
   };
 }
 
@@ -404,6 +427,7 @@ function runMorning(state: GameState) {
     if (state.incoming.length >= INCOMING_DAILY_CAP) break;
     let p = 0.08; // 想你了的基础
     if (selfieFresh) p += INCOMING_BASE_CHANCE * (def.need === 'daughter_figure' || def.need === 'desired' ? 1 : 0.5);
+    if ((state.inventory.retouch ?? 0) > 0) p += 0.1; // v2.3：修图会员——照片更"真"
     if (t.trust >= 50) p += 0.1;
     if (t.daysSilent >= 3) p += 0.2; // 断联的人憋不住了
     if (t.daysSincePaid >= 5 && t.trust >= 40) p += 0.15; // 发工资的日子
@@ -429,6 +453,75 @@ function runMorning(state: GameState) {
     }
   }
 
+  // v2.3 朋友圈结算：昨晚发的圈，今早他们会来看。点赞的、评论的、起疑的——
+  // 评论区是所有"哥哥"共享的一面墙：同一条圈 ≥3 个人留下评论，风险自然涨。
+  const lastPlayerMoment = [...state.moments].reverse().find((m) => m.author === 'player');
+  if (lastPlayerMoment && lastPlayerMoment.momentDay === state.day - 1) {
+    const reactors = state.targets.filter(
+      (t) => !t.blocked && !t.ended && t.discoveredDay > 0 && t.lastChatDay !== 0,
+    );
+    for (const t of reactors) {
+      const def = ALL_TARGET_MAP[t.targetId];
+      if (!def) continue;
+      const suspicious = def.traits.includes('suspicious') || t.wariness >= 40;
+      const reactChance = suspicious ? 0.4 : 0.45 + t.trust / 400;
+      if (!rng.chance(reactChance)) continue;
+      if (suspicious) {
+        t.trust = clamp(t.trust + MOMENT_SUSPICION_EFFECT.trust, 0, 100);
+        t.wariness = clamp(t.wariness + MOMENT_SUSPICION_EFFECT.wariness, 0, 100);
+        lastPlayerMoment.comments.push({
+          by: 'target', targetId: t.targetId,
+          text: rng.pick(MOMENT_SUSPICION),
+        });
+        log(state, 'flag', `${def.name} 在你的朋友圈里翻了半天，留了句不太客气的话。`);
+      } else {
+        const eff = MOMENT_EFFECT[def.need] ?? { trust: 1, wariness: 0 };
+        t.trust = clamp(t.trust + eff.trust, 0, 100);
+        t.wariness = clamp(t.wariness + eff.wariness, 0, 100);
+        advanceStage(t);
+        // 六成点赞（沉默的大多数），四成留评论（忍不住想被看见的）。
+        if (rng.chance(0.6)) lastPlayerMoment.likes.push(t.targetId);
+        else lastPlayerMoment.comments.push({
+          by: 'target', targetId: t.targetId,
+          text: rng.pick(MOMENT_REACTIONS[def.need] ?? ['（他点了赞。）']),
+        });
+      }
+      state.unseenMoments += 1;
+    }
+    // 评论区撞车：≥3 个不同的人留下评论——他们迟早会看见彼此。
+    const commenterCount = new Set(
+      lastPlayerMoment.comments.filter((c) => c.by === 'target').map((c) => c.targetId),
+    ).size;
+    if (commenterCount >= 3) {
+      state.riskLevel = clamp(state.riskLevel + 6, 0, 100);
+      log(state, 'flag', '朋友圈的评论区里，他看见了另一个他。两个人都以为那面墙只属于自己。');
+    }
+  }
+
+  // v2.3 老头发圈：每天早上随机一个认识的人发条自己的动态——
+  // 你可以点赞（+1 信任）或评论（走心，+2）。评论是门手艺，也是门生意。
+  const discovered = state.targets.filter((t) => !t.blocked && !t.ended && t.discoveredDay > 0);
+  if (discovered.length && rng.chance(0.75)) {
+    const poster = rng.pick(discovered);
+    const def = ALL_TARGET_MAP[poster.targetId];
+    const posts = targetMomentPosts(poster.targetId);
+    const pick = posts.length ? rng.pick(posts) : null;
+    if (def && pick) {
+      state.moments.push({
+        id: `t${poster.targetId}_${state.day}`,
+        momentDay: state.day,
+        author: 'target',
+        targetId: poster.targetId,
+        photoId: pick.photoId,
+        caption: rng.pick(pick.captions),
+        likes: [],
+        comments: [],
+      });
+      if (state.moments.length > MOMENTS_CAP) state.moments.splice(0, state.moments.length - MOMENTS_CAP);
+      state.unseenMoments += 1;
+    }
+  }
+
   // 产业化代聊结算：课程买断后，代聊群每天替你维护所有未拉黑的关系。
   if (state.industryCourse) {
     for (const t of state.targets) {
@@ -440,7 +533,8 @@ function runMorning(state: GameState) {
     state.numbness = clamp(state.numbness + INDUSTRY_NUMBNESS_PER_DAY, 0, 100);
   }
 
-  state.energy = ENERGY_MAX;
+  // v2.3：精力回填跟随上限（网红套餐 16→24 后，24 才是"满"）。
+  state.energy = state.energyMax;
 }
 
 /** Score the ending from run shape.
@@ -500,6 +594,10 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       s.incoming = [];
       s.todayPlan = '';
       s.numbnessToday = 0;
+      s.moments = [];
+      s.unseenMoments = 0;
+      s.inventory = {};
+      s.energyMax = ENERGY_MAX;
       s.money = START_MONEY;
       s.riskLevel = 0;
       s.numbness = 0;
@@ -574,20 +672,98 @@ export function dispatch(state: GameState, action: GameAction): GameState {
     }
 
     case 'update_profile': {
-      // v2.0：改资料。换头像/性格随时可以；发自拍会刷新 selfieDay（引来他找你）。
+      // v2.0：改资料（v2.3：发自拍迁去朋友圈模块的 post_moment）。
       if (action.avatarId !== undefined) s.profile.avatarId = clamp(action.avatarId, 1, 6);
       if (action.ageClaim) s.profile.ageClaim = action.ageClaim;
       if (action.traitId) s.profile.traitId = action.traitId;
-      if (action.selfieId) {
-        // 换照片=发新朋友圈：重置 linger。
-        if (s.profile.selfieId !== action.selfieId) {
-          s.profile.selfieId = action.selfieId;
-          s.profile.selfieDay = s.day;
-          log(s, 'flag', '你发了条朋友圈。配图换成了新的那张。');
-        } else {
-          s.profile.selfieDay = s.day;
-          log(s, 'flag', '你把那张照片又置顶了一次——配文换了两个表情。');
-        }
+      return s;
+    }
+
+    case 'post_moment': {
+      // v2.3：发一条朋友圈自拍——一天一条（新照片三天内他会更主动来找你）。
+      if (s.dayPhase === 'chat') return s;
+      const postedToday = s.moments.some((m) => m.author === 'player' && m.momentDay === s.day);
+      if (postedToday) return s;
+      const captions = MOMENT_CAPTIONS[action.selfieId];
+      if (!captions) return s;
+      s.moments.push({
+        id: `m${s.day}`,
+        momentDay: s.day,
+        author: 'player',
+        selfieId: action.selfieId,
+        caption: rng01(s).pick(captions),
+        likes: [],
+        comments: [],
+      });
+      if (s.moments.length > MOMENTS_CAP) s.moments.splice(0, s.moments.length - MOMENTS_CAP);
+      s.profile.selfieId = action.selfieId;
+      s.profile.selfieDay = s.day;
+      log(s, 'flag', `你发了条朋友圈：${SELFIE_LABEL[action.selfieId] ?? '一张自拍'}。明早他们会来看的。`);
+      return s;
+    }
+
+    case 'react_moment': {
+      // v2.3：去他的圈里点赞/评论——比"想你"两个字有用，因为他真的被看见了。
+      if (s.dayPhase === 'chat') return s;
+      const post = s.moments.find((m) => m.id === action.momentId);
+      if (!post || post.author !== 'target' || !post.targetId) return s;
+      const t = s.targets.find((x) => x.targetId === post.targetId);
+      const def = ALL_TARGET_MAP[post.targetId];
+      if (!t || !def || t.blocked) return s;
+      if (action.kind === 'like') {
+        if (post.likes.includes('player')) return s; // 已经点过
+        post.likes.push('player');
+        t.trust = clamp(t.trust + 1, 0, 100);
+        advanceStage(t);
+      } else {
+        const already = post.comments.some((c) => c.by === 'player');
+        if (already) return s; // 一条圈只评论一次
+        const pool = MOMENT_PLAYER_COMMENTS[def.need] ?? ['（你点了赞。）'];
+        post.comments.push({ by: 'player', text: action.text ?? rng01(s).pick(pool) });
+        t.trust = clamp(t.trust + 2, 0, 100);
+        advanceStage(t);
+      }
+      return s;
+    }
+
+    case 'view_moments': {
+      // v2.3：打开朋友圈，红点清零。
+      s.unseenMoments = 0;
+      return s;
+    }
+
+    case 'buy_item': {
+      // v2.3：钱包商店。钱不够/唯一道具已购 → no-op（返回原 clone）。
+      const item = SHOP_ITEMS.find((i) => i.id === action.itemId);
+      if (!item) return s;
+      if (item.unique && (s.inventory[item.id] ?? 0) > 0) return s;
+      if (s.money < item.price) return s;
+      s.money -= item.price;
+      ledgerAdd(s, -item.price, `${item.name}（${item.unique ? '一件就是全部' : '消耗品'}）`, 'shop');
+      const e = item.effect;
+      if (e.kind === 'energy') {
+        s.energy = Math.min(s.energyMax, s.energy + e.amount);
+        log(s, 'flag', `${item.name}：${item.flavor}`);
+      } else if (e.kind === 'energyCalm') {
+        s.energy = Math.min(s.energyMax, s.energy + e.energy);
+        s.numbness = clamp(s.numbness - e.numbnessDown, 0, 100);
+        log(s, 'flag', `${item.name}：${item.flavor}`);
+      } else if (e.kind === 'lipstick') {
+        s.inventory.lipstick = (s.inventory.lipstick ?? 0) + 1;
+        log(s, 'flag', `你买了${item.name}——下场对话有效。${item.flavor}`);
+      } else if (e.kind === 'jewelry') {
+        s.inventory.jewelry = 1;
+        log(s, 'flag', `${item.flavor}之后每一场对话，好感 +1。`);
+      } else if (e.kind === 'retouch') {
+        s.inventory.retouch = 1;
+        log(s, 'flag', `${item.flavor}新照片三天内，他们更容易来找你。`);
+      } else if (e.kind === 'powerbank') {
+        s.inventory.powerbank = 1;
+        log(s, 'flag', `${item.flavor}之后每场对话精力 4 → 3。`);
+      } else if (e.kind === 'streamerKit') {
+        s.energyMax = e.energyMax;
+        s.riskLevel = clamp(s.riskLevel + e.riskAdd, 0, 100);
+        log(s, 'flag', `${item.flavor}你一晚上能聊的人更多了——也更不像在过自己的日子。`);
       }
       return s;
     }
@@ -598,7 +774,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       if (idx < 0 || s.dayPhase === 'chat') return s;
       const t = s.targets.find((x) => x.targetId === action.targetId);
       const def = ALL_TARGET_MAP[action.targetId];
-      if (!t || !def || t.blocked || s.energy < CHAT_SESSION_COST) return s;
+      if (!t || !def || t.blocked || s.energy < chatCost(s)) return s;
       if (t.lastChatDay === s.day) {
         // 今天聊过了：把这条 incoming 消掉但不开会话。
         s.incoming.splice(idx, 1);
@@ -607,7 +783,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       const msg = s.incoming[idx];
       s.incoming.splice(idx, 1);
       t.lastChatDay = s.day;
-      s.energy -= CHAT_SESSION_COST;
+      s.energy -= chatCost(s);
       s.dayPhase = 'chat';
       s.stats.nightsWorked += 1;
       applyAffinity(s, t, def);
@@ -664,13 +840,13 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       const t = s.targets.find((x) => x.targetId === action.targetId);
       // v2.0：全量映射——库里偶遇的老头也能开聊。
       const def = ALL_TARGET_MAP[action.targetId];
-      if (!t || !def || t.blocked || s.energy < CHAT_SESSION_COST) return s;
+      if (!t || !def || t.blocked || s.energy < chatCost(s)) return s;
       if (!targetAwake(def, s.dayPhase)) return s;
       // 一个人一天只聊一场：重复刷同一个老头没有额外收益——
       // 多线经营是这门生意的本质，也是风险的来源。
       if (t.lastChatDay === s.day) return s;
       t.lastChatDay = s.day;
-      s.energy -= CHAT_SESSION_COST;
+      s.energy -= chatCost(s);
       s.dayPhase = 'chat';
       s.stats.nightsWorked += 1;
       const lines = scriptFor(t.targetId).lines;

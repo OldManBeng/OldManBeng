@@ -4,6 +4,7 @@ import { ALL_TARGETS, LIBRARY_IDS } from '../../data/target-library';
 import { SCRIPTS } from '../../data/script-registry';
 import { DAILY_PLANS } from '../../data/plans';
 import { TRAIT_ARCHETYPE_AFFINITY, AGE_NEED_AFFINITY, CHAT_SESSION_COST, ENERGY_MAX, ARCHIVE_CAP, NUMBNESS_DAILY_CAP, INCOMING_DAILY_CAP, SELFIE_LINGER_DAYS } from '../../data/constants';
+import { SELFIE_IDS } from '../../types/game';
 import type { GameState } from '../../types/game';
 
 /** 新开一局（默认 profile：sweet_mouth/24/cake），可改 profile 后再开聊。
@@ -107,13 +108,13 @@ describe('v2.0: 他来找你（incoming）', () => {
   it('新自拍引来他主动私信；回他=开一场他起头的会话', () => {
     let s = fresh(21);
     // 发一张新自拍 → 第二天早上 incoming 应当显著增多（基础 0.45+）。
-    s = dispatch(s, { type: 'update_profile', selfieId: 'gym' });
+    s = dispatch(s, { type: 'post_moment', selfieId: 'gym' });
     expect(s.profile.selfieDay).toBe(s.day);
     const found: GameState[] = [];
     for (let seed = 100; seed < 160; seed++) {
       let x = { ...createInitialState(), rngSeed: seed };
       x = dispatch(x, { type: 'new_game', name: 't', motive: 'debt', personaId: 'wise_sister' });
-      x = dispatch(x, { type: 'update_profile', selfieId: 'gym' });
+      x = dispatch(x, { type: 'post_moment', selfieId: 'gym' });
       // 老李：深夜在线，带 incoming 台词。
       x = nightChatWith(x, 'lao_li');
       x = dispatch(x, { type: 'end_chat' });
@@ -160,12 +161,12 @@ describe('v2.0: 他来找你（incoming）', () => {
 
   it('一天最多攒 INCOMING_DAILY_CAP 条', () => {
     let s = fresh(23);
-    s = dispatch(s, { type: 'update_profile', selfieId: 'cat' }); // 全员加权
+    s = dispatch(s, { type: 'post_moment', selfieId: 'gym' }); // 全员加权
     let maxSeen = 0;
     for (let seed = 200; seed < 280; seed++) {
       let x = { ...createInitialState(), rngSeed: seed };
       x = dispatch(x, { type: 'new_game', name: 't', motive: 'debt', personaId: 'wise_sister' });
-      x = dispatch(x, { type: 'update_profile', selfieId: 'cat' });
+      x = dispatch(x, { type: 'post_moment', selfieId: 'cat' });
       x = dispatch(x, { type: 'sleep' });
       maxSeen = Math.max(maxSeen, x.incoming.length);
     }
@@ -328,7 +329,7 @@ describe('v2.0: profile 模块', () => {
     expect(s.profile.ageClaim).toBe(32);
     expect(s.profile.traitId).toBe('cold_queen');
     const dayBefore = s.profile.selfieDay;
-    s = dispatch(s, { type: 'update_profile', selfieId: 'pool' });
+    s = dispatch(s, { type: 'post_moment', selfieId: 'pool' });
     expect(s.profile.selfieId).toBe('pool');
     expect(s.profile.selfieDay).toBeGreaterThanOrEqual(dayBefore);
     expect(defaultProfile().ageClaim).toBeGreaterThanOrEqual(20);
@@ -339,7 +340,9 @@ describe('v2.0: profile 模块', () => {
     const lib = ALL_TARGET_MAP[LIBRARY_IDS[0]];
     expect(lib).toBeDefined();
     // 占位符正确性由 fillProfileVars 保证——这里用 constants 的语义标签做契约。
-    expect(['cake', 'gym', 'pool', 'cat'].length).toBe(4);
+    // v2.3：自拍类型扩到 8 种（蛋糕/夜跑/泳池/橘猫/加班/旅游/奶茶/病床输液）。
+    expect(SELFIE_IDS.length).toBe(8);
+    for (const id of SELFIE_IDS) expect(SELFIE_LABEL[id]).toBeTruthy();
   });
 
   it('incoming 生成时占位符已填好——收件箱卡片不出现裸 {selfie}', () => {

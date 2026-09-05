@@ -1,210 +1,143 @@
-# 实施计划：头像置灰 + 全新头像系统 + 照片消息 + 序章/终章
+# 实施计划：底部导航重构 + 朋友圈系统 + 钱包道具商店
 
-## 任务 1：已下线老头头像置灰
+## 任务 1：模块重排 + 手机底部 Tab 栏（固定不随滚动）
 
-**改动文件：** `src/components/character-art.tsx`
+**改动文件：** `src/components/main-screen.tsx` + `src/styles.css`
 
-`OldManAvatar` 组件已经接收 `state?: TargetState`，且 `state.blocked` 可读。在 SVG 根节点上条件加 `filter: grayscale(1) opacity(0.4)` 即可——不用改任何调用方。
+**现状：** 5 个模块（今天/通讯录/钱包/聊天记录/人设）tab 已存在，但 `.screen` 整体滚动，nav 跟着滚。
+
+**新结构：** MainScreen 根节点加 `app-shell` 类，改为三段式手机布局——HUD（顶部固定）/ 滚动内容区 / Tab 栏（底部固定）：
 
 ```tsx
-// character-art.tsx OldManAvatar 函数内
-const blocked = state?.blocked ?? false;
-return (
-  <svg
-    width={size} height={size} viewBox="0 0 54 54" role="img" aria-label={target.name}
-    style={blocked ? { filter: 'grayscale(1) opacity(0.4)' } : undefined}
-  >
+<div className="screen main-screen app-shell">
+  <header className="hud">…</header>
+  <div className="risk-strip">…</div>
+  {dayPhase === 'chat' ? <ChatView /> : (
+    <>
+      <div className="app-scroll">   {/* 只有这块滚动 */}
+        {activeTab === 'xxx' && <XxxPanel />}
+        {showLog && <LogOverlay />}
+        <footer className="stats-row">…</footer>  {/* 移入滚动区 */}
+      </div>
+      <nav className="module-nav">…</nav>   {/* 永远钉在底部 */}
+    </>
+  )}
+</div>
 ```
 
-**验证：** 现有 CSS `.contact-row.blocked { opacity: 0.45 }` 和 `.target-card.blocked { opacity: 0.5 }` 保留（容器层降透明度），SVG 自身 grayscale 补齐"灰色头像"视觉。手动拉黑一个老头看通讯录和卡片头像变灰。
+**CSS：** `.app-shell { overflow: hidden; padding: 12px 12px 0; }`（覆盖 .screen 的滚动），`.app-scroll { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 14px; }`，`.module-nav { margin: 0 -12px; padding: 6px 10px calc(6px + env(safe-area-inset-bottom)); border-radius: 12px 12px 0 0; border-width: 1px 0 0 0; }`。tab 栏不需要 position: fixed/sticky——它就是滚动区外的最后一个 flex 子元素，天然钉底。其他屏幕（标题/结局/序章）不受影响。
+
+**Tab 顺序（6 个）：** 今天 ◐ → 通讯录 ☰ → **朋友圈 ⊛（新增）** → 聊天记录 ❝ → 钱包 ¥ → 人设 ☺。朋友圈 tab 带 `nav-badge`：老头未看过的评论数。
 
 ---
 
-## 任务 2：全新头像系统（混合方案）
+## 任务 2：朋友圈系统（新模块 + 自拍迁移 + 互动 + 增益）
 
-### 2a. 扩展 portraitSpec 类型
+### 2a. 数据模型
 
-**文件：** `src/types/target.ts`
-
-在现有 `portraitSpec` 接口上扩展字段（保持旧字段兼容）：
-
+**`src/types/game.ts`**：
 ```ts
-portraitSpec: {
-  hair: number;
-  hairColor: string;
-  glasses: number;
-  beard: number;
-  cheeks: number;
-  shirtColor: string;
-  // ---- v2.2 新增 ----
-  /** 头像背景场景类型：决定 SVG 背景图层 */
-  bgScene: 'night_road' | 'study' | 'garage' | 'internet_cafe' | 'balcony'
-    | 'guard_booth' | 'fishing' | 'chess' | 'square' | 'roadside' | 'default';
-  /** 配饰图标类型：在头像角落画一个小图标 */
-  accessory: 'steering_wheel' | 'calligraphy_brush' | 'cigarette' | 'gamepad'
-    | 'wrench' | 'flashlight' | 'fishing_rod' | 'chess_piece' | 'speaker' | 'helmet' | 'none';
-  /** 头像色调（背景渐变用） */
-  accent: string;
-};
-```
-
-### 2b. 重写 OldManAvatar 渲染器
-
-**文件：** `src/components/character-art.tsx`
-
-重写 `OldManAvatar` 函数，按三层渲染：
-1. **背景层**——按 `bgScene` 画一个简化场景 SVG（深夜公路=深蓝渐变+路灯黄点、书房=暖黄灯+书架线条、车库=暗灰+车窗轮廓、网吧=蓝屏光、阳台=花盆+栏杆等）
-2. **人脸层**——保留现有 portraitSpec 面部渲染逻辑（发际线/眼镜/胡须/表情）
-3. **配饰层**——按 `accessory` 在角落画小图标（方向盘圆环、毛笔竖线、烟头白点、手柄方块等）
-
-关键：背景和配饰用极简几何图形（3-5 个 path/circle），不追求写实，追求辨识度。
-
-### 2c. 为每人配独特参数
-
-**文件：** `src/data/targets.ts`（主五人）+ `src/data/target-library.ts`（库 45 人）
-
-主五人每人独立配置 bgScene + accessory + accent：
-
-| 角色 | bgScene | accessory | accent | 设计逻辑 |
-|------|---------|-----------|--------|----------|
-| 老李 | night_road | steering_wheel | #4a5d6e | 深夜公路+方向盘=出租车司机身份 |
-| 周老师 | study | calligraphy_brush | #7a6f5f | 书房+毛笔=退休教师 |
-| 王总 | garage | cigarette | #8a4a3a | 车库+烟头=深夜独处的中年老板 |
-| 阿豪 | internet_cafe | gamepad | #3d6b5e | 网吧蓝光+手柄=90后网吧老板 |
-| 陈工 | balcony | wrench | #5a6d7a | 阳台台钳+扳手=退休工程师 |
-
-库 45 人按原型分化（5 原型各 9 人），每原型共享 bgScene + accessory 但 accent 色微调：
-
-| 原型 | bgScene | accessory | accent |
-|------|---------|-----------|--------|
-| night_guard | guard_booth | flashlight | #3a4a5a |
-| designated_driver | roadside | helmet | #6a5a3a |
-| fisherman | fishing | fishing_rod | #4a6a4a |
-| chess_uncle | chess | chess_piece | #6a5a4a |
-| square_dancer | square | speaker | #8a3a5a |
-
-库人物 `lib()` 函数签名加 `accent` 参数，每个库人物单独传 accent 色值做微调（同原型 9 人色调递变），避免一模一样。
-
-### 2d. 女主角头像扩展
-
-现有 `AVATAR_PRESETS` 6 款和 `PersonaAvatar` 4 款保留不变。女主角头像已经是程序化 SVG 人脸，风格统一，**不改动**——用户要求是为"所有人"设计新头像，但女主角已有 6 款可选 + 4 款人设卡，够用了。重点放在老头侧。
-
-### 2e. bio 展示增强
-
-**文件：** `src/components/main-screen.tsx`
-
-通讯录的 `.contact-bio` 当前只显示 `def.bio.slice(0, 42)`。改为显示完整 bio（CSS 去掉 `white-space: nowrap`，加 `display: -webkit-box; -webkit-line-clamp: 2` 两行截断），让每个老头的身份背景更完整地展示。
-
-同时把 `personality` 字段接入 UI——在通讯录行 `.contact-body` 里加一行小字显示 `def.personality`（当前此字段有数据但 UI 从未读取）。
-
----
-
-## 任务 2 续：照片/立绘系统
-
-### 2f. ChatMessage 加图片字段
-
-**文件：** `src/types/chat.ts`
-
-```ts
-export interface ChatMessage {
-  speaker: ChatSpeaker;
-  label?: string;
-  text: string;
-  stamp?: string;
-  /** v2.2：附带照片——渲染程序化 SVG 立绘图。 */
-  photoId?: string;
+export type SelfieId = 'cake'|'gym'|'pool'|'cat'|'grind'|'travel'|'boba'|'sick';
+export const SELFIE_IDS: SelfieId[] = [...8个];  // 测试与 UI 共用
+export interface MomentComment { by: 'player'|'target'; targetId?: string; text: string; }
+export interface MomentPost {
+  id: string; momentDay: number; author: 'player'|'target'; targetId?: string;
+  selfieId?: SelfieId;          // 玩家自拍类型
+  photoId?: string;             // 老头发图的 photoId（复用 PHOTO_SCENES）
+  caption: string;
+  likes: string[];               // 点赞者 targetId
+  comments: MomentComment[];
 }
 ```
+- `GameState` 加 `moments: MomentPost[]`（上限 80，超出 shift）+ `seenComments: number`（红点计数）
+- `GameAction` 加 `post_moment {selfieId}` / `react_moment {momentId, kind:'like'|'comment', text?}`
+- `LedgerEntry.kind` 不动（朋友圈不产生钱）
 
-### 2g. 照片立绘渲染器
+**`src/data/moments.ts`（新文件）：**
+- `SELFIE_META`：8 种自拍 {id, label, emoji}：蛋糕照🍰 / 夜跑照🏃 / 泳池照🏊 / 橘猫照🐈 / **加班照💻（晒努力）/ 旅游照⛰ / 奶茶咖啡照🧋 / 病床输液照🩹（新确认）**
+- `MOMENT_CAPTIONS: Record<SelfieId, string[]>`：玩家发圈的配文池（各 3 条，口语化真实朋友圈体）
+- `MOMENT_TARGET_POSTS`：老头发圈的素材——主五人复用各自 2 张 photoId、按原型挂 caption 池；库 5 原型复用各自 arch photoId + caption 池（钓到鱼的/今晚棋摊赢了两把/广场舞新曲目之类）
+- **增益效果表（用户要求：朋友圈产生信任/怀疑正负增益）：**
+  - `MOMENT_EFFECT: Record<Need, {trust, wariness}>` 按情感缺口分档——daughter_figure（周老师）看输液照 trust +3；listened_to +2；desired +2 且 wariness +1（越看越想要见面）；respected +1（不咸不淡）
+  - **怀疑线：** `trait` 含 `suspicious`（王总/陈工）或 wariness ≥ 40 的老头 → 换用 `MOMENT_SUSPICION` 话术池 + **trust −1 / wariness +3~5**（「你上个月还在旅游，这个月就输液？」——朋友圈穿帮的显微镜）
+- `MOMENT_REACTIONS / MOMENT_SUSPICION: Record<Need, string[]>`：老头评论玩家朋友圈的话术（按 need 分 4 档，各 4 条，符合各原型声音：老李朴素/周老师书面/王总傲慢/陈工条目式/库按原型）
+- `MOMENT_PLAYER_COMMENTS: Record<Need, string[]>`：玩家评论老头朋友圈的话术（按 need 4 档，各 4 条 → trust +1，评论比点赞更走心）
 
-**文件：** `src/components/character-art.tsx` 新增 `PhotoRender` 组件
+### 2b. 引擎接线
 
-按 `photoId` + `targetId` 渲染一张程序化 SVG "照片"——比头像更大（200×150），场景更丰富：
-- `lao_li_taxi_night`：夜间出租车内视角，方向盘+挡风玻璃外的路灯
-- `zhou_calligraphy`：书桌俯拍，毛笔架+宣纸+挂钟
-- `wang_garage_smoke`：车库视角，方向盘+车窗外的烟
-- `hao_cafe_cats`：网吧柜台，显示器排+橘猫
-- `chen_balcony_vise`：阳台台钳+图纸
-- 库人物复用原型场景图（5 张各原型代表照片）
+**`src/engine/state-machine.ts`：**
+1. `SELFIE_LABEL` 扩到 8 条（`{selfie}` 占位符兼容——`fillProfileVars` 已有回退，8 种全给标签）
+2. `case 'post_moment'`：当天已发 → no-op；否则 push 玩家 moment（id 用 `m{day}`、caption 从池抽）、`profile.selfieId/selfieDay` 同步更新（**人设里的自拍机制整体迁入这里**，`update_profile` 保留头像/年龄/性格三参数）、log 记录
+3. `case 'react_moment'`：对老头贴点赞（likes.push，trust +1）或评论（comments.push，trust +1）；每个老头每条限评一次
+4. `runMorning` 里老头对玩家新发自拍的反应（与既有 selfie incoming 机制分层，不互相替代）：
+   - 已发现、未拉黑、随机 2-4 个老头给昨天玩家发的圈点赞/评论；按 MOMENT_EFFECT / 怀疑线结算 trust/wariness（clamp 保持 0-100）
+   - **评论区撞车**：同一条玩家朋友圈收到 ≥3 个不同老头评论 → `riskLevel +6`，log「朋友圈的评论区里，他看见了另一个他。」（穿帮机制的自然延伸）
+   - 每天早上随机 1 个已发现老头发一条自己的朋友圈（素材从 MOMENT_TARGET_POSTS 抽）
+5. `createInitialState` / `new_game` 重置块 / `gameStore.migrate()` 三处补 `moments: []`、`seenComments: 0`
 
-每张照片都是一段 SVG 几何抽象（10-15 个 path/rect），不是写实绘画。
+### 2c. 自拍 SVG 场景图
 
-### 2h. 引擎推送照片消息
+**`src/components/character-art.tsx`** 加 `SELFIE_SCENES: Record<SelfieId, ReactElement>` + `MomentPhoto({selfieId})` 组件：8 张程序化 SVG（200×150）——蛋糕（蜡烛+奶油层）/夜跑（跑道+路灯剪影）/泳池（水波纹+浮圈）/橘猫（猫耳+尾巴弧线）/**加班（笔记本屏光+咖啡杯）/旅游（山形+落日+公路）/奶茶（吸管+珍珠圆点）/病床输液（病床+吊瓶架+输液管线）**。零图片资源，与既有 PHOTO_SCENES 同风格。
 
-**文件：** `src/engine/state-machine.ts`
+### 2d. MomentsPanel UI
 
-在 `start_chat` 和 `accept_incoming` 的 transcript 构建中，当满足条件时（约 15% 概率，或特定话术组关联），在 node openers 之间插入一条 `{ speaker: 'target', photoId: 'xxx', text: '（他发来一张照片。）', stamp: ... }` 消息。
-
-照片 ID 从 `scriptFor(t.targetId)` 的新字段 `photos?: string[]` 取，随机选一个。主五人每人 2 张照片 ID，库人物按原型挂 1 张。
-
-**文件：** `src/types/scripts-registry.ts` —— `TargetScript` 接口加 `photos?: string[]`
-**文件：** `src/data/script-registry.ts` —— 主五人配 photos，库人物按原型配
-
-### 2i. 聊天渲染器加图片分支
-
-**文件：** `src/components/main-screen.tsx`
-
-在 ChatSession 和 history-transcript 两处气泡渲染中，`m.photoId` 存在时在 `bubble-text` 下方插入 `<PhotoRender photoId={m.photoId} targetId={...} />`。
-
-**文件：** `src/styles.css` 加 `.bubble-photo { width: 100%; max-width: 200px; border-radius: 8px; overflow: hidden; margin: 4px 0; }` 等样式。
-
----
-
-## 任务 3：序章 + 终章
-
-### 3a. 序章
-
-**文件：** `src/components/screens.tsx` 新增 `PrologueScreen` 组件
-
-在 `TitleScreen` 的"新的一晚"按钮点击后，不直接弹 `NewGameScreen`，而是先展示序章（分 3-4 屏文字，点击"继续"翻页）：
-
-**序章内容（约 600 字，分 4 屏）：**
-1. **背景：** 2025 年的某种网络现象——年轻女性伪装身份，通过聊天软件接近孤独的中老年男性，建立情感关系后索取红包。网上管这叫"崩老头"。
-2. **女主角：** 24 岁，小城出身，大专毕业，在城里做着 4000 块一个月的工作。网贷下月到期，利息滚到了她还不起的数字。她不是天生的骗子——她只是一个被数字逼到墙角的人。
-3. **手段：** 她在网上有五个人设，通讯录里躺着五个"哥哥"。每个深夜，她切换身份，走进不同老头的孤独。红包、转账、"束脩"——钱以各种名目流动。同时崩的越多，钱来得越快——穿帮也来得越快。
-4. **选择：** 你是这个月的主角。30 天，1500 元。你要怎么凑？谁来凑？代价是什么？
-
-**流程改动：**
-- `App.tsx`：加 `prologueOpen` 本地 state，TitleScreen"新的一晚"→ 先展示 PrologueScreen → 完成后展示 NewGameScreen
-- PrologueScreen 用"继续"按钮翻页，最后一页"开始"按钮派发 `beng:newgame` 事件
-
-### 3b. 终章（编者按式）
-
-**文件：** `src/components/ending-screen.tsx`
-
-在 EndingScreen 的底部（结局正文 + 账本 + 老头后记之后，"再过一个月"按钮之前）加一个「终章」区块。
-
-**终章内容（约 1000 字，3-4 段）：**
-
-> **终章：不只是"崩老头"**
->
-> 第一段——**经济维度**：这不是一个人的贪婪。网贷、消费主义、低薪——当一个人的劳动换不来体面，总有人会用另一种"劳动"补上差价。她不是不想靠双手吃饭，是那双手挣的，不够还利息。
->
-> 第二段——**老龄化与孤独**：五个老头不是五个傻子。他们是退休的教师、下岗的工人、独居的父亲——一辈子奉公守法，到老发现身边连个说话的人都没有。他们的孤独不是偶然的，是城市化进程把三代人拆散在三个城市的结果。
->
-> 第三段——**数字鸿沟**：他们分不清美颜和真人，分不清群发和私信，分不清关心和套路。不是他们蠢——是他们这代人，没上过这堂课。
->
-> 第四段——**情感产业**：当孤独本身变成一门生意——不只是"崩老头"，还有代聊群、情感陪聊、虚拟恋人——这说明什么？说明这个社会有一种需求，量很大，得不到正视，于是有人用最坏的方式满足了它。
->
-> 收束：**"崩老头"不是一个人的病。它是一代人的孤独，撞上了另一代人的困境。要解决这个问题，不是抓几个人那么简单——得让劳动值得，让孤独有人管，让数字世界对老人友好。在那之前，凌晨三点，还会有下一个"哥哥"。**
-
-用 `.epilogue-essay` CSS 类做排版（分段、缩进、斜体收束句）。
+**`src/components/main-screen.tsx`** 新增 `MomentsPanel`：
+- 顶部发布区：8 格类型瓷砖（emoji+label），点选直接 dispatch `post_moment`（每天一次，已发显示今日已发）
+- Feed 倒序流：每张卡片 = 头像（OldManAvatar/ProfileAvatar）+ 名字 + 第 N 天 + 配图（MomentPhoto 或 PhotoRender）+ 配文 + 点赞/评论区
+- 玩家的圈：展示老头们的评论与点赞（红点计数喂给 nav-badge）
+- 老头的圈：两个按钮「点赞」「评论」——评论点开内联输入框 → dispatch react_moment
+- ProfilePanel 删掉 SELFIE_OPTIONS 自拍选择区（迁入朋友圈），保留头像/年龄/性格
 
 ---
 
-## 实施顺序
+## 任务 3：钱包道具商店
 
-1. **Task 1**（置灰）：改 `character-art.tsx` 的 OldManAvatar SVG 根节点 → tsc 验证（最小改动，先行）
-2. **Task 2a-2e**（头像系统）：扩类型 → 重写渲染器 → 配数据 → bio UI → tsc+build
-3. **Task 2f-2i**（照片系统）：扩 ChatMessage → PhotoRender 组件 → 引擎推送 → 渲染+CSS → tsc+build
-4. **Task 3a**（序章）：PrologueScreen 组件 → App.tsx 流程 → CSS → build
-5. **Task 3b**（终章）：ending-screen.tsx 加区块 → endings.ts 不改（终章独立于结局） → CSS → build
-6. **收尾验证**：tsc + vitest run + npm run build 全绿；手动验证置灰效果、头像分化、照片消息、序章终章渲染
+### 3a. 道具数据
 
-## 不改动的文件
+**`src/data/items.ts`（新文件）：** `SHOP_ITEMS: ShopItem[]`，`ShopItem { id, name, price, desc, effect }`：
 
-- 引擎核心逻辑（dispatch 纯函数）——只在 transcript 构建处加照片消息推送
-- 现有话术数据文件——照片是新维度，不改已有话术
-- 测试文件——除非新增字段导致类型不兼容（balance.test.ts 的 tstate 已在上轮修过 recentGreetingIdx，photos 是可选字段不影响）
-- 女主角头像系统——已有 6 款预设 + 4 款人设卡，够用
+| 道具 | 价格 | 效果（挂真实系统） |
+|------|------|------|
+| 能量饮料（红瓶） | ¥9 | 当天精力 +4 |
+| 速溶咖啡 | ¥18 | 当天精力 +8 |
+| 奶茶（大杯） | ¥16 | 当天精力 +5，麻木 −3（甜的东西让人清醒一点） |
+| 地摊口红 | ¥25 | 下一次对话好感结算 +4（用完即止的一次性加成） |
+| 廉价首饰（会掉色的手链） | ¥58 | 之后每场对话好感结算 +1（持续到月底——廉价但有光） |
+| 修图 App 会员（月卡） | ¥30 | 30 天内：发朋友圈后老头来找你私聊的概率 +0.1 |
+| 迷你充电宝 | ¥45 | 当天深夜聊天精力消耗 4→3 |
+| 网红套餐（声卡+补光灯） | ¥780 | 精力上限 16→24（永久），风险 +10——欲望的天花板，买得起就停不下来了 |
+
+定价刻意压在「奶茶钱能买、顶配一个月工资买不起」的档位，呼应红包层级（warming ~24 元/trusted ~35 元）——买首饰 = 两个红包；买网红套餐 = 放弃这个月目标。
+
+### 3b. 引擎接线
+
+**`src/engine/state-machine.ts`：**
+- `GameState` 加 `inventory: Record<string, number>`（四处补默认值：类型/createInitialState/new_game/migrate）
+- `case 'buy_item'`：钱不够或已购唯一道具 → **no-op（返回原 clone，JSON 不变，沿用聊天满精力的约定）**；否则 `money -= price`、`ledgerAdd(…, 'shop')`（**`LedgerEntry.kind` 加 `'shop'`**）、即时型当场生效、持久型写 inventory
+- 挂点：`applyAffinity` 尾部读 inventory 结算首饰+口红；`runMorning` 精力回填行改 `state.energy = state.energyMax`（修掉写死 `ENERGY_MAX` 常量的隐患，网红套餐上限才能生效）；聊天扣精力处经 `chatCost(s)` 工具函数（充电宝当天 −1）；runMorning 的 selfie incoming 概率处 + 会员加成
+- `ShopItem.effect` 描述文案走 log（买咖啡当天 log「咖啡因起效，今晚还能再撑一会儿。」）
+
+### 3c. 商店 UI
+
+**WalletPanel** 流水列表上方加 `.shop-section`：道具卡网格（名称/价格/一句话效果+风味描述/购买按钮）。钱不够或已拥有的按钮置灰；购买后钱款进流水（kind: 'shop'）。HUD 余额已可见，无需重复。
+
+---
+
+## 测试与收尾
+
+**更新既有测试（新内容纳入门禁）：**
+- `simulation.test.ts:268/275` 两个内容 blob 加入 `MOMENT_CAPTIONS / MOMENT_TARGET_POSTS / MOMENT_REACTIONS / MOMENT_SUSPICION / MOMENT_PLAYER_COMMENTS / SHOP_ITEMS / SELFIE_META`——新话术受禁词扫描约束
+- `v2-systems.test.ts:342` 的 `['cake','gym','pool','cat'].length === 4` 断言改为 `SELFIE_IDS.length === 8`（'pool' 等既有用法不动）
+
+**新增 `src/engine/__tests__/moments-shop.test.ts`：**
+- 朋友圈：每天只能发一条（第二次 post no-op）；feed 上限；老头反应落 trust/wariness 且 clamp；怀疑线走 suspicious 池；玩家评论老头圈 trust +1；评论区 ≥3 人 → riskLevel +6；8 种自拍全有 label/配文/SVG 场景
+- 商店：钱款精确入账（`money === before − price`）+ ledger 'shop' 条目；钱不够 no-op（JSON 深等）；咖啡精力 +8；首饰挂 applyAffinity；网红套餐 energyMax=24 且次日回填 24 而非 16；充电宝当天聊天扣 3
+- 模拟器 bot（simulation.test.ts 的 autoPlay）不发圈不购物，走既有路径 → 61 个旧测试断言不受影响
+
+**收尾验证：** `npx tsc --noEmit` 零错 → `npx vitest run` 全绿（旧 61 + 新增）→ `npm run build` 成功。
+
+## 不改动的部分
+- 话术引擎核心（dispatch 纯函数、askChance/红包结算曲线、balance.test 的数值契约）
+- 既有自拍 incoming 机制（SELFIE_LINGER_DAYS=3、on_selfie 池照旧，朋友圈反应是新增层不替代）
+- 头像/照片/序章/终章等上一轮全部产出
+- 女主角 6 款头像预设、人设卡
