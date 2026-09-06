@@ -109,6 +109,10 @@ function DayBriefingModal() {
   if (bill) rows.push({ ico: '🧾', label: '今日开销', text: bill.details });
   // "无事发生"不值得占一行——安静的早晨也是一种信息。
   if (event && event.details !== '无事发生的一天。') rows.push({ ico: '🎲', label: '今天的事', text: event.details });
+  // v4.0 他的人生线：不等她上线，日子照过。晨报里多一行——他今天过着什么日子。
+  for (const l of entries) {
+    if (l.kind === 'life') rows.push({ ico: '🕰', label: '他的今天', text: l.details });
+  }
   const step = 150;
   const delay = (i: number) => `${300 + i * step}ms`;
   let rowIdx = 0;
@@ -313,7 +317,7 @@ function TodayPanel({ phaseLabel }: { phaseLabel: string }) {
               <div key={m.targetId} className="incoming-card">
                 <OldManAvatar target={def} state={t} size={40} />
                 <div className="incoming-body">
-                  <div className="incoming-head">{def.name} · {m.reason === 'selfie' ? '因为你的新照片' : m.reason === 'wallet_open' ? '他发工资了' : '就是想你了'}</div>
+                  <div className="incoming-head">{def.name} · {m.reason === 'selfie' ? '因为你的新照片' : m.reason === 'wallet_open' ? '他发工资了' : m.reason === 'his_life' ? '他今天有事想跟你说' : '就是想你了'}</div>
                   <div className="incoming-msg">{m.opener}</div>
                 </div>
                 <div className="incoming-actions">

@@ -440,6 +440,9 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 .log-entry.log-bill { border-left-color: var(--danger); }
 .log-entry.log-packet { border-left-color: var(--warm); }
 .log-entry.log-gatha { border-left-color: var(--warm); }
+/* v4.0 他的人生线——他的日子跟她的事隔开一点距离，像一个远处的钟声。 */
+.log-entry.log-life { border-left-color: var(--muted); }
+.log-entry.log-life .log-main { color: var(--muted); }
 .packet-flash { color: var(--warm); font-size: var(--fs-5); }
 
 /* ---------- 状态条（信任/警惕/精力） ---------- */

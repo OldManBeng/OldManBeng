@@ -28,6 +28,9 @@ import {
 import { SHOP_ITEMS } from '../data/items';
 import { DAILY_GATHAS, TRIGGER_GATHAS } from '../data/gathas';
 import {
+  LIFE_BY_TARGET, LIFE_DAILY_CAP, ASK_COST_NARRATOR, ASK_COST_NARRATOR_GENERIC,
+} from '../data/life-events';
+import {
   START_MONEY, MONTHLY_GOAL, DAYS_LIMIT, ENERGY_MAX, CHAT_SESSION_COST,
   TRUST_DECAY_PER_DAY, WARINESS_DECAY_PER_DAY, SILENT_TRUST_PENALTY,
   CLINGY_SILENT_MULTIPLIER, ASK_SUCCESS_WARINESS, ASK_FAIL_WARINESS,
@@ -581,9 +584,66 @@ function runMorning(state: GameState) {
     }
   }
 
+  // v4.0 老头人生线：他的人生按日历推进——不看她聊没聊，日子到了就发生。
+  // 这是中期（第 4-30 天）新鲜感的骨架：他不是提款机，他是过着日子的人。
+  // 三个变体：基准（他的人生）/ costText（她拿走的钱改写了哪一行）/ blockedLine
+  // （他删了她，日子照过，只是她看不见了）。不消耗 RNG（种子确定性保护）。
+  {
+    let fired = 0;
+    for (const t of state.targets) {
+      if (fired >= LIFE_DAILY_CAP) break;
+      if (!t.discoveredDay) continue;
+      const arc = LIFE_BY_TARGET[t.targetId];
+      if (!arc) continue;
+      const beat = arc.find((b) => b.day === state.day);
+      if (!beat) continue;
+      fired += 1;
+      if (t.blocked || t.ended) {
+        if (beat.blockedLine) log(state, 'life', beat.blockedLine);
+        continue;
+      }
+      const def = ALL_TARGET_MAP[t.targetId];
+      const harvested = !!(beat.costText && t.totalReceived >= (beat.costFrom ?? Infinity));
+      log(state, 'life', harvested ? (beat.costText ?? beat.text) : beat.text);
+      if (beat.moment) {
+        state.moments.push({
+          id: `life_${beat.id}_${state.day}`,
+          momentDay: state.day,
+          author: 'target',
+          targetId: t.targetId,
+          photoId: beat.moment.photoId,
+          caption: beat.moment.caption,
+          likes: [],
+          comments: [],
+        });
+        if (state.moments.length > MOMENTS_CAP) state.moments.splice(0, state.moments.length - MOMENTS_CAP);
+        state.unseenMoments += 1;
+      }
+      if (beat.incoming && t.trust >= (beat.incoming.minTrust ?? 0)) {
+        // 人生线优先：他今天的这件事，比"就是想你了"重要——同一天同老头
+        // 只留一条（incoming 卡片按 targetId 取 key，重复入队会撞 key）。
+        const dup = state.incoming.findIndex((m) => m.targetId === t.targetId);
+        if (dup >= 0) state.incoming.splice(dup, 1);
+        state.incoming.push({
+          targetId: t.targetId,
+          day: state.day,
+          reason: 'his_life',
+          opener: fillProfileVars(beat.incoming.opener, state),
+          stamp: nightStamp(def?.activeHour ?? 20, 5),
+        });
+        t.pingedToday = true;
+        while (state.incoming.length > INCOMING_DAILY_CAP) state.incoming.shift();
+      }
+    }
+  }
+
   // v2.3 老头发圈：每天早上随机一个认识的人发条自己的动态——
   // 你可以点赞（+1 信任）或评论（走心，+2）。评论是门手艺，也是门生意。
-  const discovered = state.targets.filter((t) => !t.blocked && !t.ended && t.discoveredDay > 0);
+  // v4.0：今天已经发过人生线的老头不再重复发圈。
+  const discovered = state.targets.filter(
+    (t) => !t.blocked && !t.ended && t.discoveredDay > 0
+      && !state.moments.some((m) => m.author === 'target' && m.targetId === t.targetId && m.momentDay === state.day),
+  );
   if (discovered.length && rng.chance(0.75)) {
     const poster = rng.pick(discovered);
     const def = ALL_TARGET_MAP[poster.targetId];
@@ -1095,6 +1155,17 @@ export function dispatch(state: GameState, action: GameAction): GameState {
           s.ledger.push({ day: s.day, amount: result.amount, note: `${def.name} 的红包（${result.tierLabel}）`, kind: 'packet' });
           s.chat.transcript.push({ speaker: 'system' as const, label: `红包 +${result.amount} 元`, text: `（${result.tierLabel}）`, stamp: nightStamp(def.activeHour, 14) });
           if (result.line) pushBubbles(s.chat.transcript, 'target', result.line, nightStamp(def.activeHour, 15));
+          // v4.0 代价呈现层：要到钱的那一刻，插进她心里的一帧——用的全是他
+          // 人生线里的事（手头紧/退休金/老婆查账/包夜钱/机票钱）。按天轮换、
+          // 不耗 RNG。第 8 天起才出现：代价感是随着月份深入才浮上来的。
+          if (s.day >= 8) {
+            const pool = ASK_COST_NARRATOR[def.id] ?? ASK_COST_NARRATOR_GENERIC;
+            s.chat.transcript.push({
+              speaker: 'target' as const,
+              text: pool[(s.day - 8) % pool.length],
+              stamp: nightStamp(def.activeHour, 16),
+            });
+          }
           log(s, 'packet', `${def.name} 的红包：${result.amount} 元`);
         } else {
           s.stats.asksFailed += 1;

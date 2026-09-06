@@ -22,7 +22,8 @@ export type EventKind =
   | 'blocked'
   | 'target_ending'
   | 'ending'
-  | 'flag';
+  | 'flag'
+  | 'life';
 
 export interface EventLogEntry {
   day: number;
@@ -104,7 +105,7 @@ export interface IncomingChat {
   targetId: string;
   /** 到达日（用于过期）。 */
   day: number;
-  reason: 'selfie' | 'missed_you' | 'wallet_open';
+  reason: 'selfie' | 'missed_you' | 'wallet_open' | 'his_life';
   opener: string;
   stamp: string;
 }
