@@ -262,7 +262,7 @@ describe('v3.2: 人设专属开场白', () => {
       let s = fresh(seed, personaId);
       const tl = s.targets.find((x) => x.targetId === 'lao_li')!;
       tl.wariness = 5;
-      tl.trust = 10;
+      tl.trust = 30; // 熟络期（≥25）：人设池才开始介入；陌生期走 greeting_far（见下一条）
       s = nightChat(s, 'lao_li');
       return s.chat!.transcript[1].text;
     };
@@ -275,6 +275,19 @@ describe('v3.2: 人设专属开场白', () => {
     console.log(`人设开场白命中率：ff ${ffHit}/50，sd ${sdHit}/50（期望 ~55%）`);
     expect(ffHit).toBeGreaterThan(5);
     expect(sdHit).toBeGreaterThan(5);
+  });
+
+  it('陌生期（信任<25）开场白走 greeting_far——距离感：客气、没称呼、不交心', () => {
+    let hit = 0;
+    for (let seed = 800; seed < 840; seed++) {
+      let s = fresh(seed, 'wise_sister');
+      const tl = s.targets.find((x) => x.targetId === 'lao_li')!;
+      tl.trust = 5;
+      tl.wariness = 5;
+      s = nightChat(s, 'lao_li');
+      if (LAO_LI_LINES.greeting_far.includes(s.chat!.transcript[1].text)) hit += 1;
+    }
+    expect(hit).toBeGreaterThan(30); // 陌生期 ~100% 走距离池
   });
 
   it('进场白跨场去重：同一句"想你了"不连着来', () => {

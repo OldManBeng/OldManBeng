@@ -27,6 +27,47 @@ function personaKeysValid(obj: Record<string, unknown>): boolean {
   return Object.keys(obj).every((k) => k === 'default' || (SHORT_KEY as Set<string>).has(k));
 }
 
+
+// ---------------------------------------------------------------------------
+// v3.2.1 语境与身份审计：
+//  A. 称呼越界（鸡同鸭讲）：他的台词里对她的称呼/自称必须属于本剧本——
+//     老李叫"丫头"、周老师叫"闺女"、王总叫"领导"、这些词出现在别人嘴里就是穿帮。
+//  B. 时间戳与作息一致：以（HH:MM）开头的池子台词，小时数必须落在
+//     该老头的在线时段（夜行 20-5，晨型 5-12）——上午的老师不能说"凌晨两点"。
+//  C. 玩家选项人设锁词：基础选项文本里出现"姐姐我/姐我/老娘/本仙女/妹妹我"
+//     这类锁死人设的自称——基础选项是四个人设共用的，锁词会让学妹说出御姐的话。
+// ---------------------------------------------------------------------------
+const CALLSIGN_MAP: Record<string, string[]> = {
+  lao_li: ['丫头'],
+  zhou_teacher: ['闺女'],
+  boss_wang: ['领导'],
+  hao_ge: ['豪哥说'],
+  chen_gong: [],
+};
+/** 各剧本的"豁免词"——该词在本剧本里有第三人称含义，不作称呼越界处理。 */
+const EXEMPT_WORDS: Record<string, string[]> = {
+  lao_li: ['闺女'], // 老李的亲闺女：给"闺女"打生活费是他自己的生活，不是对她的称呼
+};
+const ALL_NICKS = ['丫头', '闺女', '领导'];
+
+function hourOk(text: string, activeHour: number, poolKey: string): boolean {
+  if (poolKey === 'morning' || poolKey === 'deep_night') return true; // 回味池，时间属于"另一段生活"
+  const m = text.match(/^（(\d{1,2}):(\d{2})）/);
+  if (!m) return true; // 不带时间戳的台词不检查
+  const h = Number(m[1]);
+  if (activeHour >= 20 || activeHour < 6) return h >= 20 || h <= 6; // 夜猫子横跨整个深夜带
+  const diff = Math.min(Math.abs(h - activeHour), 24 - Math.abs(h - activeHour));
+  return diff <= 5; // 白天型以在线时刻为中心 ±5 小时
+}
+
+function selfLockWords(text: string): string[] {
+  const bad: string[] = [];
+  for (const w of ['姐姐我', '姐我', '姐可很少', '姐不跟', '老娘', '本仙女', '妹妹我']) {
+    if (text.includes(w)) bad.push(w);
+  }
+  return bad;
+}
+
 describe('话术全量审计', () => {
   it('全部剧本结构合规（上下文/重复/占位符/池子规模/人设键）', () => {
     const issues: string[] = [];
@@ -37,6 +78,40 @@ describe('话术全量审计', () => {
     for (const [tid, script] of Object.entries(SCRIPTS)) {
       const seenOpeners = new Map<string, string>();
       const seenOptions = new Map<string, string>();
+      // ---- v3.2.1 语境与身份检查 ----
+      const isMain = ['lao_li', 'zhou_teacher', 'boss_wang', 'hao_ge', 'chen_gong'].includes(tid);
+      const activeHour = (() => {
+        const t = (LIB_REGISTRY as Record<string, { activeHour?: number }>)[tid];
+        return t?.activeHour ?? 23;
+      })();
+      const nickBlacklist = ALL_NICKS.filter((n) => !(CALLSIGN_MAP[tid] ?? []).includes(n) && !(EXEMPT_WORDS[tid] ?? []).includes(n));
+      const scanVoice = (where: string, text: string, poolKey: string) => {
+        // 去掉第三人称指涉（"讲他闺女的近况"不是在叫她）
+        const stripped = text.replace(/[他她自人的讲]的?(闺女|丫头|领导)/g, '◇');
+        if (!poolKey.startsWith('greet_')) {
+          // 人设专属池（greet_*）本来就对应"她是谁"，称呼随人设变——不查越界
+          for (const n of nickBlacklist) {
+            if (stripped.includes(n)) issues.push(`${tid}/${where}: 称呼越界「${n}」（鸡同鸭讲）：${text.slice(0, 22)}…`);
+          }
+        }
+        // 时间戳作息检查只管五位主角——库人物共用原型台词，时段随原型不随个人
+        if (isMain && !hourOk(text, activeHour, poolKey)) issues.push(`${tid}/${where}: 时间戳超出作息时段：${text.slice(0, 22)}…`);
+      };
+      for (const [k, arr] of Object.entries(script.lines)) {
+        if (!Array.isArray(arr)) continue;
+        arr.forEach((line, idx) => scanVoice(`lines.${k}[${idx}]`, line, k));
+      }
+      if (script.incoming) {
+        for (const [k, arr] of Object.entries(script.incoming)) {
+          ((arr ?? []) as string[]).forEach((line: string, idx: number) => scanVoice(`incoming.${k}[${idx}]`, line, `incoming.${k}`));
+        }
+      }
+      const checkPlayerVoice = (where: string, o: { text: string; personaText?: unknown }) => {
+        const locks = selfLockWords(o.text);
+        if (locks.length) issues.push(`${tid}/${where}: 基础选项锁死人设自称（${locks.join('/')}）：${o.text.slice(0, 24)}…`);
+      };
+
+
 
       const checkOpeners = (where: string, openers: string[]) => {
         openersTotal += openers.length;
@@ -52,7 +127,7 @@ describe('话术全量审计', () => {
         }
       };
 
-      const checkOption = (where: string, o: { text: string; isAsk?: boolean; replies?: unknown; personaText?: unknown }) => {
+      const checkOption = (where: string, o: { text: string; isAsk?: boolean; replies?: unknown; personaText?: unknown }, gated?: boolean) => {
         optionsTotal += 1;
         if (!o.text?.trim()) { issues.push(`${tid}/${where}: 空选项文本`); return; }
         const bad = badPlaceholders(o.text);
@@ -66,6 +141,7 @@ describe('话术全量审计', () => {
           const pt = o.personaText as Record<string, unknown>;
           if (!personaKeysValid(pt)) issues.push(`${tid}/${where}: personaText 键非法`);
         }
+        if (!gated) checkPlayerVoice(where, o);
         if (o.isAsk) return; // 开口选项的反馈由红包结算生成
         const r = o.replies;
         if (Array.isArray(r)) {
@@ -89,7 +165,7 @@ describe('话术全量审计', () => {
       }
       for (const [nid, n] of Object.entries(script.chain)) {
         checkOpeners(`chain:${nid}`, n.openers);
-        n.options.forEach((o, i) => checkOption(`chain:${nid}#${i}`, o));
+        n.options.forEach((o, i) => checkOption(`chain:${nid}#${i}`, o, !!n.onlyPersona));
       }
       for (const n of script.free) {
         checkOpeners(`free:${n.id}`, n.openers);
@@ -141,3 +217,7 @@ describe('话术全量审计', () => {
 });
 
 const LIB_NO_RECALL = new Set<string>();
+import { ALL_TARGETS as AUDIT_TARGETS } from '../../data/target-library';
+const LIB_REGISTRY: Record<string, { activeHour: number }> = Object.fromEntries(
+  AUDIT_TARGETS.map((t) => [t.id, { activeHour: t.activeHour }]),
+);

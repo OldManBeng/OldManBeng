@@ -221,10 +221,17 @@ export const NUMBNESS_REST_RECOVERY = 5;
 /** ---- v3.0：语境连续性（话术真实感的三块基建） ----
  *  1) recall：昨晚聊过带话题标签的闲聊，今晚他有可能"接昨天的话"
  *     （"昨晚你说的那个摊……"），而不是每晚从零开始尬聊。
- *  2) greeting_close：信任够高后开场白换更亲近的池子（关系深了，语气就变了）。
+ *  2) greeting_close：信任达到该值后开场白换更亲近的池子（关系深了，语气就变了）。
  *  3) recentGreetings：近 3 条开场白原文去重——同一句晚安三天不重样。 */
 export const RECALL_CHANCE = 0.4;
 export const GREETING_CLOSE_TRUST = 50;
+
+/** ---- v3.2：亲疏分层（距离感） ----
+ *  信任低于 GREETING_FAR_TRUST 时，开场白走 greeting_far 池——客气、试探、
+ *  没有称呼、不交心、目的性弱：刚认识的人就是这样发消息的。
+ *  人设专属开场白也设门槛：熟了之后，他的话里才开始带"你是谁"的印记。 */
+export const GREETING_FAR_TRUST = 25;
+export const PERSONA_GREET_TRUST = 20;
 
 /** ---- v3.0：人设场次被动 ----
  *  人设×情感缺口 命中矩阵（PERSONA_NEED_MATCH）除放大单条回复的信任收益外，

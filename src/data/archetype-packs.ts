@@ -648,6 +648,41 @@ const ARCHETYPE_GREETING_CLOSE: Record<string, string[]> = {
 };
 
 
+
+/** v3.2 距离层开场白：信任 <25 时用——客气、试探、没称呼、目的性弱。 */
+const ARCHETYPE_GREETING_FAR: Record<string, string[]> = {
+  night_guard: [
+    '（02:12）新认识的朋友，打个招呼。我在岗上。',
+    '（01:38）巡楼路过。问一句：还没睡？',
+    '（02:49）监控室夜班。闲一句：你那边动静大吗。不大就好。',
+    '（01:24）对讲机安静，手机亮着。就说一句：夜安。',
+  ],
+  designated_driver: [
+    '（01:52）等单呢。新加的，问一声：吃了吗。',
+    '（02:30）今晚单一般。闲着，打个招呼。',
+    '（03:07）送完一单了。你这作息，跟我的像。',
+    '（01:20）等单区就我亮着灯。顺口说一句：夜深了。',
+  ],
+  fisherman: [
+    '（06:12）刚到水边。问一声：起了吗。',
+    '（05:48）打完窝了。新朋友里你醒得早。聊两句？',
+    '（06:55）今天风小，适合下竿。你那边天气怎样。',
+    '（07:20）浮漂没动。人闲着，发个消息。',
+  ],
+  chess_uncle: [
+    '（15:12）棋摊刚支起来。问一声：吃了吗。',
+    '（16:02）今天观棋的多。新朋友里就你回过消息。聊两句。',
+    '（15:48）上午赢了一盘，输了一盘。跟你说一声。',
+    '（16:30）茶泡上了。闲一句：下午好。',
+  ],
+  square_dancer: [
+    '（19:42）音响还没开。新认识的，问一声：吃了吗。',
+    '（20:15）今晚人齐。顺口跟你说一声。',
+    '（19:58）天凉了，跳舞的正经日子。你多穿。',
+    '（21:05）收队了。忙你的，就打个招呼。',
+  ],
+};
+
 /** 拉黑/不再回复的收束台词——库人物也各有各的沉默方式。 */
 const ARCHETYPE_BLOCKED: Record<string, string[]> = {
   night_guard: [
@@ -678,4 +713,5 @@ for (const key of Object.keys(ARCHETYPE_LINES) as TargetArchetype[]) {
   if (ARCHETYPE_RECALL[key]) lines.recall = ARCHETYPE_RECALL[key];
   if (ARCHETYPE_GREETING_CLOSE[key]) lines.greeting_close = ARCHETYPE_GREETING_CLOSE[key];
   if (ARCHETYPE_BLOCKED[key]) lines.blocked = ARCHETYPE_BLOCKED[key];
+  if (ARCHETYPE_GREETING_FAR[key]) lines.greeting_far = ARCHETYPE_GREETING_FAR[key];
 }

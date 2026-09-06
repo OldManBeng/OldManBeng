@@ -23,6 +23,7 @@ import { ARCHETYPE_PACKS } from '../data/archetype-packs';
 import {
   MOMENT_CAPTIONS, MOMENT_EFFECT, MOMENT_REACTIONS, MOMENT_SUSPICION, MOMENT_SUSPICION_EFFECT,
   MOMENT_PLAYER_COMMENTS, MOMENTS_CAP, targetMomentPosts, hasReacted, SELFIE_REACTIONS,
+  MOMENT_REACTIONS_FAR, MOMENT_REACTIONS_CLOSE,
 } from '../data/moments';
 import { SHOP_ITEMS } from '../data/items';
 import { DAILY_GATHAS, TRIGGER_GATHAS } from '../data/gathas';
@@ -38,7 +39,7 @@ import {
   TRAIT_ARCHETYPE_AFFINITY, AGE_NEED_AFFINITY, INCOMING_BASE_CHANCE,
   INCOMING_DAILY_CAP, SELFIE_LINGER_DAYS, ARCHIVE_CAP, NUMBNESS_DAILY_CAP, NUMBNESS_REST_RECOVERY,
   PERSONA_NEED_MATCH, PERSONA_SESSION_TRUST, PERSONA_SESSION_WARINESS,
-  RECALL_CHANCE, GREETING_CLOSE_TRUST,
+  RECALL_CHANCE, GREETING_CLOSE_TRUST, GREETING_FAR_TRUST, PERSONA_GREET_TRUST,
 } from '../data/constants';
 
 export const TARGET_MAP: Record<string, Target> = Object.fromEntries(TARGETS.map((t) => [t.id, t]));
@@ -354,10 +355,15 @@ function applyMomentReaction(
     if (rng.chance(0.6)) {
       post.likes.push(t.targetId);
     } else {
-      const selfieLines = post.selfieId ? SELFIE_REACTIONS[post.selfieId] : undefined;
-      const text = selfieLines?.length && rng.chance(0.45)
-        ? rng.pick(selfieLines)
-        : rng.pick(MOMENT_REACTIONS[def.need] ?? ['（他点了赞。）']);
+      // v3.2 距离分层：刚认识的人评论客气克制（远池），熟了才说得出知心话（近池）；
+      // 照片专属评论也只在有些交情之后——不合逻辑的亲昵一句话都不说。
+      const far = t.trust < 25;
+      const near = t.trust >= 60;
+      const selfieLines = !far && post.selfieId ? SELFIE_REACTIONS[post.selfieId] : undefined;
+      let text: string;
+      if (near && rng.chance(0.5)) text = rng.pick(MOMENT_REACTIONS_CLOSE[def.need] ?? MOMENT_REACTIONS[def.need] ?? ['（他点了赞。）']);
+      else if (!far && selfieLines?.length && rng.chance(0.45)) text = rng.pick(selfieLines);
+      else text = rng.pick((far ? MOMENT_REACTIONS_FAR[def.need] : undefined) ?? MOMENT_REACTIONS[def.need] ?? ['（他点了赞。）']);
       post.comments.push({ by: 'target', targetId: t.targetId, text });
     }
   }
@@ -962,17 +968,21 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       transcript.push({ speaker: 'system' as const, text: `和 ${def.name} 的${phaseLabel}对话`, stamp: nightStamp(def.activeHour, 0) });
       // 近 3 条开场白原文去重（问候/警示/断联共用一个"最近说过"列表，谁说过谁让路）。
       const recent = t.recentGreetings ?? (t.recentGreetings = []);
-      if (t.wariness >= 50 && t.timesPaid > 0) {
+      // v3.2 距离层：信任不足时开场白走 greeting_far——客气、试探、没称呼、目的性弱。
+      if (t.trust < GREETING_FAR_TRUST && lines.greeting_far?.length) {
+        const greeting = fillProfileVars(pickFreshLine(rng, lines.greeting_far, '（他来了。）', recent), s);
+        transcript.push({ speaker: 'target' as const, text: greeting, stamp: nightStamp(def.activeHour, 1) });
+      } else if (t.wariness >= 50 && t.timesPaid > 0) {
         transcript.push({ speaker: 'target' as const, text: fillProfileVars(pickFreshLine(rng, lines.wariness_high, '（他回得越来越慢。）', recent), s), stamp: nightStamp(def.activeHour, 2) });
       } else if (t.daysSilent >= 3) {
         transcript.push({ speaker: 'target' as const, text: fillProfileVars(pickFreshLine(rng, lines.silent_warning, '（他安静了很多天。）', recent), s), stamp: nightStamp(def.activeHour, 1) });
       } else {
-        // v3.2：人设专属开场白优先——他开口第一句就带着"你是谁"的印记
-        // （55% 走人设池，其余按关系深浅走 greeting_close / 通用池，保底多样性）。
+        // v3.2 三层开场白（亲疏分层）：熟了之后人设专属池才介入——
+        // 他第一句话里"你是谁"的印记，是熟了才配有的；陌生期另走 greeting_far。
+        let pool = t.trust >= GREETING_CLOSE_TRUST && lines.greeting_close?.length ? lines.greeting_close : lines.greeting;
         const short = s.personaId === 'femme_fatale' ? 'ff' : s.personaId === 'sweet_daughter' ? 'sd' : s.personaId === 'wise_sister' ? 'ws' : 'art';
         const personaPool = lines[`greet_${short}`];
-        let pool = t.trust >= GREETING_CLOSE_TRUST && lines.greeting_close?.length ? lines.greeting_close : lines.greeting;
-        if (personaPool?.length && rng.chance(0.55)) pool = personaPool;
+        if (personaPool?.length && t.trust >= PERSONA_GREET_TRUST && rng.chance(0.55)) pool = personaPool;
         const greeting = fillProfileVars(pickFreshLine(rng, pool, '（他来了。）', recent), s);
         transcript.push({ speaker: 'target' as const, text: greeting, stamp: nightStamp(def.activeHour, 1) });
       }
