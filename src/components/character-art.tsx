@@ -1620,6 +1620,96 @@ const PHOTO_SCENES: Record<string, ReactElement> = {
       <path d="M 150 128 L 176 128 L 176 104 Z" fill="none" stroke="#5b8db8" strokeWidth="0.8" opacity="0.6" transform="rotate(4 163 116)" />
     </>
   ),
+  // 私发照片钩子①：王总"刚加完班"——深夜办公室摆拍，时钟是时间证据
+  wang_overtime: (
+    <>
+      <rect width="200" height="150" fill="#1a1c22" />
+      {/* 显示器：表格荧光 */}
+      <rect x="14" y="24" width="86" height="62" rx="3" fill="#0e1218" />
+      <rect x="18" y="28" width="78" height="54" fill="#1e2c3a" />
+      {[34, 44, 54, 64, 74].map((y) => (
+        <rect key={y} x="22" y={y} width={70 - (y % 12)} height="4" fill="#3a5a7a" opacity="0.7" />
+      ))}
+      <ellipse cx="57" cy="55" rx="40" ry="26" fill="#4a8ab8" opacity="0.08" />
+      {/* 挂钟：01:30——时间证据 */}
+      <circle cx="158" cy="38" r="15" fill="#2a2e34" />
+      <circle cx="158" cy="38" r="15" fill="none" stroke="#4a505a" strokeWidth="1.6" />
+      <circle cx="158" cy="38" r="11.6" fill="#33383e" />
+      <g stroke="#c9e0ea" strokeWidth="1">
+        <line x1="158" y1="28" x2="158" y2="30" />
+        <line x1="168" y1="38" x2="166" y2="38" />
+        <line x1="158" y1="48" x2="158" y2="46" />
+        <line x1="148" y1="38" x2="150" y2="38" />
+      </g>
+      <line x1="158" y1="38" x2="158" y2="30" stroke="#c9e0ea" strokeWidth="1.4" />
+      <line x1="158" y1="38" x2="151.6" y2="33.4" stroke="#c9e0ea" strokeWidth="1.4" />
+      {/* 桌面 */}
+      <path d="M 0 96 L 200 92 L 200 150 L 0 150 Z" fill="#241e18" />
+      <path d="M 0 96 L 200 92" stroke="#3a322a" strokeWidth="1.6" />
+      {/* 键盘 + 咖啡 */}
+      <path d="M 96 104 L 168 100 L 172 122 L 100 126 Z" fill="#2a2e36" />
+      <g opacity="0.5" fill="#3a3f48">
+        {[108, 113, 118].map((y) => <rect key={y} x="106" y={y} width="54" height="3" rx="1" />)}
+      </g>
+      <rect x="30" y="106" width="13" height="15" rx="2" fill="#4a3a2c" />
+      <path d="M 43 109 q 5 2.4 0 7" stroke="#4a3a2c" strokeWidth="2.4" fill="none" />
+      {/* 他：衬衫领带 熬夜脸 只露半身 闪光打在脸上 */}
+      <path d="M 96 150 Q 100 122 128 118 Q 156 114 170 122 Q 186 130 190 150 Z" fill="#d8dde2" />
+      <path d="M 128 118 L 140 128 L 132 136 L 126 126 Z" fill="#8a3a3a" />
+      <path d="M 118 122 L 124 126 L 121 131 Z" fill="#aab2ba" opacity="0.7" />
+      <ellipse cx="146" cy="96" rx="15" ry="17" fill="#d9a678" />
+      <path d="M 131 94 Q 132 78 146 77 Q 160 78 161 94 Q 154 85 146 84.6 Q 138 85 131 94 Z" fill="#3a3630" />
+      <ellipse cx="140.4" cy="96" rx="2.4" ry="2" fill="#26221c" />
+      <ellipse cx="151.6" cy="96.4" rx="2.4" ry="2" fill="#26221c" />
+      <path d="M 140 105 Q 146 107.6 152.6 104.8" stroke="#8a5a3e" strokeWidth="1.4" fill="none" opacity="0.8" />
+      <ellipse cx="136" cy="101" rx="3" ry="1.8" fill="#c19268" opacity="0.5" />
+      {/* 强制笑 + 闪光热斑 */}
+      <path d="M 139 104 Q 146 108 153 104" stroke="#7c4a38" strokeWidth="1.2" fill="none" opacity="0.5" />
+      <circle cx="146" cy="94" r="17" fill="#fff" opacity="0.1" />
+      <rect width="200" height="150" fill="#7aa8cc" opacity="0.05" />
+    </>
+  ),
+  // 私发照片钩子②：奶茶外卖——殷勤供养型"给你也点了"，小票入镜
+  milktea_gift: (
+    <>
+      <rect width="200" height="150" fill="#d8cfc2" />
+      <rect width="200" height="150" fill="#cfc4b4" opacity="0.5" />
+      {/* 木桌纹 */}
+      <g stroke="#b8a88e" strokeWidth="1.2" opacity="0.6">
+        <line x1="0" y1="28" x2="200" y2="24" />
+        <line x1="0" y1="62" x2="200" y2="56" />
+        <line x1="0" y1="98" x2="200" y2="90" />
+        <line x1="0" y1="132" x2="200" y2="124" />
+      </g>
+      {/* 奶茶（全糖 去冰） */}
+      <path d="M 52 38 L 106 38 L 98 108 L 60 108 Z" fill="#c9a37a" />
+      <path d="M 56 44 L 102 44 L 96 102 L 62 102 Z" fill="#a87848" opacity="0.8" />
+      <path d="M 54 38 L 104 38 L 103 48 L 55 48 Z" fill="#f4ede4" />
+      <circle cx="70" cy="94" r="4" fill="#2a1a12" />
+      <circle cx="82" cy="98" r="4" fill="#2a1a12" />
+      <circle cx="92" cy="92" r="3.6" fill="#2a1a12" />
+      <path d="M 92 26 L 88 44" stroke="#d4553f" strokeWidth="4" strokeLinecap="round" />
+      <ellipse cx="90" cy="25" rx="4" ry="1.8" fill="#3a2018" />
+      {/* 甜品袋 */}
+      <rect x="118" y="30" width="64" height="74" rx="4" fill="#e8b86a" />
+      <path d="M 118 38 L 182 38" stroke="#c89a4a" strokeWidth="2" />
+      <path d="M 138 30 Q 150 18 162 30" stroke="#c89a4a" strokeWidth="3" fill="none" />
+      <circle cx="150" cy="62" r="12" fill="#f0d8a0" />
+      <path d="M 143 58 Q 150 52 157 58" stroke="#c89a4a" strokeWidth="1.6" fill="none" />
+      {/* 小票（价格入镜——供养的证据） */}
+      <rect x="34" y="96" width="52" height="40" rx="1" fill="#f8f4ec" transform="rotate(-6 60 116)" />
+      <g stroke="#a89a84" strokeWidth="1" opacity="0.8" transform="rotate(-6 60 116)">
+        <line x1="42" y1="104" x2="78" y2="102" />
+        <line x1="42" y1="110" x2="74" y2="108" />
+        <line x1="42" y1="116" x2="78" y2="114" />
+        <line x1="42" y1="124" x2="70" y2="122" />
+      </g>
+      <text x="44" y="130" font-size="9" fill="#5a4a34" fontFamily="monospace" transform="rotate(-6 60 116)">¥38</text>
+      {/* 手机拍摄阴影一角 */}
+      <path d="M 0 150 L 0 120 Q 30 140 60 150 Z" fill="#00000022" />
+      <rect width="200" height="150" fill="#f4a03f" opacity="0.05" />
+    </>
+  ),
   // 库人物照片（按原型）——保安岗亭
   arch_guard_booth: (
     <>
