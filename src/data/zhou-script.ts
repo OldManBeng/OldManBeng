@@ -20,7 +20,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
         text: '看到了！叔叔你的评论比诗还长',
         style: 'playful',
         trust: 6,
-        replies: ['（片刻后）抱歉，职业病。教书四十年，改作文改的。', '你看，又忍不住多说了。'],
+        replies: ['（片刻后）｜抱歉，职业病。教书四十年，改作文改的。', '你看，又忍不住多说了。'],
       },
       {
         text: '您是老师？',
@@ -54,7 +54,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
         trust: 9,
         replies: {
           sweet_daughter: ['（他的回复一下子多了起来，像上课铃响了。）', '好啊。先备齐文房四宝。磨刀不误砍柴工。'],
-          default: ['（他认真想了想）可以先从描红开始。', '你若不嫌我啰嗦。'],
+          default: ['（他认真想了想）｜可以先从描红开始。', '你若不嫌我啰嗦。'],
         },
       },
       {
@@ -62,7 +62,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
         style: 'intellectual',
         trust: 3,
         wariness: 2,
-        replies: ['没坏。走得很好。', '……你问这个做什么。（笑了笑）没事，随口一问就好。'],
+        replies: ['没坏。走得很好。', '……你问这个做什么。｜（笑了笑）｜没事，随口一问就好。'],
       },
     ],
     next: 'c_zhou_3',
@@ -113,7 +113,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
         text: '「她为什么没回来呀」',
         style: 'intellectual',
         trust: 6,
-        replies: ['（片刻后）因为我没让她走。她要走的那个晚上，我说了很重的话。', '这件事我想了半辈子。'],
+        replies: ['（片刻后）｜因为我没让她走。她要走的那个晚上，我说了很重的话。', '这件事我想了半辈子。'],
       },
       {
         text: '（不接话茬，转开话题）「老师今天的字练了吗」',
@@ -277,7 +277,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
     onlyPersona: ['artistic_soul'],
     minTrust: 58,
     openers: [
-      '（10:12）抄了一首《卜算子》。"此水几时休，此恨何时已"。',
+      '（10:12）｜抄了一首《卜算子》。"此水几时休，此恨何时已"。',
       '抄到一半停了笔。这首词她生前最喜欢。四年来，我没在人前念过它。',
       '今天想找个人接下一句。翻遍了通讯录——只有你，接得住。',
     ],
@@ -297,7 +297,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
         style: 'caring',
         trust: 8,
         conscience: 3,
-        replies: ['（片刻后）此言有古意。', '（那天下午，他把这页词夹进了她的那本《宋词选》。）'],
+        replies: ['（片刻后）｜此言有古意。', '（那天下午，他把这页词夹进了她的那本《宋词选》。）'],
       },
     ],
     next: '',
@@ -308,7 +308,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
     onlyPersona: ['sweet_daughter'],
     minTrust: 58,
     openers: [
-      '（09:35）问你个正事。你的名字，哪几个字？',
+      '（09:35）｜问你个正事。你的名字，哪几个字？',
       '别问为什么。老师留作业，学生哪有反过来问的。',
     ],
     options: [
@@ -348,13 +348,13 @@ export const ZHOU_FREE: FreeNode[] = [
   {
     id: 'f_zhou_2',
     minTrust: 30,
-    openers: ['（上午 9:40）今天的粥熬糊了。', '就一点点。我还是吃完了。', '以前都是她熬粥。我到现在没学会那个火候。'],
+    openers: ['（上午 9:40）｜今天的粥熬糊了。', '就一点点。我还是吃完了。', '以前都是她熬粥。我到现在没学会那个火候。'],
     options: [
       { text: '「叔，明天你拍糊的我也要看」', style: 'caring', trust: 9, replies: ['（第二天他真的拍了。那天粥没糊。）', '（你随口一句话，他记了两个月。）'] },
       { text: '「教你个办法，水开了再下米」', style: 'intellectual', trust: 6, replies: ['（他认真记了。回了个：受教。）', '第二天：粥好了。就是有点像饭。'] },
       { text: '（要红包）「老师请我喝粥~ 熬糊的那锅算我的」', personaText: {
-        sweet_daughter: '（要红包）「老师~人家想喝粥嘛，你请客，糊的那锅算我的」',
-        artistic_soul: '（要红包）「老师，粥钱你出，诗意我出——这买卖你不亏」',
+        sweet_daughter: '（要红包）｜「老师~人家想喝粥嘛，你请客，糊的那锅算我的」',
+        artistic_soul: '（要红包）｜「老师，粥钱你出，诗意我出——这买卖你不亏」',
       }, style: 'sweet', trust: -2, wariness: 5, isAsk: true, replies: [] },
     ],
   },

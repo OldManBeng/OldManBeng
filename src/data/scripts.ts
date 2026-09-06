@@ -49,7 +49,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         style: 'caring',
         trust: 8,
         numbness: 2,
-        replies: ['你还真记着我姓。', '（过了会儿）行，今晚这单没白跑。'],
+        replies: ['你还真记着我姓。', '（过了会儿）｜行，今晚这单没白跑。'],
       },
       {
         text: '那种客人别理，都是酒壮的',
@@ -82,8 +82,8 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         numbness: 6,
         conscience: -1,
         replies: {
-          sweet_daughter: ['……', '（片刻后）谢谢。'],
-          default: ['……你这姑娘。', '（片刻后）晚安，姑娘。'],
+          sweet_daughter: ['……', '（片刻后）｜谢谢。'],
+          default: ['……你这姑娘。', '（片刻后）｜晚安，姑娘。'],
         },
       },
       {
@@ -124,7 +124,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         text: '（收藏了照片）',
         style: 'playful',
         trust: 3,
-        replies: ['（片刻后）头一回有人收藏我拍的照片。'],
+        replies: ['（片刻后）｜头一回有人收藏我拍的照片。'],
       },
     ],
     next: 'c_li_5',
@@ -148,7 +148,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         wariness: 6,
         numbness: 4,
         conscience: -1,
-        replies: ['那就好。', '（片刻后）你要是骗子，我可就看不出来。'],
+        replies: ['那就好。', '（片刻后）｜你要是骗子，我可就看不出来。'],
       },
       {
         text: '（转移话题）你今天跑了几个小时？',
@@ -171,7 +171,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         trust: 10,
         numbness: 8,
         conscience: -2,
-        replies: ['……唉。', '这话我闺女从来跟我说过。', '（很晚）今晚睡不着了。高兴的。'],
+        replies: ['……唉。', '这话我闺女从来跟我说过。', '（很晚）｜今晚睡不着了。高兴的。'],
       },
       {
         text: '那你把我当妹妹看呗，我也缺个哥',
@@ -215,7 +215,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         text: '（片刻后）叔叔，跟你说个事',
         style: 'intellectual',
         trust: 4,
-        replies: ['你说。', '（他好像有点紧张）你说。'],
+        replies: ['你说。', '（他好像有点紧张）｜你说。'],
       },
     ],
     next: 'c_li_8',
@@ -274,7 +274,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         text: '「那叔叔你下次拉到我，我请你喝」',
         style: 'sweet',
         trust: 7,
-        replies: ['（片刻后）好。', '一言为定。'],
+        replies: ['（片刻后）｜好。', '一言为定。'],
       },
       {
         text: '（避开）「甜的喝多了睡不着，叔叔你少喝」',
@@ -299,7 +299,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         style: 'sweet',
         trust: -4,
         wariness: 10,
-        replies: ['（他回得很快）你也有事瞒着我？', '……好。我等。'],
+        replies: ['（他回得很快）｜你也有事瞒着我？', '……好。我等。'],
       },
       {
         text: '「李叔，我答应你。但你要是见了失望，可别不理我」',
@@ -368,7 +368,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
     onlyPersona: ['wise_sister'],
     minTrust: 55,
     openers: [
-      '（00:50）跟你说个事。这话我跟收音机都没说过。',
+      '（00:50）｜跟你说个事。这话我跟收音机都没说过。',
       '上个月有个同行，跑车的时候走的。心梗。方向盘到最后都握得稳稳的。',
       '我那天在想，我要是那天没醒，手机里最后一个对话框，是你这个。我不觉得亏。',
     ],
@@ -399,7 +399,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
     onlyPersona: ['sweet_daughter'],
     minTrust: 55,
     openers: [
-      '（23:40）闺女今天给我发照片了。她烫了头发。'
+      '（23:40）｜闺女今天给我发照片了。她烫了头发。'
       , '我盯着看了半天，第一反应不是"好看"，是想说：这么晚别一个人在外面。',
       '说完才想起来，她今年十九了，不是小孩了。',
     ],
@@ -412,7 +412,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         style: 'caring',
         trust: 10,
         numbness: 4,
-        replies: ['（片刻后）', '你们俩，一个亲生的，一个……（他没打完这句。）', '（但你知道后半句是什么。）'],
+        replies: ['（片刻后）', '你们俩，一个亲生的，一个……｜（他没打完这句。）', '（但你知道后半句是什么。）'],
       },
       {
         text: '「下次她再发照片，你替我回一句：头发真好看」',
@@ -464,8 +464,8 @@ export const LAO_LI_FREE: FreeNode[] = [
       { text: '「那我以后少烦你」', style: 'caring', trust: -2, replies: ['不是那个意思！', '（他打字都急了）我就随口一算。你爱发，我爱听。'] },
       { text: '「李叔，我给你充话费吧」', style: 'sweet', trust: 6, wariness: -3, conscience: 3, replies: ['不用不用。', '（他真的不要。这个人的钱，他只肯往外掏。）'] },
       { text: '（要红包）「那叔叔请我喝奶茶呀，都聊这么久」', personaText: {
-        sweet_daughter: '（要红包）「叔叔~都聊这么久了，请我喝杯奶茶嘛~」',
-        wise_sister: '（要红包）「李叔，姐很少开口——一杯奶茶，你请。」',
+        sweet_daughter: '（要红包）｜「叔叔~都聊这么久了，请我喝杯奶茶嘛~」',
+        wise_sister: '（要红包）｜「李叔，姐很少开口——一杯奶茶，你请。」',
       }, style: 'sweet', trust: -2, wariness: 5, isAsk: true, replies: [] },
     ],
   },

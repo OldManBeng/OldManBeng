@@ -11,7 +11,7 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
   c_wang_1: {
     id: 'c_wang_1',
     openers: [
-      '（01:30）还没睡?',
+      '（01:30）｜还没睡?',
       '关注你半年了。一直没好意思说话。',
       '今天店里的账对上了，高兴。喝了点。你看我,这点出息。',
     ],
@@ -20,7 +20,7 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
         text: '「半年?! 那你说说看，我哪条视频最好」',
         style: 'playful',
         trust: 7,
-        replies: ['（他秒回）雨夜那条。你打的伞是透明的。', '（他记得伞是透明的。你后背有点麻。）'],
+        replies: ['（他秒回）｜雨夜那条。你打的伞是透明的。', '（他记得伞是透明的。你后背有点麻。）'],
       },
       {
         text: '「王总今天喝多了吧」',
@@ -125,7 +125,7 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
   c_wang_5: {
     id: 'c_wang_5',
     minTrust: 50,
-    openers: ['（01:15）跟你说说我年轻时候的事。', '我21岁,差点去跑长途。大解放,拉货到格尔木。', '我爸病了。我回来接了店。这一接,三十年。'],
+    openers: ['（01:15）｜跟你说说我年轻时候的事。', '我21岁,差点去跑长途。大解放,拉货到格尔木。', '我爸病了。我回来接了店。这一接,三十年。'],
     options: [
       {
         text: '「那你现在还想去吗」',
@@ -161,7 +161,7 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
     id: 'c_wang_6',
     minTrust: 60,
     minStage: 'trusted',
-    openers: ['（01:02）今天店里流水八万。请客吃了一顿,回来路上给自己买了串糖葫芦。', '五十块。在车里啃完的。', '（片刻后）领导,你说我这算不算可怜。'],
+    openers: ['（01:02）｜今天店里流水八万。请客吃了一顿,回来路上给自己买了串糖葫芦。', '五十块。在车里啃完的。', '（片刻后）｜领导,你说我这算不算可怜。'],
     options: [
       {
         text: '「不可怜。你这叫童心。童心最贵了」',
@@ -195,7 +195,7 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
     id: 'c_wang_7',
     minTrust: 55,
     minStage: 'trusted',
-    openers: ['（02:40）出事了。', '她翻我手机了。', '其实没翻到什么。你给我设的备注是「材料商王经理」。', '但她问我:一个材料商,为什么凌晨两点给你发「晚安」。'],
+    openers: ['（02:40）｜出事了。', '她翻我手机了。', '其实没翻到什么。你给我设的备注是「材料商王经理」。', '但她问我:一个材料商,为什么凌晨两点给你发「晚安」。'],
     options: [
       {
         text: '「就说是普通客户! 王总你稳住」',
@@ -228,7 +228,7 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
     id: 'c_wang_8',
     minTrust: 50,
     minStage: 'harvest',
-    openers: ['（03:15）她把车开走了。限我三天说清楚。', '领导,我跟你交个底:我卡里的钱,都是她管着的。', '我卡里能动的,就四千三。', '（片刻后）你要是真缺——这四千三,你都拿去。'],
+    openers: ['（03:15）｜她把车开走了。限我三天说清楚。', '领导,我跟你交个底:我卡里的钱,都是她管着的。', '我卡里能动的,就四千三。', '（片刻后）｜你要是真缺——这四千三,你都拿去。'],
     options: [
       {
         text: '（要红包——「王总,你对我的好,我都记着」）',
@@ -276,7 +276,7 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
     onlyPersona: ['femme_fatale'],
     minTrust: 58,
     openers: [
-      '（02:35）领导，睡了没。没睡最好。',
+      '（02:35）｜领导，睡了没。没睡最好。',
       '今天库尔勒的客户问我：王总你天天乐呵呵的，图啥。',
       '我说图个稳。其实我想说——我图的那个人，还没醒。这话我说不出来。跟你说说。',
     ],
@@ -307,7 +307,7 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
     onlyPersona: ['sweet_daughter'],
     minTrust: 58,
     openers: [
-      '（01:50）领导，正经事。下个月，结婚纪念日。',
+      '（01:50）｜领导，正经事。下个月，结婚纪念日。',
       '我相中一条围巾，1300。不敢买。她看见了要说我乱花钱。',
       '你说，是不是我这人，天生就不配对人好。',
     ],
@@ -339,20 +339,20 @@ export const WANG_FREE: FreeNode[] = [
   {
     id: 'f_wang_1',
     minTrust: 15,
-    openers: ['（01:50）今天应酬,客户非让我喝白的。', '我拿茶水替的。第九杯被人发现了。罚了三杯真酒。', '回家路上一边吐一边乐。省了六杯,不亏。'],
+    openers: ['（01:50）｜今天应酬,客户非让我喝白的。', '我拿茶水替的。第九杯被人发现了。罚了三杯真酒。', '回家路上一边吐一边乐。省了六杯,不亏。'],
     options: [
       { text: '「王总你是生意场上的扫地僧」', style: 'playful', trust: 7, replies: ['「哈哈哈哈扫地僧。」', '（他搜了扫地僧是谁。第二天回你:岂敢岂敢。）'] },
       { text: '「少喝点! 你的肝不是你自己的吗」', style: 'caring', trust: 8, replies: ['（片刻后）', '「领导,全城就你管我酒量。」'] },
       { text: '（要红包）「替你挡酒,得加鸡腿」', personaText: {
-        femme_fatale: '（要红包）「哥,姐姐替你挡了六杯。你看着办。」',
-        sweet_daughter: '（要红包）「哥哥,我帮你挡酒了哦,奖励呢?」',
+        femme_fatale: '（要红包）｜「哥,姐姐替你挡了六杯。你看着办。」',
+        sweet_daughter: '（要红包）｜「哥哥,我帮你挡酒了哦,奖励呢?」',
       }, style: 'flirty', trust: -2, wariness: 4, isAsk: true, replies: [] },
     ],
   },
   {
     id: 'f_wang_2',
     minTrust: 35,
-    openers: ['（02:30）车库。第二根了。', '楼上灯还亮着。她没睡。', '（他没再说别的。就是,人在车库里,想跟人说句话。）'],
+    openers: ['（02:30）｜车库。第二根了。', '楼上灯还亮着。她没睡。', '（他没再说别的。就是,人在车库里,想跟人说句话。）'],
     options: [
       { text: '「我在呢,王总」', style: 'caring', trust: 9, replies: ['「嗯。」', '「也没什么要紧事。」', '（又过了十分钟:)「领导,睡吧。你也熬着呢。」'] },
       { text: '「上去呀,别让嫂子等急了」', style: 'sweet', trust: 4, wariness: 3, replies: ['「她等我干什么。她等我认错。」', '「我不上去,她正好。」'] },

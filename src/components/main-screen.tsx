@@ -607,7 +607,7 @@ function HistoryPanel() {
               {openIdx === realIdx && (
                 <div className="history-transcript">
                   {a.transcript.map((m, j) => (
-                    <div key={j} className={`bubble ${m.speaker} ${m.label ? 'packet' : ''}`}>
+                    <div key={j} className={`bubble ${m.speaker} ${m.label ? 'packet' : ''} ${m.speaker === 'target' && /^（[^）]*）$/.test(m.text) && !m.photoId ? 'narrator' : ''}`}>
                       {m.label && <div className="packet-label">{m.label}</div>}
                       <div className="bubble-text">{m.text}</div>
                       {m.photoId && (
