@@ -35,7 +35,7 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
         text: '（很高冷）「嗯」',
         style: 'intellectual',
         trust: -1,
-        replies: ['（他发来一个握手的表情。）', '（生意人的万能回复。）'],
+        replies: ['[图片: 他发来一个握手的表情]', '（生意人的万能回复。）'],
       },
     ],
     next: 'c_wang_2',
@@ -50,7 +50,7 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
         style: 'flirty',
         trust: 10,
         numbness: 4,
-        replies: ['（他发来一个抱拳的表情。）', '「整个城市，就你说我有实力。」', '（他大概在车库里笑了一声。那声笑你听得见。）'],
+        replies: ['[图片: 他发来一个抱拳的表情]', '「整个城市，就你说我有实力。」', '（他大概在车库里笑了一声。那声笑你听得见。）'],
       },
       {
         text: '「叔，其实你挺不容易的」',
@@ -89,7 +89,7 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
         text: '（认真地）「其实第三条和第五条,写得真好」',
         style: 'intellectual',
         trust: 11,
-        replies: ['（很久没回。）', '「你是第一个真看的人。」', '（从那天起他管你叫「领导」。你叫他「王总」。这是你们的暗号。）'],
+        replies: ['（片刻后）', '「你是第一个真看的人。」', '（从那天起他管你叫「领导」。你叫他「王总」。这是你们的暗号。）'],
       },
     ],
     next: 'c_wang_4',
@@ -111,7 +111,7 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
         trust: 10,
         numbness: 8,
         conscience: -2,
-        replies: ['（很久。）', '「领导,你这句话,我存着了。」', '（他真的截图了。你后来在他朋友圈的草稿箱里见过——那是另一个人发给你的截图。）'],
+        replies: ['（片刻后）', '「领导,你这句话,我存着了。」', '（他真的截图了。你后来在他朋友圈的草稿箱里见过——那是另一个人发给你的截图。）'],
       },
       {
         text: '「59 比我当年强多了」',
@@ -161,13 +161,13 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
     id: 'c_wang_6',
     minTrust: 60,
     minStage: 'trusted',
-    openers: ['（01:02）今天店里流水八万。请客吃了一顿,回来路上给自己买了串糖葫芦。', '五十块。在车里啃完的。', '（他停了一会儿。）领导,你说我这算不算可怜。'],
+    openers: ['（01:02）今天店里流水八万。请客吃了一顿,回来路上给自己买了串糖葫芦。', '五十块。在车里啃完的。', '（片刻后）领导,你说我这算不算可怜。'],
     options: [
       {
         text: '「不可怜。你这叫童心。童心最贵了」',
         style: 'flirty',
         trust: 10,
-        replies: ['（他发来一个龇牙的表情。用了很多次。）', '「领导懂我。」'],
+        replies: ['[图片: 他发来一个龇牙的表情。用了很多次]', '「领导懂我。」'],
       },
       {
         text: '（要红包——「童心多少钱一斤? 王总给我称二斤」）',
@@ -186,7 +186,7 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
         style: 'caring',
         trust: 8,
         conscience: 3,
-        replies: ['（很久没回。）', '「好。这话我也存着。」', '（他有两个存着的承诺了。你的账上,一个都没记。）'],
+        replies: ['（片刻后）', '「好。这话我也存着。」', '（他有两个存着的承诺了。你的账上,一个都没记。）'],
       },
     ],
     next: 'c_wang_7',
@@ -210,7 +210,7 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
         trust: 8,
         wariness: 6,
         conscience: 6,
-        replies: ['（他很久没回。）', '「跟你没关系。跟她也没关系。」', '「就是我自己的事。五十二了,在车库里,跟个孩子似的。」'],
+        replies: ['（片刻后）', '「跟你没关系。跟她也没关系。」', '「就是我自己的事。五十二了,在车库里,跟个孩子似的。」'],
       },
       {
         text: '「那……我们先别聊了吧,别影响你家庭」',
@@ -228,7 +228,7 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
     id: 'c_wang_8',
     minTrust: 50,
     minStage: 'harvest',
-    openers: ['（03:15）她把车开走了。限我三天说清楚。', '领导,我跟你交个底:我卡里的钱,都是她管着的。', '我卡里能动的,就四千三。', '（停顿很久。）你要是真缺——这四千三,你都拿去。'],
+    openers: ['（03:15）她把车开走了。限我三天说清楚。', '领导,我跟你交个底:我卡里的钱,都是她管着的。', '我卡里能动的,就四千三。', '（片刻后）你要是真缺——这四千三,你都拿去。'],
     options: [
       {
         text: '（要红包——「王总,你对我的好,我都记着」）',
@@ -249,10 +249,10 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
         conscience: 10,
         setFlag: 'wang_refused_money',
         replies: {
-          default: ['（很久的安静。）', '「领导……」', '「我这条命里,除了我妈,没人为我着想过。」', '（他把备注从「领导」改回了你的名字。这是他做过最勇敢的事。）'],
-          wise_sister: ['（很久的安静。）', '「姐。」', '「……我这辈子，就听过我妈这么跟我说话。」'],
-          femme_fatale: ['（很久的安静。）', '「领导。」', '「你这句话，比四千三值钱。哥记下了。」'],
-          sweet_daughter: ['（很久的安静。）', '「丫头……」', '「哥没白疼你这声哥。」'],
+          default: ['（片刻后）', '「领导……」', '「我这条命里,除了我妈,没人为我着想过。」', '（他把备注从「领导」改回了你的名字。这是他做过最勇敢的事。）'],
+          wise_sister: ['（片刻后）', '「姐。」', '「……我这辈子，就听过我妈这么跟我说话。」'],
+          femme_fatale: ['（片刻后）', '「领导。」', '「你这句话，比四千三值钱。哥记下了。」'],
+          sweet_daughter: ['（片刻后）', '「丫头……」', '「哥没白疼你这声哥。」'],
         },
       },
       {
@@ -342,7 +342,7 @@ export const WANG_FREE: FreeNode[] = [
     openers: ['（01:50）今天应酬,客户非让我喝白的。', '我拿茶水替的。第九杯被人发现了。罚了三杯真酒。', '回家路上一边吐一边乐。省了六杯,不亏。'],
     options: [
       { text: '「王总你是生意场上的扫地僧」', style: 'playful', trust: 7, replies: ['「哈哈哈哈扫地僧。」', '（他搜了扫地僧是谁。第二天回你:岂敢岂敢。）'] },
-      { text: '「少喝点! 你的肝不是你自己的吗」', style: 'caring', trust: 8, replies: ['（他安静了一会儿。）', '「领导,全城就你管我酒量。」'] },
+      { text: '「少喝点! 你的肝不是你自己的吗」', style: 'caring', trust: 8, replies: ['（片刻后）', '「领导,全城就你管我酒量。」'] },
       { text: '（要红包）「替你挡酒,得加鸡腿」', personaText: {
         femme_fatale: '（要红包）「哥,姐姐替你挡了六杯。你看着办。」',
         sweet_daughter: '（要红包）「哥哥,我帮你挡酒了哦,奖励呢?」',
@@ -356,7 +356,7 @@ export const WANG_FREE: FreeNode[] = [
     options: [
       { text: '「我在呢,王总」', style: 'caring', trust: 9, replies: ['「嗯。」', '「也没什么要紧事。」', '（又过了十分钟:)「领导,睡吧。你也熬着呢。」'] },
       { text: '「上去呀,别让嫂子等急了」', style: 'sweet', trust: 4, wariness: 3, replies: ['「她等我干什么。她等我认错。」', '「我不上去,她正好。」'] },
-      { text: '（发他一个搞笑视频,岔开话题）', style: 'playful', trust: 5, replies: ['「哈哈哈哈。」', '（车库里的笑声,隔着屏幕都有回音。）'] },
+      { text: '（发他一个搞笑视频,岔开话题）', style: 'playful', trust: 5, replies: ['「哈哈哈哈。」', '（片刻后）'] },
     ],
   },
   {

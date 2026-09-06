@@ -650,6 +650,18 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   text-align: center;
 }
 .bubble.packet { border-color: var(--warm); }
+/* v3.3 叙事层气泡：与聊天层分离——故事的声音，不是他的消息 */
+.bubble.narrator {
+  align-self: center;
+  background: none;
+  border: none;
+  box-shadow: none;
+  color: var(--faint);
+  font-size: var(--fs-3);
+  font-style: italic;
+  max-width: 92%;
+  text-align: center;
+}
 .bubble-photo {
   margin-top: 6px;
   border-radius: var(--r-sm);

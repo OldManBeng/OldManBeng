@@ -82,8 +82,8 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         numbness: 6,
         conscience: -1,
         replies: {
-          sweet_daughter: ['……', '（语音，两秒的沉默，然后一声很轻的）谢谢。'],
-          default: ['……你这姑娘。', '（过了很久）晚安，姑娘。'],
+          sweet_daughter: ['……', '（片刻后）谢谢。'],
+          default: ['……你这姑娘。', '（片刻后）晚安，姑娘。'],
         },
       },
       {
@@ -124,7 +124,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         text: '（收藏了照片）',
         style: 'playful',
         trust: 3,
-        replies: ['（他那边安静了一会儿）头一回有人收藏我拍的照片。'],
+        replies: ['（片刻后）头一回有人收藏我拍的照片。'],
       },
     ],
     next: 'c_li_5',
@@ -148,7 +148,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         wariness: 6,
         numbness: 4,
         conscience: -1,
-        replies: ['那就好。', '（过了一会儿）你要是骗子，我可就看不出来。'],
+        replies: ['那就好。', '（片刻后）你要是骗子，我可就看不出来。'],
       },
       {
         text: '（转移话题）你今天跑了几个小时？',
@@ -179,7 +179,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         trust: 9,
         wariness: 3,
         numbness: 6,
-        replies: ['行，哥。', '（头像旁边亮了很久）'],
+        replies: ['行，哥。', '（片刻后）'],
       },
       {
         text: '（不接这茬）夜班别抽太多烟',
@@ -202,7 +202,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         style: 'caring',
         trust: 8,
         numbness: 5,
-        replies: ['嗯。', '（这次语音很长，四分半，说了一堆从前跑车的晚上。）'],
+        replies: ['嗯。', '[语音 8"]'],
       },
       {
         text: '真的，你要是倒下了，你闺女怎么办',
@@ -212,7 +212,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         replies: ['这倒是。', '唉，养大个孩子，最后还是为她活。'],
       },
       {
-        text: '（沉默一会儿）叔叔，跟你说个事',
+        text: '（片刻后）叔叔，跟你说个事',
         style: 'intellectual',
         trust: 4,
         replies: ['你说。', '（他好像有点紧张）你说。'],
@@ -224,7 +224,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
     id: 'c_li_8',
     minTrust: 75,
     minStage: 'harvest',
-    openers: ['姑娘，在吗。', '（他发来一个红包的截图——不是给你的，是他在给别人帮忙）', '人这一辈子，能有个惦记的人，不容易。'],
+    openers: ['姑娘，在吗。', '[图片: 他发来一个红包的截图——不是给你的，是他在给别人帮忙]', '人这一辈子，能有个惦记的人，不容易。'],
     options: [
       {
         text: '（要红包——「叔叔，我这个月房租差一点……」）',
@@ -260,7 +260,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
     id: 'c_li_9',
     minTrust: 70,
     minStage: 'harvest',
-    openers: ['（他发来一张照片：副驾驶上放着一杯奶茶。）', '给乘客捎的。人家小姑娘下车忘了拿。', '我就想，你要在，也给你带一杯。'],
+    openers: ['[图片: 副驾驶上放着一杯奶茶]', '给乘客捎的。人家小姑娘下车忘了拿。', '我就想，你要在，也给你带一杯。'],
     options: [
       {
         text: '（要红包——「那我也要，叔叔请我喝奶茶！」）',
@@ -274,7 +274,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         text: '「那叔叔你下次拉到我，我请你喝」',
         style: 'sweet',
         trust: 7,
-        replies: ['（他很久没回。然后：）好。', '一言为定。'],
+        replies: ['（片刻后）好。', '一言为定。'],
       },
       {
         text: '（避开）「甜的喝多了睡不着，叔叔你少喝」',
@@ -338,7 +338,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         numbness: 10,
         conscience: -5,
         setFlag: 'li_lied_final',
-        replies: ['（过了很久很久）', '好。我信。', '（他什么都没说。但第二天照常给你发了"早安"。）'],
+        replies: ['（片刻后）', '好。我信。', '（他什么都没说。但第二天照常给你发了"早安"。）'],
       },
       {
         text: '「李叔，对不起。」（坦白）',
@@ -346,7 +346,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         trust: -20,
         conscience: 20,
         setFlag: 'li_confessed',
-        replies: ['（长久的沉默。）', '（他退回了这个月的红包，附言：不怪你。怪我自己。）', '（他没拉黑你。他只是，再也没主动说过话。）'],
+        replies: ['（片刻后）', '（他退回了这个月的红包，附言：不怪你。怪我自己。）', '（他没拉黑你。他只是，再也没主动说过话。）'],
       },
       {
         text: '（不回。关掉对话框。）',
@@ -382,7 +382,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         trust: 10,
         conscience: 4,
         numbness: 3,
-        replies: ['（他很久没回。）', '答应了。姐。', '（这是他第一次叫你"姐"。这个字，他叫得比"丫头"重。）'],
+        replies: ['（片刻后）', '答应了。姐。', '（这是他第一次叫你"姐"。这个字，他叫得比"丫头"重。）'],
       },
       {
         text: '「我给你电台点首歌吧，你收车路上听」',
@@ -412,7 +412,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         style: 'caring',
         trust: 10,
         numbness: 4,
-        replies: ['（他打字打了很久。）', '你们俩，一个亲生的，一个……（他没打完这句。）', '（但你知道后半句是什么。）'],
+        replies: ['（片刻后）', '你们俩，一个亲生的，一个……（他没打完这句。）', '（但你知道后半句是什么。）'],
       },
       {
         text: '「下次她再发照片，你替我回一句：头发真好看」',

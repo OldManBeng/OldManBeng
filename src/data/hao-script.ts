@@ -22,7 +22,7 @@ export const HAO_CHAIN: Record<string, ChainNode> = {
         text: '「38也太良心了8，老板你是不是不赚钱呀」',
         style: 'playful',
         trust: 7,
-        replies: ['赚啥啊。机器都六代了。', '（隔了一会儿）你要来上号，给你打折。'],
+        replies: ['赚啥啊。机器都六代了。', '（片刻后）你要来上号，给你打折。'],
       },
       {
         text: '「早面？什么面」',
@@ -34,7 +34,7 @@ export const HAO_CHAIN: Record<string, ChainNode> = {
         text: '（已读不回，去看别人的评论）',
         style: 'intellectual',
         trust: -1,
-        replies: ['（他撤回了第二句。）', '（又发：）当我打广告了。38，包面。'],
+        replies: ['[撤回了一条消息]', '（又发：）当我打广告了。38，包面。'],
       },
     ],
     next: 'c_hao_2',
@@ -54,7 +54,7 @@ export const HAO_CHAIN: Record<string, ChainNode> = {
         text: '「40台机器陪着你呢，不算没人」',
         style: 'caring',
         trust: 9,
-        replies: ['……你这人说话有点东西。', '（过了十分钟）我把机器都关了。省电。反正没人。'],
+        replies: ['……你这人说话有点东西。', '（片刻后）我把机器都关了。省电。反正没人。'],
       },
       {
         text: '「网吧现在确实不好干了」',
@@ -68,7 +68,7 @@ export const HAO_CHAIN: Record<string, ChainNode> = {
   c_hao_3: {
     id: 'c_hao_3',
     minTrust: 22,
-    openers: ['给你看个东西。（照片：一只很胖的橘猫趴在键盘上）', '键盘。猫叫键盘。', '它睡的这台是全店最好的显卡。它配。'],
+    openers: ['给你看个东西。[图片: 一只很胖的橘猫趴在键盘上]', '键盘。猫叫键盘。', '它睡的这台是全店最好的显卡。它配。'],
     options: [
       {
         text: '「它比你舒服，睡在4090上」',
@@ -80,7 +80,7 @@ export const HAO_CHAIN: Record<string, ChainNode> = {
         text: '「豪哥，它晚上陪你值班吗」',
         style: 'caring',
         trust: 10,
-        replies: ['陪。它比我老顾客都忠诚。', '（很久）有一回我发烧，躺店里沙发上。它趴我肚子上睡了一夜。', '我醒了它还在。我哥们都没做到。'],
+        replies: ['陪。它比我老顾客都忠诚。', '（片刻后）有一回我发烧，躺店里沙发上。它趴我肚子上睡了一夜。', '我醒了它还在。我哥们都没做到。'],
       },
       {
         text: '（收藏照片）',
@@ -100,7 +100,7 @@ export const HAO_CHAIN: Record<string, ChainNode> = {
         text: '「豪哥你是不敢看自己以后吗」',
         style: 'intellectual',
         trust: 11,
-        replies: ['（他很久没回。）', '你这一刀挺准。', '我以为我无所谓。网吧嘛，就是过渡。过渡了十年。'],
+        replies: ['（片刻后）', '你这一刀挺准。', '我以为我无所谓。网吧嘛，就是过渡。过渡了十年。'],
       },
       {
         text: '「婚礼红包到了吗！别管人到没到」',
@@ -127,7 +127,7 @@ export const HAO_CHAIN: Record<string, ChainNode> = {
         text: '「豪哥你的青春存在哪了」',
         style: 'intellectual',
         trust: 10,
-        replies: ['（很久。）', '存在WOW账号里了。08年的号。我去年登录了一次。', '上线，好友列表全灰。就一个亮的——那人2019年就没了。车祸。', '我站在暴风城港口，站了半小时，下线了。'],
+        replies: ['（片刻后）', '存在WOW账号里了。08年的号。我去年登录了一次。', '上线，好友列表全灰。就一个亮的——那人2019年就没了。车祸。', '我站在暴风城港口，站了半小时，下线了。'],
       },
       {
         text: '「还有我呢，我每天来你店里报道」',
@@ -180,7 +180,7 @@ export const HAO_CHAIN: Record<string, ChainNode> = {
         style: 'intellectual',
         trust: 10,
         conscience: 2,
-        replies: ['（他发来一张照片：暴风城港口。好友列表那一栏全是灰的。）', '你这么一说——是哈。', '（他把这张图设成了网吧的桌面背景。）'],
+        replies: ['[图片: 暴风城港口。好友列表那一栏全是灰的]', '你这么一说——是哈。', '（他把这张图设成了网吧的桌面背景。）'],
       },
     ],
     next: 'c_hao_7',
@@ -189,7 +189,7 @@ export const HAO_CHAIN: Record<string, ChainNode> = {
     id: 'c_hao_7',
     minTrust: 66,
     minStage: 'trusted',
-    openers: ['（语音，11 秒。他很少发语音。）', '（点开：先是猫叫，然后是很小的声音：）「今天……来了个客人，问我通宵还包面不。」', '「我说包。他说那下礼拜还来。」', '（停顿。猫又叫了一声。）「就这事。跟你说一声。」'],
+    openers: ['[语音 11"]', '（点开：先是猫叫，然后是很小的声音：）「今天……来了个客人，问我通宵还包面不。」', '「我说包。他说那下礼拜还来。」', '（片刻后）「就这事。跟你说一声。」'],
     options: [
       {
         text: '「豪哥，你店不会倒的。你的面那么好吃」',
@@ -202,7 +202,7 @@ export const HAO_CHAIN: Record<string, ChainNode> = {
         text: '「下礼拜还来」——这句话他等了十年吧',
         style: 'intellectual',
         trust: 10,
-        replies: ['（很久。）', '（他把语音撤回了。但你听过，撤不掉。）', '（后来那个"下礼拜还来"的客人，你在他朋友圈见过——是你群里的另一个"妹妹"。你们没聊过彼此的客户。）'],
+        replies: ['（片刻后）', '[语音 8"]', '（后来那个"下礼拜还来"的客人，你在他朋友圈见过——是你群里的另一个"妹妹"。你们没聊过彼此的客户。）'],
       },
       {
         text: '「所以豪哥你今晚高兴吗」',
@@ -227,7 +227,7 @@ export const HAO_CHAIN: Record<string, ChainNode> = {
         numbness: 12,
         conscience: -6,
         setFlag: 'hao_lied_final',
-        replies: ['（很久。）', '行。', '（那晚他照常说了晚安。转天照常发了猫。第三天，网吧大门贴了张纸：设备处理，含一台4090。）'],
+        replies: ['（片刻后）', '行。', '（那晚他照常说了晚安。转天照常发了猫。第三天，网吧大门贴了张纸：设备处理，含一台4090。）'],
       },
       {
         text: '「不止你一个。对不起，豪哥。」',
@@ -236,8 +236,8 @@ export const HAO_CHAIN: Record<string, ChainNode> = {
         conscience: 15,
         setFlag: 'hao_confessed',
         replies: {
-          default: ['（他回得很快。像早想好了。）', '没事。', '（隔了很久）其实键盘也差不多这个价。猫粮、疫苗、绝育。', '（他说的是猫。你说的是他。他把你交的"学费"换算成了猫的一生。）'],
-          sweet_daughter: ['（他回得很快。）', '没事。', '（隔了很久）其实我也知道。你就是嘴甜。甜的——我戒不掉。）'],
+          default: ['（他回得很快。像早想好了。）', '没事。', '（片刻后）其实键盘也差不多这个价。猫粮、疫苗、绝育。', '（他说的是猫。你说的是他。他把你交的"学费"换算成了猫的一生。）'],
+          sweet_daughter: ['（他回得很快。）', '没事。', '（片刻后）其实我也知道。你就是嘴甜。甜的——我戒不掉。）'],
           artistic_soul: ['（他回得很快。）', '没事。', '（然后他发来那段小说的结尾。写完的。第一个读者是你。）'],
         },
       },
@@ -260,7 +260,7 @@ export const HAO_CHAIN: Record<string, ChainNode> = {
     minTrust: 55,
     openers: [
       '（03:50）跟你看个东西。看完删。',
-      '（他发来一张照片：一个发黄的笔记本，第一页写着"开业第一天"。）',
+      '[图片: 一个发黄的笔记本，第一页写着"开业第一天"]',
       '19 岁写的。网吧开业那天。写了一半就没写了——"故事还没发生"。',
     ],
     options: [
@@ -272,7 +272,7 @@ export const HAO_CHAIN: Record<string, ChainNode> = {
         style: 'intellectual',
         trust: 10,
         numbness: 3,
-        replies: ['（他把这张照片重新保存了。）', '（过了一会儿：）我把本子从柜子底下翻出来了。灰挺厚。', '（他说：哪天写完了，第一个给你看。你别嫌烂。）'],
+        replies: ['（他把这张照片重新保存了。）', '（片刻后）我把本子从柜子底下翻出来了。灰挺厚。', '（他说：哪天写完了，第一个给你看。你别嫌烂。）'],
       },
       {
         text: '「19 岁的阿豪比现在的你有文采」',

@@ -794,8 +794,9 @@ function ChatView() {
         {visible.map((m, i) => {
           const isTyping = typingBubble === m && i === visible.length - 1;
           const text = isTyping ? m.text.slice(0, typed) : m.text;
+          const narrator = m.speaker === 'target' && /^（[^）]*）$/.test(m.text) && !m.photoId;
           return (
-            <div key={i} className={`bubble ${m.speaker} ${m.label ? 'packet' : ''} ${isTyping ? 'typing' : ''}`}>
+            <div key={i} className={`bubble ${m.speaker} ${m.label ? 'packet' : ''} ${narrator ? 'narrator' : ''} ${isTyping ? 'typing' : ''}`}>
               {m.label && <div className="packet-label">{m.label}</div>}
               <div className="bubble-text">
                 {text}

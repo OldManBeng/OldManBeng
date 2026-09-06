@@ -20,7 +20,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
         text: '看到了！叔叔你的评论比诗还长',
         style: 'playful',
         trust: 6,
-        replies: ['（过了很久）抱歉，职业病。教书四十年，改作文改的。', '你看，又忍不住多说了。'],
+        replies: ['（片刻后）抱歉，职业病。教书四十年，改作文改的。', '你看，又忍不住多说了。'],
       },
       {
         text: '您是老师？',
@@ -32,7 +32,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
         text: '（只回了个表情）',
         style: 'sweet',
         trust: 0,
-        replies: ['（他也回了一个。大概是翻了很久表情库。）'],
+        replies: ['（片刻后）'],
       },
     ],
     next: 'c_zhou_2',
@@ -46,7 +46,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
         text: '叔，家里有钟声陪着，也挺好的',
         style: 'caring',
         trust: 8,
-        replies: ['（很久没回）', '那口钟是她还在的时候买的。'],
+        replies: ['（片刻后）', '那口钟是她还在的时候买的。'],
       },
       {
         text: '那你教教我写毛笔字吧，我字丑',
@@ -78,7 +78,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
         trust: 10,
         numbness: 5,
         conscience: -1,
-        replies: ['（他发来一个大拇指。旧表情。）', '（从那天起，你设了个真的闹钟——按了静音。）'],
+        replies: ['[图片: 他发来一个大拇指。旧表情]', '（从那天起，你设了个真的闹钟——按了静音。）'],
       },
       {
         text: '儿子不管你吗',
@@ -107,13 +107,13 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
         trust: 11,
         numbness: 7,
         conscience: -2,
-        replies: ['（他沉默了很久。）', '你啊。', '（后来他把你的备注改成了那个学生的名字。你没告诉他你看见了。）'],
+        replies: ['（片刻后）', '你啊。', '（后来他把你的备注改成了那个学生的名字。你没告诉他你看见了。）'],
       },
       {
         text: '「她为什么没回来呀」',
         style: 'intellectual',
         trust: 6,
-        replies: ['（很久）因为我没让她走。她要走的那个晚上，我说了很重的话。', '这件事我想了半辈子。'],
+        replies: ['（片刻后）因为我没让她走。她要走的那个晚上，我说了很重的话。', '这件事我想了半辈子。'],
       },
       {
         text: '（不接话茬，转开话题）「老师今天的字练了吗」',
@@ -133,7 +133,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
         text: '「老师你别胡说，你身体好着呢」',
         style: 'caring',
         trust: 8,
-        replies: ['（他发来一张体检报告的照片。箭头不少。）', '都是小毛病。可小毛病多了，就成年纪了。'],
+        replies: ['[图片: 他发来一张体检报告的照片。箭头不少]', '都是小毛病。可小毛病多了，就成年纪了。'],
       },
       {
         text: '（要红包——「老师，我想买套好点的毛笔，跟你学」）',
@@ -182,7 +182,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
         trust: 10,
         conscience: 8,
         setFlag: 'zhou_refused_deposit',
-        replies: ['（他过了很久才回。）', '……好。', '（但那之后，他发红包的次数变多了。像是在绕开你说过的话。）'],
+        replies: ['（片刻后）', '……好。', '（但那之后，他发红包的次数变多了。像是在绕开你说过的话。）'],
       },
       {
         text: '（装没看见这条消息）',
@@ -190,7 +190,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
         trust: -5,
         wariness: 8,
         numbness: 3,
-        replies: ['（他撤回了那条消息。）', '（又发：当我没说。字都打了，老糊涂。）'],
+        replies: ['[撤回了一条消息]', '（又发：当我没说。字都打了，老糊涂。）'],
       },
     ],
     next: 'c_zhou_7',
@@ -212,14 +212,14 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
         style: 'sweet',
         trust: 7,
         conscience: 2,
-        replies: ['（他发来一张字。写的是：但愿人长久。）', '（笔画很稳。他练了很久。）'],
+        replies: ['[图片: 他发来一张字。写的是：但愿人长久]', '（片刻后）'],
       },
       {
         text: '「老师，其实我……」（差点说出口）',
         style: 'intellectual',
         trust: 3,
         wariness: 10,
-        replies: ['（他等了很久。）', '（最后他说：不急。你想说的时候再说。他从来不打断人。）'],
+        replies: ['（片刻后）', '（最后他说：不急。你想说的时候再说。他从来不打断人。）'],
       },
     ],
     next: 'c_zhou_8',
@@ -228,7 +228,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
     id: 'c_zhou_8',
     minTrust: 64,
     minStage: 'harvest',
-    openers: ['（语音，1 分 47 秒。他很少发语音。）', '（点开，前半段是安静的。然后他说：）', '我不糊涂。我知道你手机里不止我一个老头。', '（停顿。粉笔灰一样的安静。）', '我是想，你连装都肯装，说明你心里苦。能装到底的人，都是心里缺东西的。'],
+    openers: ['[语音 60"]', '（点开，前半段是安静的。然后他说：）', '我不糊涂。我知道你手机里不止我一个老头。', '（片刻后）', '我是想，你连装都肯装，说明你心里苦。能装到底的人，都是心里缺东西的。'],
     options: [
       {
         text: '「老师，对不起」（说一半的真话）',
@@ -237,9 +237,9 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
         conscience: 10,
         setFlag: 'zhou_half_confessed',
         replies: {
-          default: ['（语音，4 秒：）', '「行了。字还在练吗？」', '（他什么都没追究。他只是把话题，轻轻放回了原处。）'],
-          sweet_daughter: ['（语音，4 秒：）', '「行了。字还在练吗？」', '（隔了一会儿又发：闺女，别哭。老师没生气。）'],
-          femme_fatale: ['（语音，只有 4 秒。）', '「行了。都别说了。」', '（他把话题轻轻放回原处——像批一份没写完的作文。）'],
+          default: ['[语音 4"]', '「行了。字还在练吗？」', '（他什么都没追究。他只是把话题，轻轻放回了原处。）'],
+          sweet_daughter: ['[语音 4"]', '「行了。字还在练吗？」', '（隔了一会儿又发：闺女，别哭。老师没生气。）'],
+          femme_fatale: ['[语音 4"]', '「行了。都别说了。」', '（他把话题轻轻放回原处——像批一份没写完的作文。）'],
         },
       },
       {
@@ -257,7 +257,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
         },
       },
       {
-        text: '（退掉了他的语音。整晚没回。）',
+        text: '[语音 8"]',
         style: 'intellectual',
         trust: -14,
         wariness: 15,
@@ -297,7 +297,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
         style: 'caring',
         trust: 8,
         conscience: 3,
-        replies: ['（很久，他回：）此言有古意。', '（那天下午，他把这页词夹进了她的那本《宋词选》。）'],
+        replies: ['（片刻后）此言有古意。', '（那天下午，他把这页词夹进了她的那本《宋词选》。）'],
       },
     ],
     next: '',
@@ -319,7 +319,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
         },
         style: 'playful',
         trust: 8,
-        replies: ['（他发来一张照片：宣纸上，你的名字，写了满满一页。）', '（他说：练了六遍。你的名字，第二遍才写得好。第一遍，手生。）'],
+        replies: ['[图片: 宣纸上，你的名字，写了满满一页]', '（他说：练了六遍。你的名字，第二遍才写得好。第一遍，手生。）'],
       },
       {
         text: '「报名字可以，老师也要教我一个字」',
@@ -360,7 +360,7 @@ export const ZHOU_FREE: FreeNode[] = [
   },
   {
     id: 'f_zhou_3',
-    openers: ['（他发来一张字。今天写的是：「静」。）'],
+    openers: ['[图片: 他发来一张字。今天写的是：「静」]'],
     options: [
       { text: '「老师今天怎么写这个字」', style: 'caring', trust: 7, replies: ['写着写着就写了这个字。', '手比脑子老实。'] },
       { text: '「好字！ Lehrer 周赛过田英章」', style: 'playful', trust: 4, replies: ['（他没懂这个梗。但他认真地去查了田英章是谁。）', '查到了。不敢比不敢比。'] },
