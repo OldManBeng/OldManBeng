@@ -47,6 +47,7 @@ const CALLSIGN_MAP: Record<string, string[]> = {
 /** 各剧本的"豁免词"——该词在本剧本里有第三人称含义，不作称呼越界处理。 */
 const EXEMPT_WORDS: Record<string, string[]> = {
   lao_li: ['闺女'], // 老李的亲闺女：给"闺女"打生活费是他自己的生活，不是对她的称呼
+  chen_gong: ['闺女'], // 陈工对学妹人设的合法称呼（greet_sd 全池使用）
 };
 const ALL_NICKS = ['丫头', '闺女', '领导'];
 
@@ -85,7 +86,8 @@ describe('话术全量审计', () => {
         return t?.activeHour ?? 23;
       })();
       const nickBlacklist = ALL_NICKS.filter((n) => !(CALLSIGN_MAP[tid] ?? []).includes(n) && !(EXEMPT_WORDS[tid] ?? []).includes(n));
-      const scanVoice = (where: string, text: string, poolKey: string) => {
+      const scanVoice = (where: string, line: string, poolKey: string) => {
+        const text = line;
         // 去掉第三人称指涉（"讲他闺女的近况"不是在叫她）
         const stripped = text.replace(/[他她自人的讲]的?(闺女|丫头|领导)/g, '◇');
         if (!poolKey.startsWith('greet_')) {
@@ -96,6 +98,22 @@ describe('话术全量审计', () => {
         }
         // 时间戳作息检查只管五位主角——库人物共用原型台词，时段随原型不随个人
         if (isMain && !hourOk(text, activeHour, poolKey)) issues.push(`${tid}/${where}: 时间戳超出作息时段：${text.slice(0, 22)}…`);
+        // v3.3 话风卡红线（五位主角）：台词气泡禁旁白括号（（他笑了笑）式）；
+        // 连发段长上限 42 字；老李/阿豪的问候系池子禁句号逗号（空格断句是他们的手）。
+        if (tid === 'chen_gong') return; // 排版例外：编号与括号补充是陈工的打字习惯（见话风卡）
+        const noTimeGaps = text
+          .replace(/（猫）/g, '')
+          .replace(/（\d{1,2}:\d{2}）/g, '')
+          .replace(/（[^）]*后）/g, '')
+          .replace(/（次日[^）]*）/g, '');
+        if (isMain && noTimeGaps.includes('（')) issues.push(`${tid}/${where}: 气泡含旁白括号（红线）：${text.slice(0, 22)}…`);
+        const cap = poolKey.startsWith('incoming') ? 60 : isMain ? 42 : 60;
+        for (const seg of text.split('｜')) {
+          if (seg.length > cap) issues.push(`${tid}/${where}: 连发段超长（${seg.length}>${cap}）：${seg.slice(0, 22)}…`);
+        }
+        if ((tid === 'lao_li' || tid === 'hao_ge') && (poolKey.startsWith('greeting') || poolKey.startsWith('recall') || poolKey.startsWith('greet_'))) {
+          if (/[。，]/.test(text)) issues.push(`${tid}/${where}: 话风卡禁则（无句号逗号，空格断句）：${text.slice(0, 22)}…`);
+        }
       };
       for (const [k, arr] of Object.entries(script.lines)) {
         if (!Array.isArray(arr)) continue;

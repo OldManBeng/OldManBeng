@@ -150,6 +150,20 @@ function fillProfileVars(text: string, s: GameState): string {
     .replace(/\{trait\}/g, TRAIT_LABEL[s.profile.traitId] ?? '你');
 }
 
+/** v3.3 话风卡合规：
+ *  1. 一条数据可含 ｜ 连发分隔——拆成多条气泡（一个气泡一行）；
+ *  2. 剥掉条内旧式时间戳前缀（23:47）——引擎给每条气泡盖真实时间戳，条内戳既冗余又矛盾；
+ *  3. 空段不产出。 */
+function pushBubbles(transcript: ChatMsg[], speaker: ChatMsg['speaker'], raw: string, stamp: string): number {
+  const clean = raw.replace(/^（\d{1,2}:\d{2}）\s*/, '');
+  let n = 0;
+  for (const seg of clean.split('｜')) {
+    const t = seg.trim();
+    if (t) { transcript.push({ speaker, text: t, stamp }); n += 1; }
+  }
+  return n;
+}
+
 /** v2.1：选话术组——去重窗口随库扩容：池子越大，近期不再重复的套数越多。
  *  10 套（旧库）窗口 3；60 套（主五人 v2.1）窗口 10——玩家连续 10 晚不见同一套话术。 */
 function recentPackWindow(packs: import('../types/script').ChatPack[]): number {
@@ -200,7 +214,7 @@ function maybePushPhoto(t: TargetState, rng: ReturnType<typeof makeRng>, transcr
   transcript.push({
     speaker: 'target' as const,
     photoId: photos[idx],
-    text: '（他给你发来一张照片。）',
+    text: '[图片]',
     stamp: nightStamp(activeHour, 4 + transcript.length),
   });
 }
@@ -897,9 +911,9 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       const transcript: ChatMsg[] = [];
       const phaseLabel = def.activeHour >= 6 && def.activeHour <= 12 ? '上午' : '深夜';
       transcript.push({ speaker: 'system' as const, text: `和 ${def.name} 的${phaseLabel}对话（他先找的你）`, stamp: msg.stamp });
-      transcript.push({ speaker: 'target' as const, text: fillProfileVars(msg.opener, s), stamp: msg.stamp });
+      pushBubbles(transcript, 'target', fillProfileVars(msg.opener, s), msg.stamp);
       if (t.wariness >= 50 && t.timesPaid > 0) {
-        transcript.push({ speaker: 'target' as const, text: pickVaryLine(rng01(s), lines.wariness_high, '（他回得越来越慢。）', { val: -1 }), stamp: nightStamp(def.activeHour, 5) });
+        pushBubbles(transcript, 'target', pickVaryLine(rng01(s), lines.wariness_high, '（他回得越来越慢。）', { val: -1 }), nightStamp(def.activeHour, 5));
       }
       if (node) {
         for (const opener of node.openers) {
@@ -970,12 +984,11 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       const recent = t.recentGreetings ?? (t.recentGreetings = []);
       // v3.2 距离层：信任不足时开场白走 greeting_far——客气、试探、没称呼、目的性弱。
       if (t.trust < GREETING_FAR_TRUST && lines.greeting_far?.length) {
-        const greeting = fillProfileVars(pickFreshLine(rng, lines.greeting_far, '（他来了。）', recent), s);
-        transcript.push({ speaker: 'target' as const, text: greeting, stamp: nightStamp(def.activeHour, 1) });
+        pushBubbles(transcript, 'target', fillProfileVars(pickFreshLine(rng, lines.greeting_far, '（他来了。）', recent), s), nightStamp(def.activeHour, 1));
       } else if (t.wariness >= 50 && t.timesPaid > 0) {
-        transcript.push({ speaker: 'target' as const, text: fillProfileVars(pickFreshLine(rng, lines.wariness_high, '（他回得越来越慢。）', recent), s), stamp: nightStamp(def.activeHour, 2) });
+        pushBubbles(transcript, 'target', fillProfileVars(pickFreshLine(rng, lines.wariness_high, '（他回得越来越慢。）', recent), s), nightStamp(def.activeHour, 2));
       } else if (t.daysSilent >= 3) {
-        transcript.push({ speaker: 'target' as const, text: fillProfileVars(pickFreshLine(rng, lines.silent_warning, '（他安静了很多天。）', recent), s), stamp: nightStamp(def.activeHour, 1) });
+        pushBubbles(transcript, 'target', fillProfileVars(pickFreshLine(rng, lines.silent_warning, '（他安静了很多天。）', recent), s), nightStamp(def.activeHour, 1));
       } else {
         // v3.2 三层开场白（亲疏分层）：熟了之后人设专属池才介入——
         // 他第一句话里"你是谁"的印记，是熟了才配有的；陌生期另走 greeting_far。
@@ -984,17 +997,17 @@ export function dispatch(state: GameState, action: GameAction): GameState {
         const personaPool = lines[`greet_${short}`];
         if (personaPool?.length && t.trust >= PERSONA_GREET_TRUST && rng.chance(0.55)) pool = personaPool;
         const greeting = fillProfileVars(pickFreshLine(rng, pool, '（他来了。）', recent), s);
-        transcript.push({ speaker: 'target' as const, text: greeting, stamp: nightStamp(def.activeHour, 1) });
+        pushBubbles(transcript, 'target', greeting, nightStamp(def.activeHour, 1));
       }
       // v3.0 语境连续性：昨晚聊过带话题标签的闲聊，今晚有概率先"接昨天的话"。
       if (!chainNode && prevTopic && lines.recall?.length && rng.chance(RECALL_CHANCE)) {
         const recent = t.recentGreetings ?? (t.recentGreetings = []);
         const line = pickFreshLine(rng, lines.recall, '', recent).replace(/\{topic\}/g, prevTopic);
-        if (line) transcript.push({ speaker: 'target' as const, text: fillProfileVars(line, s), stamp: nightStamp(def.activeHour, 2) });
+        if (line) pushBubbles(transcript, 'target', fillProfileVars(line, s), nightStamp(def.activeHour, 2));
       }
       if (node) {
         for (const opener of node.openers) {
-          transcript.push({ speaker: 'target' as const, text: fillProfileVars(opener, s), stamp: nightStamp(def.activeHour, 3 + transcript.length) });
+          pushBubbles(transcript, 'target', fillProfileVars(opener, s), nightStamp(def.activeHour, 3 + transcript.length));
         }
         maybePushPhoto(t, rng, transcript, def.activeHour);
         s.chat = {
@@ -1081,13 +1094,13 @@ export function dispatch(state: GameState, action: GameAction): GameState {
           s.stats.biggestPacket = Math.max(s.stats.biggestPacket, result.amount);
           s.ledger.push({ day: s.day, amount: result.amount, note: `${def.name} 的红包（${result.tierLabel}）`, kind: 'packet' });
           s.chat.transcript.push({ speaker: 'system' as const, label: `红包 +${result.amount} 元`, text: `（${result.tierLabel}）`, stamp: nightStamp(def.activeHour, 14) });
-          if (result.line) s.chat.transcript.push({ speaker: 'target' as const, text: result.line, stamp: nightStamp(def.activeHour, 15) });
+          if (result.line) pushBubbles(s.chat.transcript, 'target', result.line, nightStamp(def.activeHour, 15));
           log(s, 'packet', `${def.name} 的红包：${result.amount} 元`);
         } else {
           s.stats.asksFailed += 1;
           t.wariness = clamp(t.wariness + ASK_FAIL_WARINESS, 0, 100);
           t.trust = clamp(t.trust - 4, 0, 100);
-          if (result.line) s.chat.transcript.push({ speaker: 'target' as const, text: result.line, stamp: nightStamp(def.activeHour, 14) });
+          if (result.line) pushBubbles(s.chat.transcript, 'target', result.line, nightStamp(def.activeHour, 14));
           log(s, 'ask_fail', `你试探着开了口，${def.name} 岔开了话题。`);
         }
         s.chat.awaiting = 'closed';
@@ -1098,7 +1111,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       // Normal reply lines.
       const replies = linesFor(option, s.personaId);
       for (const r of replies) {
-        s.chat.transcript.push({ speaker: 'target' as const, text: r, stamp: nightStamp(def.activeHour, 16 + s.chat.transcript.length) });
+        pushBubbles(s.chat.transcript, 'target', r, nightStamp(def.activeHour, 16 + s.chat.transcript.length));
       }
       if (!isChain) {
         s.chat.awaiting = 'closed';
