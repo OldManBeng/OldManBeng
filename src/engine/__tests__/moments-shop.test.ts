@@ -32,7 +32,7 @@ describe('v2.3: 朋友圈——发圈', () => {
     expect(s.profile.selfieDay).toBe(s.day);
     // 第二条 → no-op（JSON 深等：状态一个字节没变）。
     const snap = JSON.stringify(s);
-    s = dispatch(s, { type: 'post_moment', selfieId: 'cake' });
+    s = dispatch(s, { type: 'post_moment', selfieId: 'bestie' });
     expect(JSON.stringify(s)).toBe(snap);
     expect(s.moments.filter((m) => m.author === 'player').length).toBe(1);
   });
@@ -73,7 +73,7 @@ describe('v2.3: 朋友圈——反应与增益', () => {
     let s = fresh(21);
     s = nightChatWith(s, 'lao_li');
     s = dispatch(s, { type: 'end_chat' });
-    s = dispatch(s, { type: 'post_moment', selfieId: 'cake' });
+    s = dispatch(s, { type: 'post_moment', selfieId: 'bestie' });
     s = dispatch(s, { type: 'sleep' });
     const post = [...s.moments].reverse().find((m) => m.author === 'player');
     expect(post).toBeDefined();

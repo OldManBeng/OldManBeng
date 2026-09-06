@@ -29,7 +29,7 @@ export const TARGETS: Target[] = [
       glasses: 0,
       beard: 1,
       cheeks: 0.55,
-      shirtColor: '#4a5d6e', skin: 2, brow: 1, face: 0,
+      shirtColor: '#4a5d6e', skin: 2, brow: 1, face: 0, shotType: 'wheel',
       bgScene: 'night_road',
       accessory: 'steering_wheel',
       accent: '#4a5d6e',

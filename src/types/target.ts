@@ -110,6 +110,11 @@ export interface Target {
     brow?: 0 | 1;
     /** v3.2：脸型 0 国字方脸 / 1 富态圆脸 / 2 清瘦尖脸 / 3 瘦长脸 / 4 年轻短圆脸（缺省 1）。 */
     face?: 0 | 1 | 2 | 3 | 4;
+    /** v3.3：头像类型学——中国直男社交头像还原（face=真人脸，其余为"不是人人都拿脸当头像"）。
+     *  wheel 方向盘照 / business 商务形象照 / gym 健身房镜拍 / lowangle 迷之低角度自拍 /
+     *  zen 禅意茶具 / cap 帽子墨镜半身 / kid 孩子照片（隐藏已婚核弹）/ wallpaper 网图风景 /
+     *  fishing 钓鱼照 / brunch 精致生活摆拍。缺省 face。 */
+    shotType?: 'face' | 'wheel' | 'business' | 'gym' | 'lowangle' | 'zen' | 'cap' | 'kid' | 'wallpaper' | 'fishing' | 'brunch';
   };
 }
 

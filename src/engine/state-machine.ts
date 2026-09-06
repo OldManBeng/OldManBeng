@@ -98,7 +98,7 @@ function freshTargetState(targetId: string): TargetState {
 
 /** v2.0：女主默认自设资料。 */
 export function defaultProfile(): GameState['profile'] {
-  return { avatarId: 1, ageClaim: 24, traitId: 'sweet_mouth', selfieId: 'cake', selfieDay: 0 };
+  return { avatarId: 1, ageClaim: 24, traitId: 'sweet_mouth', selfieId: 'bestie', selfieDay: 0 };
 }
 
 /** v2.0：钱包流水工具——每一笔钱都记账。 */
@@ -137,7 +137,7 @@ function chatCost(s: GameState): number {
 
 /** v2.0：话术里的 {selfie}/{age}/{trait} 占位符——他的台词会念到你的资料。 */
 export const SELFIE_LABEL: Record<string, string> = {
-  cake: '那个蛋糕', gym: '夜跑那几张', pool: '泳池照', cat: '那只橘猫',
+  bestie: '那张闺蜜照', gym: '夜跑那几张', pool: '泳池照', cat: '那只橘猫',
   grind: '加班那几张', travel: '旅游照', boba: '那杯奶茶', sick: '输液那几张',
 };
 export const TRAIT_LABEL: Record<string, string> = {

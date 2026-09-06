@@ -499,6 +499,176 @@ function AccessoryLayer({ accessory }: { accessory: Accessory }) {
 //  4 年轻短圆脸：脸短、下巴圆、五官紧凑（网吧老板——熬夜的 90 后）
 // 每档配专属阴影（咬肌/双下巴/凹颊/颧骨），肤色三档、发际线三档、胡茬两档照旧。
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// v3.3 头像类型学：中国直男社交头像还原——不是人人都拿脸当头像。
+// 全部按 96px 圆裁可读标准绘制：高对比剪影 + 真实拍摄瑕疵（乱打的光/歪构图/穿帮背景）。
+// ---------------------------------------------------------------------------
+function ShotScene({ kind }: { kind: NonNullable<Target['portraitSpec']['shotType']> }) {
+  switch (kind) {
+    case 'wheel':
+      return (
+        <g>
+          <rect width="54" height="54" fill="#2a3038" />
+          <rect width="54" height="22" fill="#4a5866" opacity="0.7" />
+          <rect x="0" y="20" width="54" height="3" fill="#1c2128" />
+          <circle cx="27" cy="46" r="21" fill="none" stroke="#1a1e24" strokeWidth="5" />
+          <circle cx="27" cy="46" r="21" fill="none" stroke="#3a424c" strokeWidth="1.2" />
+          <path d="M 27 26 L 27 40 M 12 44 L 22 46 M 42 44 L 32 46" stroke="#1a1e24" strokeWidth="3" />
+          <ellipse cx="19" cy="44" rx="5" ry="3.4" fill="#caa27c" />
+          <ellipse cx="35" cy="44" rx="5" ry="3.4" fill="#caa27c" />
+          <circle cx="27" cy="46" r="3.4" fill="#262c34" />
+          <rect x="0" y="0" width="54" height="4" fill="#f4d03f" opacity="0.08" />
+        </g>
+      );
+    case 'business':
+      return (
+        <g>
+          <rect width="54" height="54" fill="#5a6a80" />
+          <rect width="54" height="54" fill="#4a5a70" opacity="0.5" />
+          <rect x="4" y="4" width="46" height="30" fill="#6a7a90" opacity="0.4" />
+          <path d="M 12 54 Q 13 38 27 36 Q 41 38 42 54 Z" fill="#2a3648" />
+          <path d="M 24 38 L 27 44 L 30 38 L 28.4 37 L 27 38.6 L 25.6 37 Z" fill="#f4f0e8" />
+          <path d="M 27 44 L 25 52 L 29 52 Z" fill="#8a3a3a" />
+          <path d="M 21 37 L 24.6 40 L 22 42 Z M 33 37 L 29.4 40 L 32 42 Z" fill="#e8ecf0" />
+          <circle cx="27" cy="26" r="8.4" fill="#d9a678" />
+          <path d="M 18.6 26 Q 18 15 27 14.4 Q 36 15 35.4 26 L 33 24 Q 33 19 27 18.6 Q 21 19 21 24 Z" fill="#1c1c1e" />
+          <rect x="0" y="0" width="54" height="54" fill="#f4d03f" opacity="0.04" />
+        </g>
+      );
+    case 'gym':
+      return (
+        <g>
+          <rect width="54" height="54" fill="#2c3436" />
+          <rect x="2" y="6" width="8" height="40" rx="1.6" fill="#3a4448" />
+          <rect x="44" y="12" width="7" height="30" rx="1.6" fill="#333c40" />
+          <circle cx="27" cy="34" r="12" fill="#22282c" />
+          <path d="M 20 26 L 24 32 L 21 34 Z" fill="#c8d4d8" opacity="0.5" />
+          <path d="M 14 54 Q 16 40 27 38.6 Q 38 40 40 54 Z" fill="#3a4a52" />
+          <rect x="23" y="44" width="8" height="6" rx="1" fill="#14181c" />
+          <circle cx="27" cy="24" r="7.6" fill="#d9a678" />
+          <path d="M 19.4 24 Q 19 15 27 14.6 Q 35 15 34.6 24 L 32.6 22.4 Q 32.6 18 27 17.6 Q 21.4 18 21.4 22.4 Z" fill="#2a2622" />
+          <rect x="0" y="0" width="54" height="8" fill="#8ac4a8" opacity="0.1" />
+        </g>
+      );
+    case 'lowangle':
+      return (
+        <g>
+          <rect width="54" height="54" fill="#9a948c" />
+          <rect x="30" y="8" width="20" height="26" fill="#7a746c" opacity="0.6" />
+          <rect x="34" y="12" width="4" height="9" fill="#5c564e" />
+          <circle cx="27" cy="34" r="15" fill="#d9a678" />
+          <ellipse cx="27" cy="42" rx="9" ry="6.4" fill="#c19268" />
+          <ellipse cx="23" cy="28" rx="2.6" ry="1.9" fill="#26221c" />
+          <ellipse cx="31.6" cy="28.4" rx="2.6" ry="1.9" fill="#26221c" />
+          <path d="M 22 39.6 Q 27 42.4 32.4 39.8" stroke="#8a5a3e" strokeWidth="1.4" fill="none" />
+          <ellipse cx="24" cy="45" rx="1.9" ry="1.1" fill="#8a5a3e" opacity="0.5" />
+          <ellipse cx="30" cy="45" rx="1.9" ry="1.1" fill="#8a5a3e" opacity="0.5" />
+          <circle cx="27" cy="30" r="13" fill="#fff" opacity="0.13" />
+          <path d="M 19 20 Q 27 15 35 20" stroke="#4a3a2c" strokeWidth="2.4" fill="none" />
+        </g>
+      );
+    case 'zen':
+      return (
+        <g>
+          <rect width="54" height="54" fill="#3a2e22" />
+          <rect width="54" height="30" fill="#f4e0b4" opacity="0.14" />
+          <rect x="6" y="30" width="42" height="14" rx="2" fill="#5a442c" />
+          <rect x="6" y="30" width="42" height="2.4" fill="#6e5638" />
+          <ellipse cx="22" cy="26" rx="9" ry="6" fill="#2c2420" />
+          <path d="M 30 26 Q 35 25 36 21 L 38 23 Q 36 28 30 28.6 Z" fill="#2c2420" />
+          <ellipse cx="22" cy="23" rx="5.6" ry="2.2" fill="#4a3c30" />
+          <ellipse cx="40" cy="33" rx="4" ry="2.6" fill="#2c2420" />
+          <ellipse cx="14" cy="34" rx="4" ry="2.6" fill="#2c2420" />
+          <g fill="#6a4a2c">
+            {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((a) => (
+              <circle key={a} cx={27 + 3.2 * Math.cos((a * Math.PI) / 180)} cy={45 + 3.2 * Math.sin((a * Math.PI) / 180)} r="1.05" />
+            ))}
+          </g>
+          <circle cx="46" cy="10" r="6" fill="#f4e0b4" opacity="0.2" />
+        </g>
+      );
+    case 'cap':
+      return (
+        <g>
+          <rect width="54" height="54" fill="#2c3a30" />
+          <circle cx="40" cy="10" r="10" fill="#f4e8c0" opacity="0.3" />
+          <path d="M 12 54 Q 13 36 27 34 Q 41 36 42 54 Z" fill="#3a4638" />
+          <circle cx="27" cy="24" r="9.4" fill="#4a3c30" />
+          <path d="M 16.6 21 Q 17 8 27 7.6 Q 37 8 37.4 21 L 39 23 Q 27 19 15 23 Z" fill="#2c2620" />
+          <path d="M 15 22.6 Q 27 18.6 39 22.6" stroke="#4a4438" strokeWidth="2" fill="none" />
+          <rect x="19.4" y="22.4" width="15.2" height="4.6" rx="2.2" fill="#1c1a16" />
+          <path d="M 12 54 Q 14 40 20 37 M 42 54 Q 40 40 34 37" stroke="#f4e8c0" strokeWidth="1" opacity="0.35" fill="none" />
+        </g>
+      );
+    case 'kid':
+      return (
+        <g>
+          <rect width="54" height="54" fill="#4a3e34" />
+          <rect width="54" height="18" fill="#f4c88a" opacity="0.16" />
+          <path d="M 6 44 L 20 22 L 30 30 L 24 44 Z" fill="#c0564f" opacity="0.75" />
+          <path d="M 34 44 L 34 30 L 44 30 L 44 44 Z" fill="#5a8a8a" opacity="0.6" />
+          <circle cx="30" cy="26" r="5" fill="#f0c8a0" opacity="0.9" />
+          <path d="M 26 40 Q 30 30 34 40 Z" fill="#e89a5a" opacity="0.9" />
+          <path d="M 25 42 Q 30 34 35 42" stroke="#f0c8a0" strokeWidth="1.4" opacity="0.3" fill="none" />
+          <rect x="0" y="44" width="54" height="10" fill="#3a322a" />
+        </g>
+      );
+    case 'wallpaper':
+      return (
+        <g>
+          <defs>
+            <linearGradient id="wpSky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#f0b070" />
+              <stop offset="60%" stopColor="#d8885a" />
+              <stop offset="100%" stopColor="#8a5a5a" />
+            </linearGradient>
+          </defs>
+          <rect width="54" height="54" fill="url(#wpSky)" />
+          <circle cx="27" cy="22" r="7" fill="#fff0c0" opacity="0.9" />
+          <path d="M 0 32 L 14 20 L 26 32 L 38 22 L 54 34 L 54 54 L 0 54 Z" fill="#4a3644" />
+          <rect x="0" y="38" width="54" height="16" fill="#3a2c3a" />
+          <path d="M 0 40 Q 14 38 27 40 T 54 40" stroke="#fff" strokeWidth="0.6" fill="none" opacity="0.35" />
+          <path d="M 0 47 L 54 45" stroke="#fff" strokeWidth="0.4" opacity="0.2" />
+        </g>
+      );
+    case 'fishing':
+      return (
+        <g>
+          <rect width="54" height="54" fill="#8a9498" />
+          <rect width="54" height="10" fill="#c4cbc8" opacity="0.5" />
+          <rect y="28" width="54" height="26" fill="#5a7a6e" />
+          <path d="M 0 30 Q 14 28 27 30 T 54 30" stroke="#c4d4cc" strokeWidth="0.8" fill="none" opacity="0.5" />
+          <path d="M 38 12 L 44 40" stroke="#2a2c28" strokeWidth="1.8" />
+          <circle cx="13" cy="34" r="5" fill="#3a3c34" />
+          <path d="M 10 40 Q 13 36 16 40 Z" fill="#3a3c34" />
+          <path d="M 11 39 L 38 13" stroke="#c4c8c0" strokeWidth="0.5" opacity="0.6" />
+          <rect x="6" y="46" width="9" height="5" rx="1" fill="#2a2c28" />
+        </g>
+      );
+    case 'brunch':
+      return (
+        <g>
+          <rect width="54" height="54" fill="#c8b49a" />
+          <rect width="54" height="54" fill="#d8c4aa" opacity="0.5" />
+          <circle cx="20" cy="22" r="12" fill="#f4f0e8" />
+          <circle cx="20" cy="22" r="9" fill="#e8dcc4" />
+          <ellipse cx="16" cy="20" rx="4" ry="2.6" fill="#e8b86a" />
+          <ellipse cx="23" cy="24" rx="4.6" ry="2.6" fill="#8ac47a" />
+          <ellipse cx="20" cy="17" rx="3" ry="1.8" fill="#d4553f" opacity="0.7" />
+          <circle cx="40" cy="16" r="6.4" fill="#f4f0e8" />
+          <circle cx="40" cy="16" r="4.8" fill="#6a4a2c" />
+          <path d="M 34 8 Q 40 4 46 8" stroke="#f4f0e8" strokeWidth="2.4" fill="none" />
+          <rect x="30" y="40" width="18" height="6" rx="3" fill="#d9a678" />
+          <rect x="44" y="38" width="7" height="9" rx="3.4" fill="#3a3f45" />
+          <rect x="45.4" y="40" width="4.2" height="3" rx="1.4" fill="#c8ccd4" />
+        </g>
+      );
+    default:
+      return null;
+  }
+}
+
 export function OldManAvatar({ target, state, size = 44 }: { target: Target; state?: TargetState; size?: number }) {
   const spec = target.portraitSpec;
   const wary = (state?.wariness ?? 10) >= 45;
@@ -514,6 +684,12 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
   };
   const sk = SKIN[spec.skin ?? 1];
   const hairFrost = '#cfd0ce';
+  // v3.3 头像类型学：非 face 类型整张头像就是"那张照片"
+  const typed = spec.shotType && spec.shotType !== 'face' ? spec.shotType : null;
+  // 真实感：按目标 id 的确定性不对称（眼位差 + 一颗痣）
+  const h = (target.id.charCodeAt(0) * 31 + target.id.length * 7) % 97;
+  const eyeYAsym = ((h % 5) - 2) * 0.16;
+  const hasMole = h % 3 === 0;
 
   // ---- 脸型五档：颅骨宽高 / 下颌半宽 / 下巴位置 / 轮廓类型 / 嘴位移 / 脖宽 ----
   const FACE: Record<number, { rx: number; ry: number; jaw: number; chin: number; type: 'square' | 'round' | 'point' | 'long'; mouthDy: number; neckW: number }> = {
@@ -540,7 +716,7 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
   };
 
   // 眼睛几何：警惕 → 上睑压低（眯眼审视）；含笑 → 换成月牙眼
-  const eyeY = 24.6;
+  const eyeY = 24.6 + eyeYAsym;
   const scleraRy = wary ? 1.05 : 1.5;
   const lidY = eyeY - scleraRy;
 
@@ -550,6 +726,7 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
     >
       <Defs />
       <g clipPath={`url(#clip-${uid})`}>
+        {typed ? <ShotScene kind={typed} /> : (<>
         <BgLayer scene={spec.bgScene ?? 'default'} accent={spec.accent ?? spec.shirtColor} />
 
         {/* ---- 脖颈与肩（脖宽随脸型：老板的脖子壮，书生的脖子细） ---- */}
@@ -770,6 +947,8 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
         <ellipse cx="28.6" cy="29.6" rx="0.9" ry="0.55" fill={sk.shade} opacity="0.65" />
         <ellipse cx="27.2" cy="28.6" rx="1.3" ry="0.7" fill={sk.hi} opacity="0.3" />
 
+        {hasMole && <circle cx={21.4 + (h % 3)} cy="35.4" r="0.55" fill={sk.line} opacity="0.65" />}
+
         {/* ---- 法令纹 ---- */}
         <path d={`M 23.6 ${30.2 + mDy} Q 23 ${32.2 + mDy} 23.4 ${33.8 + mDy}`} stroke={sk.shade} strokeWidth="0.5" fill="none" opacity="0.45" />
         <path d={`M 30.4 ${30.2 + mDy} Q 31 ${32.2 + mDy} 30.6 ${33.8 + mDy}`} stroke={sk.shade} strokeWidth="0.5" fill="none" opacity="0.45" />
@@ -827,6 +1006,7 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
         )}
 
         <AccessoryLayer accessory={spec.accessory ?? 'none'} />
+        </>)}
         <rect width="54" height="54" fill="url(#omVig)" />
       </g>
       <clipPath id={`clip-${uid}`}>
@@ -876,6 +1056,8 @@ export function PhotoRender({ photoId }: { photoId: string }) {
         </linearGradient>
       </defs>
       {scenes}
+      {h % 3 === 0 && <circle cx={lx} cy={ly} r="30" fill="#fff" opacity="0.11" />}
+      <rect width="200" height="150" fill={h % 2 === 0 ? '#f4a03f' : '#7aa8cc'} opacity="0.045" />
       <circle cx={lx} cy={ly} r="80" fill="url(#phLeak)" />
       <g fill="#fff">
         <circle cx="26" cy="30" r="0.5" opacity="0.1" />
@@ -1712,6 +1894,10 @@ function PhotoFx({ leak, lx, ly, warm = true }: { leak: string; lx: number; ly: 
 export function MomentPhoto({ selfieId }: { selfieId: string }) {
   const scene = SELFIE_SCENES[selfieId];
   if (!scene) return null;
+  // v3.3 手机摄影质感：每张照片自己的白平衡偏移 + 偶发闪光热斑
+  let hh = 0;
+  for (let i = 0; i < selfieId.length; i++) hh = (hh * 31 + selfieId.charCodeAt(i)) >>> 0;
+  const wb = hh % 2 === 0 ? '#f4a03f' : '#7aa8cc';
   return (
     <svg width="200" height="150" viewBox="0 0 200 150" role="img" aria-label="朋友圈自拍">
       <defs>
@@ -1727,6 +1913,8 @@ export function MomentPhoto({ selfieId }: { selfieId: string }) {
         </linearGradient>
       </defs>
       {scene}
+      {hh % 3 === 0 && <circle cx={hh % 2 ? 38 : 162} cy={hh % 5 < 2 ? 30 : 120} r="26" fill="#fff" opacity="0.1" />}
+      <rect width="200" height="150" fill={wb} opacity="0.05" />
       <rect width="200" height="150" fill="url(#sfVig)" />
     </svg>
   );
@@ -1734,47 +1922,100 @@ export function MomentPhoto({ selfieId }: { selfieId: string }) {
 
 /** 自拍场景库——按 SelfieId 索引（200×150，v3.0 重绘）。 */
 const SELFIE_SCENES: Record<string, ReactElement> = {
-  // 蛋糕照：甜品店暖光，蛋糕偏左下三分位，背景奶油柜虚化成光斑
-  cake: (
+  // 闺蜜照：两人自拍——左为主角（深色双马尾），右为闺蜜（波波头），举起的手臂与手机入镜，奶茶店暖光
+  bestie: (
     <>
-      <rect width="200" height="150" fill="#2a1a14" />
-      {/* 背景奶油柜（虚化成一排暖光斑） */}
-      {[26, 62, 98, 134, 170].map((x, i) => (
-        <circle key={x} cx={x} cy={30 + (i % 2) * 9} r={7 + (i % 3) * 2.5} fill="#f4c88a" opacity={0.10 + (i % 2) * 0.05} />
+      <rect width="200" height="150" fill="#241a20" />
+      {/* 奶茶店暖光：灯串散景 */}
+      {[24, 58, 92, 126, 160, 188].map((x, i) => (
+        <circle key={x} cx={x} cy={18 + (i % 2) * 8} r={5 + (i % 3) * 1.8} fill="#f4c88a" opacity={0.12 + (i % 2) * 0.05} />
       ))}
-      <circle cx="176" cy="20" r="14" fill="#f4d03f" opacity="0.16" />
-      {/* 桌面（斜向木纹，光从右上打来） */}
-      <path d="M 0 150 L 0 92 L 200 84 L 200 150 Z" fill="#33241a" />
-      <path d="M 0 104 Q 100 96 200 92" stroke="#463222" strokeWidth="1.4" fill="none" opacity="0.8" />
-      <path d="M 0 124 Q 100 116 200 112" stroke="#241812" strokeWidth="1.2" fill="none" opacity="0.7" />
-      <ellipse cx="120" cy="86" rx="60" ry="9" fill="#f4d03f" opacity="0.05" />
-      {/* 蛋糕（三分位偏左，侧面双层 + 顶部斜光） */}
-      <rect x="46" y="82" width="62" height="13" fill="#5a3a24" />
-      <rect x="46" y="95" width="62" height="12" fill="#7a5236" />
-      <line x1="48" y1="94" x2="106" y2="94" stroke="#efe6dc" strokeWidth="1.6" opacity="0.7" />
-      <ellipse cx="77" cy="81" rx="32" ry="7" fill="#f4ede4" />
-      <g fill="#f4ede4">
-        {[50, 63.5, 77, 90.5, 104].map((x) => <circle key={x} cx={x} cy="79" r="4" />)}
+      <circle cx="170" cy="26" r="13" fill="#f4d03f" opacity="0.14" />
+      {/* 背景：虚化的奶茶店柜台与菜单牌 */}
+      <g opacity="0.22">
+        <rect x="8" y="40" width="52" height="26" rx="2" fill="#1c1216" />
+        <rect x="14" y="46" width="40" height="3" fill="#4a3a42" />
+        <rect x="14" y="52" width="32" height="2.6" fill="#4a3a42" />
+        <rect x="150" y="44" width="42" height="30" rx="2" fill="#1c1216" />
+        <rect x="156" y="50" width="30" height="3" fill="#4a3a42" />
       </g>
-      <circle cx="77" cy="73" r="4.6" fill="#f4ede4" />
-      <circle cx="75" cy="71.4" r="1.5" fill="#fff" opacity="0.7" />
-      {/* 草莓 + 点燃的蜡烛（一根——自己买给自己的） */}
-      <path d="M 72 66 L 77 58 L 82 66 Q 77 62 72 66 Z" fill="#c0392b" />
-      <circle cx="76" cy="62" r="0.5" fill="#e8b8a8" />
-      <rect x="88" y="52" width="2.8" height="16" rx="1.3" fill="#d4553f" />
-      <path d="M 89.4 52 Q 87.6 48.6 89.4 45.8 Q 91.2 43.4 89.4 41" stroke="#aab2ba" strokeWidth="1" fill="none" opacity="0.35" strokeLinecap="round" />
-      <circle cx="89.4" cy="40" r="1.5" fill="#f4a03f" />
-      <circle cx="89.4" cy="40" r="4.2" fill="#f4a03f" opacity="0.25" />
-      <circle cx="89.4" cy="39.4" r="0.6" fill="#ffe8a0" />
-      {/* 叉子（右下前景，虚一点） */}
-      <g transform="rotate(14 138 112)" opacity="0.85">
-        <rect x="136" y="94" width="3.2" height="28" rx="1.5" fill="url(#sfMetal)" />
-        <rect x="134" y="88" width="7.2" height="8" rx="1.6" fill="url(#sfMetal)" />
-        {[134.6, 136.7, 138.8].map((x) => <rect key={x} x={x} y="82" width="1.4" height="7" rx="0.7" fill="url(#sfMetal)" />)}
+      {/* 闺蜜（右，波波头，稍后侧） */}
+      <g>
+        <path d="M 128 96 Q 122 58 148 55 Q 176 57 172 96 Q 176 100 174 106 L 126 106 Q 124 100 128 96 Z" fill="#3a2a26" />
+        <ellipse cx="149" cy="80" rx="16" ry="17" fill="#f8dcc2" />
+        <path d="M 133 78 Q 133 60 149 58.5 Q 165 60 165 78 Q 158 68 149 67.5 Q 140 68 133 78 Z" fill="#3a2a26" />
+        <path d="M 135 76 Q 141 72 146 73" stroke="#ffffff" strokeWidth="1" opacity="0.2" fill="none" />
+        <circle cx="143" cy="82" r="1.6" fill="#26221c" />
+        <circle cx="155" cy="82" r="1.6" fill="#26221c" />
+        <path d="M 142 89.5 Q 149 93.5 156 89.5" stroke="#c46a5a" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+        <ellipse cx="139" cy="87" rx="2.6" ry="1.5" fill="#f0a08c" opacity="0.45" />
+        <ellipse cx="159" cy="87" rx="2.6" ry="1.5" fill="#f0a08c" opacity="0.45" />
+        {/* 闺蜜的肩膀（紫色上衣） */}
+        <path d="M 118 126 Q 124 100 148 98 Q 172 100 180 126 Z" fill="#7a4a7a" />
       </g>
-      <PhotoFx leak="#f4b06a" lx={168} ly={30} />
+      {/* 主角（左，深色双马尾，更近镜头） */}
+      <g>
+        <path d="M 46 108 Q 38 62 70 58 Q 102 62 94 108 Q 98 114 96 122 L 44 122 Q 42 114 46 108 Z" fill="#241c20" />
+        {/* 双马尾 */}
+        <path d="M 42 84 Q 30 92 32 112 L 42 108 Z" fill="#241c20" />
+        <path d="M 98 84 Q 110 92 108 112 L 98 108 Z" fill="#241c20" />
+        <ellipse cx="70" cy="84" rx="21" ry="22" fill="#fbdfc0" />
+        <path d="M 49 82 Q 49 56 70 54.5 Q 91 56 91 82 Q 82 68 70 67.5 Q 58 68 49 82 Z" fill="#241c20" />
+        <path d="M 52 76 Q 60 68 70 67.6" stroke="#ffffff" strokeWidth="1.2" opacity="0.22" fill="none" />
+        {/* 空气刘海中分 */}
+        <path d="M 70 68 Q 66 70 64 75 M 70 68 Q 74 70 76 75" stroke="#241c20" strokeWidth="2" fill="none" strokeLinecap="round" />
+        {/* 眼睛（圆亮） */}
+        <ellipse cx="63" cy="86" rx="3.4" ry="4.2" fill="#ffffff" />
+        <ellipse cx="77" cy="86" rx="3.4" ry="4.2" fill="#ffffff" />
+        <circle cx="63" cy="86.5" r="2.6" fill="#4a3020" />
+        <circle cx="77" cy="86.5" r="2.6" fill="#4a3020" />
+        <circle cx="63" cy="86.5" r="1.2" fill="#1c1410" />
+        <circle cx="77" cy="86.5" r="1.2" fill="#1c1410" />
+        <circle cx="64.2" cy="84.8" r="1" fill="#fff" />
+        <circle cx="78.2" cy="84.8" r="1" fill="#fff" />
+        <path d="M 58.6 82.2 Q 62.6 80.2 67.2 81.4" stroke="#241a12" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+        <path d="M 72.8 81.4 Q 77.4 80.2 81.4 82.2" stroke="#241a12" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+        {/* 开口笑 */}
+        <path d="M 63 96.5 Q 70 102.5 77 96.5 Q 70 99 63 96.5 Z" fill="#c4554a" />
+        <ellipse cx="70" cy="96.8" rx="4.6" ry="1.6" fill="#ffffff" opacity="0.75" />
+        <ellipse cx="56.6" cy="92" rx="3.4" ry="2" fill="#f0a08c" opacity="0.5" />
+        <ellipse cx="83.4" cy="92" rx="3.4" ry="2" fill="#f0a08c" opacity="0.5" />
+        {/* 樱花发卡 */}
+        <g transform="rotate(10 47 66)">
+          {[0, 72, 144, 216, 288].map((a) => (
+            <ellipse key={a} cx="47" cy="64" rx="1.5" ry="2.2" fill="#f6b8c8" transform={`rotate(${a} 47 66)`} />
+          ))}
+          <circle cx="47" cy="66" r="1.1" fill="#f4d03f" />
+        </g>
+        {/* 主角肩膀（奶白上衣） */}
+        <path d="M 36 132 Q 44 102 70 100 Q 96 102 104 132 Z" fill="#f4ede4" />
+        <path d="M 62 100 L 70 106 L 78 100" stroke="#e67e22" strokeWidth="2" fill="none" strokeLinecap="round" />
+      </g>
+      {/* 两头相靠：头挨头的剪影暗示 */}
+      <path d="M 88 66 Q 96 62 104 66" stroke="#00000030" strokeWidth="2" fill="none" />
+      {/* 举起的手臂 + 手机（右上角入镜） */}
+      <path d="M 104 128 Q 126 96 148 52" stroke="#f8dcc2" strokeWidth="7" fill="none" strokeLinecap="round" />
+      <path d="M 104 128 Q 126 96 148 52" stroke="#eec49e" strokeWidth="4.6" fill="none" strokeLinecap="round" />
+      <g transform="rotate(24 156 40)">
+        <rect x="144" y="22" width="24" height="42" rx="4" fill="#14161a" />
+        <rect x="146" y="24" width="20" height="38" rx="3" fill="#23262c" />
+        <circle cx="150" cy="30" r="2.2" fill="#0c0e10" />
+        <circle cx="156" cy="30" r="2.2" fill="#0c0e10" />
+        <rect x="150" y="52" width="14" height="2" rx="1" fill="#0c0e10" />
+      </g>
+      {/* 桌沿两只奶茶（前景虚化） */}
+      <g opacity="0.85">
+        <path d="M 26 150 L 34 122 L 50 122 L 58 150 Z" fill="#c9a37a" />
+        <rect x="30" y="116" width="24" height="8" rx="3" fill="#f4ede4" />
+        <path d="M 36 118 L 44 104" stroke="#d4553f" strokeWidth="3" strokeLinecap="round" />
+        <path d="M 152 150 L 160 124 L 174 124 L 182 150 Z" fill="#c9a37a" />
+        <rect x="156" y="118" width="24" height="8" rx="3" fill="#f4ede4" />
+        <path d="M 162 120 L 170 106" stroke="#d4553f" strokeWidth="3" strokeLinecap="round" />
+      </g>
+      <PhotoFx leak="#f4c88a" lx={150} ly={26} />
     </>
   ),
+
   // 夜跑照：操场夜色，手表荧光屏占前景右下，路灯锥光+月亮
   gym: (
     <>

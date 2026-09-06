@@ -9,7 +9,7 @@ import type { Target } from '../types/target';
 
 /** 8 种自拍的元数据（UI 瓷砖 + 标签）。 */
 export const SELFIE_META: { id: SelfieId; label: string; emoji: string; note: string }[] = [
-  { id: 'cake', label: '蛋糕照', emoji: '🍰', note: '甜——女儿感拉满，像在等人记住生日。' },
+  { id: 'bestie', label: '闺蜜照', emoji: '👭', note: '有人陪——关心多一倍，试探也多一倍：旁边那位是谁。' },
   { id: 'gym', label: '夜跑照', emoji: '🏃', note: '自律人设——"努力生活"的通用证词。' },
   { id: 'pool', label: '泳池照', emoji: '🏊', note: '贵——谁看了都觉得你"过得不缺钱"。' },
   { id: 'cat', label: '橘猫照', emoji: '🐈', note: '无害——宠物是孤独者之间的通行证。' },
@@ -21,7 +21,7 @@ export const SELFIE_META: { id: SelfieId; label: string; emoji: string; note: st
 
 /** 玩家发圈的配文池（口语化真实朋友圈体）。 */
 export const MOMENT_CAPTIONS: Record<SelfieId, string[]> = {
-  cake: ['长大以后，蛋糕要自己买给自己了。', '祝我快乐。别的就不许了。', '今天是我请我自己。'],
+  bestie: ['合影两张，一张她好看，一张我好看。', '闺蜜说，她负责美，我负责笑。', '有人陪的日子，要大声发出来。'],
   gym: ['第 N 次夜跑。风把耳机线吹得乱七八糟。', '五公里。跑完发现自己还是不想回家。', '坚持的第 9 天，腿是酸的，人是空的。'],
   pool: ['蹭朋友的会员卡。水是温的，天是蓝的。', '学游泳第 3 课，教练说我不怕水，我说是啊。', '晒不到太阳的角落，刚好够自拍。'],
   cat: ['楼下的橘猫又来敲门了。它不认识我，但它选了我。', '捡到一只不太亲人的猫。我们互相观察。', '它睡了我半张床，我付的全款。'],
@@ -115,9 +115,10 @@ export const MOMENT_REACTIONS: Record<Need, string[]> = {
 /** v3.1：照片专属评论——他评的是这张照片本身，不是泛泛的寒暄。
  *  45% 概率优先从这里抽，剩下的落回按情感缺口的常规池。 */
 export const SELFIE_REACTIONS: Record<SelfieId, string[]> = {
-  cake: [
-    '又是自己给自己买的蛋糕？傻丫头。',
-    '奶油的。少吃点甜的，对胃不好。（叔说完了，该吃吃。）',
+  bestie: [
+    '旁边这位是你的闺蜜？替你高兴。',
+    '俩人玩得开心就好。叔就怕你一个人闷着。',
+    '拍照的是谁？你们仨——算上拍照的手——都要平安。',
   ],
   gym: [
     '夜跑是好，就是别跑得太晚。',

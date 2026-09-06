@@ -7,7 +7,7 @@ import { TRAIT_ARCHETYPE_AFFINITY, AGE_NEED_AFFINITY, CHAT_SESSION_COST, ENERGY_
 import { SELFIE_IDS } from '../../types/game';
 import type { GameState } from '../../types/game';
 
-/** 新开一局（默认 profile：sweet_mouth/24/cake），可改 profile 后再开聊。
+/** 新开一局（默认 profile：sweet_mouth/24/bestie），可改 profile 后再开聊。
  *  new_game 会尊重 dispatch 前注入的 rngSeed（测试确定性）。 */
 function fresh(seed = 7): GameState {
   let s = { ...createInitialState(), rngSeed: seed };

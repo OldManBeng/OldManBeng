@@ -41,8 +41,8 @@ export interface RunStats {
 }
 
 /** v2.3 朋友圈自拍的 8 种类型（全部成年向生活照）。 */
-export type SelfieId = 'cake' | 'gym' | 'pool' | 'cat' | 'grind' | 'travel' | 'boba' | 'sick';
-export const SELFIE_IDS: SelfieId[] = ['cake', 'gym', 'pool', 'cat', 'grind', 'travel', 'boba', 'sick'];
+export type SelfieId = 'bestie' | 'gym' | 'pool' | 'cat' | 'grind' | 'travel' | 'boba' | 'sick';
+export const SELFIE_IDS: SelfieId[] = ['bestie', 'gym', 'pool', 'cat', 'grind', 'travel', 'boba', 'sick'];
 
 /** 女主可编辑的自设资料——头像/年龄/性格，全部影响他的话术。 */
 export interface PlayerProfile {

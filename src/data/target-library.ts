@@ -31,16 +31,16 @@ function lib(
 }
 
 const P: Record<string, Target['portraitSpec']> = {
-  guard:  { face: 0, skin: 2, brow: 1, hair: 2, hairColor: '#2a2a2a', glasses: 0, beard: 1, cheeks: 0.45, shirtColor: '#3a4a5a', bgScene: 'guard_booth' as const, accessory: 'flashlight' as const, accent: '#3a4a5a' },
-  guard2: { face: 0, skin: 1, brow: 0, hair: 3, hairColor: '#333', glasses: 0, beard: 1, cheeks: 0.5, shirtColor: '#2a3a4a', bgScene: 'guard_booth' as const, accessory: 'flashlight' as const, accent: '#2a3a4a' },
-  driver: { face: 0, skin: 2, brow: 1, hair: 2, hairColor: '#333', glasses: 0, beard: 1, cheeks: 0.5, shirtColor: '#6a5a3a', bgScene: 'roadside' as const, accessory: 'helmet' as const, accent: '#6a5a3a' },
-  driver2:{ face: 3, skin: 1, brow: 0, hair: 3, hairColor: '#2a2a2a', glasses: 0, beard: 0, cheeks: 0.4, shirtColor: '#5a4a3a', bgScene: 'roadside' as const, accessory: 'helmet' as const, accent: '#5a4a3a' },
-  fish:   { face: 3, skin: 2, brow: 1, hair: 2, hairColor: '#555', glasses: 1, beard: 2, cheeks: 0.6, shirtColor: '#4a6a4a', bgScene: 'fishing' as const, accessory: 'fishing_rod' as const, accent: '#4a6a4a' },
-  fish2:  { face: 2, skin: 1, brow: 0, hair: 4, hairColor: '#666', glasses: 0, beard: 1, cheeks: 0.5, shirtColor: '#3a5a3a', bgScene: 'fishing' as const, accessory: 'fishing_rod' as const, accent: '#3a5a3a' },
+  guard:  { shotType: 'cap', face: 0, skin: 2, brow: 1, hair: 2, hairColor: '#2a2a2a', glasses: 0, beard: 1, cheeks: 0.45, shirtColor: '#3a4a5a', bgScene: 'guard_booth' as const, accessory: 'flashlight' as const, accent: '#3a4a5a' },
+  guard2: { shotType: 'cap', face: 0, skin: 1, brow: 0, hair: 3, hairColor: '#333', glasses: 0, beard: 1, cheeks: 0.5, shirtColor: '#2a3a4a', bgScene: 'guard_booth' as const, accessory: 'flashlight' as const, accent: '#2a3a4a' },
+  driver: { shotType: 'wheel', face: 0, skin: 2, brow: 1, hair: 2, hairColor: '#333', glasses: 0, beard: 1, cheeks: 0.5, shirtColor: '#6a5a3a', bgScene: 'roadside' as const, accessory: 'helmet' as const, accent: '#6a5a3a' },
+  driver2:{ shotType: 'wheel', face: 3, skin: 1, brow: 0, hair: 3, hairColor: '#2a2a2a', glasses: 0, beard: 0, cheeks: 0.4, shirtColor: '#5a4a3a', bgScene: 'roadside' as const, accessory: 'helmet' as const, accent: '#5a4a3a' },
+  fish:   { shotType: 'fishing', face: 3, skin: 2, brow: 1, hair: 2, hairColor: '#555', glasses: 1, beard: 2, cheeks: 0.6, shirtColor: '#4a6a4a', bgScene: 'fishing' as const, accessory: 'fishing_rod' as const, accent: '#4a6a4a' },
+  fish2:  { shotType: 'zen', face: 2, skin: 1, brow: 0, hair: 4, hairColor: '#666', glasses: 0, beard: 1, cheeks: 0.5, shirtColor: '#3a5a3a', bgScene: 'fishing' as const, accessory: 'fishing_rod' as const, accent: '#3a5a3a' },
   chess:  { face: 2, skin: 0, brow: 0, hair: 7, hairColor: '#999', glasses: 1, beard: 0, cheeks: 0.5, shirtColor: '#6a5a4a', bgScene: 'chess' as const, accessory: 'chess_piece' as const, accent: '#6a5a4a' },
-  chess2: { face: 0, skin: 2, brow: 1, hair: 3, hairColor: '#aaa', glasses: 0, beard: 1, cheeks: 0.6, shirtColor: '#5a4a3a', bgScene: 'chess' as const, accessory: 'chess_piece' as const, accent: '#5a4a3a' },
+  chess2: { shotType: 'wallpaper', face: 0, skin: 2, brow: 1, hair: 3, hairColor: '#aaa', glasses: 0, beard: 1, cheeks: 0.6, shirtColor: '#5a4a3a', bgScene: 'chess' as const, accessory: 'chess_piece' as const, accent: '#5a4a3a' },
   dance:  { face: 1, skin: 1, brow: 1, hair: 6, hairColor: '#777', glasses: 0, beard: 0, cheeks: 0.55, shirtColor: '#8a3a5a', bgScene: 'square' as const, accessory: 'speaker' as const, accent: '#8a3a5a' },
-  dance2: { face: 3, skin: 2, brow: 0, hair: 3, hairColor: '#888', glasses: 0, beard: 0, cheeks: 0.5, shirtColor: '#7a3a4a', bgScene: 'square' as const, accessory: 'speaker' as const, accent: '#7a3a4a' },
+  dance2: { shotType: 'brunch', face: 3, skin: 2, brow: 0, hair: 3, hairColor: '#888', glasses: 0, beard: 0, cheeks: 0.5, shirtColor: '#7a3a4a', bgScene: 'square' as const, accessory: 'speaker' as const, accent: '#7a3a4a' },
 };
 
 export const LIBRARY: Target[] = [
