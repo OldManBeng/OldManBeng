@@ -73,8 +73,8 @@ export function TitleScreen() {
     <div className="screen title-screen">
       <TitleBackdrop />
       <div className="title-block">
-        <h1>凌晨三点，哥哥</h1>
-        <p className="subtitle">一个关于「崩老头」的游戏</p>
+        <h1>情感反诈模拟器</h1>
+        <p className="subtitle">原名《凌晨三点，哥哥》 · 一个关于「崩老头」的游戏</p>
       </div>
       <div className="title-buttons">
         {hasSave && (
