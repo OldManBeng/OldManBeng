@@ -478,3 +478,59 @@ tsc 零错 / vitest 181 全过 / vite build 通过。红线全保：无银行卡
 验证码/收款码/支付宝账号/转账到/删除聊天记录/清空记录；35+；每笔钱
 带后果（isAsk 成功统一带 wariness+numbness 代价；askAmount 只用于
 剧本写死终局，不绕过代价）。
+
+## v4.3：Apple 风格主题层（superdesign / frontend-design skill 流程）
+
+按 Layout→Theme→Animation→Implementation 四步走完整个 UI。布局层
+（HUD/滚动区/玻璃 tab 栏三段式）本就是 iOS 结构，未动；落的是 Theme、
+触控与动效三件事，全部收敛进 styles.css 单文件。
+
+### Theme：全 token 化（84 处裸 rgba 归零）
+
+- `:root` 全量 oklch：底色（bg 16.3%/ink 7%）、面板、语义色（月光蓝/
+  灯笼金/代价红/信任绿/朋友圈紫）、风格签五色、微信式气泡四色
+  （--bub-target/--bub-ink/--bub-green/--bub-green-ink）、氛围光与两级阴影。
+- 派生色一律 `color-mix(in srgb, var(--token) N%, transparent)`——
+  脚本化替换全部 84 处 rgba 字面量（含嵌套进 linear-gradient 的），
+  无一处裸色残留（:root 注释里的原值除外）。
+- 按钮渐变端点从写死 hex 改为 token 派生（color-mix 提亮/压暗），
+  主题改一处、全 UI 联动。
+
+### 对比度修复（WCAG 4.5:1，三处实测不达标）
+
+- `--faint` 3.26 → 4.83（提亮至 oklch 61.7% 0.034 253）。
+- 气泡时间戳 2.90 → 4.67（42% 黑→bub-ink 62% 兑 bub-target 的深灰）。
+- 红包标签 `红包 +N 元` 3.62 → 5.06（新 token --bub-gold，白气泡上的金字）。
+
+### 触控与按压反馈（Apple HIG 44px）
+
+- `.btn`/`.option`：min-height 44px；tab 栏与紧凑按钮（.btn.small）38px。
+- 全部主控件补 `:active` 按压反馈（scale 0.96–0.99 + 下沉阴影），
+  过渡统一走 token。
+
+### Animation：150–400ms ease-out 系
+
+- 新 token：--speed 180ms / --speed-press 120ms / --speed-in 300ms /
+  --speed-panel 400ms / --ease-out cubic-bezier(0.25,1,0.5,1)。
+- 18 处裸 `Xs ease` 动画全量 token 化；弹跳（briefing 日期 pop、
+  badge 红点）保留专用 spring 曲线；氛围循环（窗灯呼吸/月光）保留
+  ease-in-out。
+- 新增 `prefers-reduced-motion: reduce` 全局降级（动画停住而非闪过，
+  氛围循环整停）。
+
+### 验证（生产构建 + 真机走查）
+
+- tsc/vitest 181 全过 / vite build 通过。
+- 浏览器实走 P0 主流程：标题→序章→人设→简报→陈工开场聊天→回复
+  →朋友圈/钱包/聊天记录六 tab，截图 7 张存 gui-test-screenshots/
+  （本会话图像通道受限，另做页面内计算样式审计兜底）。
+- 计算样式审计全绿：CSS.supports(oklch+color-mix)=true；body 双层
+  渐变渲染正常；聊天气泡 bg=oklch(0.981/0.86)、radius 12px、
+  微阴影均在；narrator 规则加载；.btn/.option/.nav-btn 全部 ≥36px
+  （主控件 44）。
+
+### 不做（记档）
+
+- Google Fonts 外链：游戏字体栈以系统中文字体优先（PingFang/
+  HarmonyOS/雅黑），外链字体在离线/国内环境反劣化，不走。
+- 亮色模式：游戏主题是凌晨三点，只做暗色。
