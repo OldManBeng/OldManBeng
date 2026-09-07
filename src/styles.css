@@ -1402,6 +1402,22 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 .log-entry.log-beat { border-left-color: var(--warm); }
 .log-entry.log-beat .log-main, .log-entry.log-beat span { color: var(--warm); }
 
+/* ---------- v4.2 突发事件：横生枝节的早晨（红调——不是偈语的钟，是急事） ---------- */
+.beat-card.incident {
+  border-color: rgba(224, 106, 94, 0.45);
+  border-left-color: var(--danger);
+  background: rgba(224, 106, 94, 0.06);
+  animation: incident-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.beat-card.incident .beat-title { color: var(--danger); }
+@keyframes incident-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+.log-entry.log-incident { border-left-color: var(--danger); }
+.log-entry.log-incident span { color: var(--text); }
+.log-entry.log-incident .log-line { color: var(--danger); }
+
 /* ---------- 小屏适配 ---------- */
 @media (max-width: 420px) {
   .screen { padding: 14px 12px 20px; }

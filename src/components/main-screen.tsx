@@ -8,6 +8,7 @@ import { INDUSTRY_COURSE_COST, CHAT_SESSION_COST } from '../data/constants';
 import { DAILY_PLANS } from '../data/plans';
 import { SELFIE_META, MOMENT_PLAYER_COMMENTS, playerCommentPool } from '../data/moments';
 import { DIRECT_ASK_AMOUNTS, DIRECT_ASK_REASONS, reasonForAmount } from '../data/direct-ask';
+import { INCIDENTS } from '../data/incidents';
 import { SHOP_ITEMS } from '../data/items';
 import { WORLD_BEAT_BY_DAY, interpolateBeat } from '../data/life-events';
 import type { PlayerProfile } from '../types/game';
@@ -121,6 +122,11 @@ function DayBriefingModal() {
   if (beatLog) {
     rows.push({ ico: '⏳', label: '这个月', text: beatLog.details.replace(/^[^——]+——/, '') });
   }
+  // v4.2 突发事件：横生枝节的早晨——先看一眼（⚡ 行），决策卡在下面。
+  const incLog = entries.find((l) => l.kind === 'incident');
+  if (incLog) {
+    rows.push({ ico: '⚡', label: '今天出事了', text: incLog.details.replace(/^[^——]+——/, '') });
+  }
   const beatDef = beatLog ? WORLD_BEAT_BY_DAY[day] : undefined;
   const beatBody = beatDef
     ? interpolateBeat(beatDef.body, state.stats.totalEarned, state.stats.redPacketsReceived, Math.max(0, state.goal - state.stats.totalEarned))
@@ -166,6 +172,25 @@ function DayBriefingModal() {
             </div>
           </div>
         )}
+        {(() => {
+          if (!state.pendingIncident || state.incidentResolved) return null;
+          const inc = INCIDENTS.find((i) => i.id === state.pendingIncident);
+          if (!inc) return null;
+          return (
+            <div className="beat-card incident" style={{ animationDelay: delay(rowIdx) }}>
+              <div className="beat-title">⚡ {inc.title}</div>
+              <div className="beat-body">{inc.body}</div>
+              <div className="beat-options">
+                {inc.options.map((opt, i) => (
+                  <button key={i} className="btn small beat-opt" onClick={() => { playMessage(); store.dispatch({ type: 'resolve_incident', optionIndex: i }); }}>
+                    {opt.text}
+                  </button>
+                ))}
+              </div>
+              <p className="muted small">也可以先按下不表——但拖到睡觉，就按"没接住"算。</p>
+            </div>
+          );
+        })()}
         {verse && (
           <div className="briefing-row briefing-gatha" style={{ animationDelay: delay(rowIdx) }}>
             <div className="gatha-verse">{verse}</div>
@@ -361,6 +386,27 @@ function TodayPanel({ phaseLabel }: { phaseLabel: string }) {
           <p className="muted small">划掉是有代价的——孤独的人记得每一次已读不回。</p>
         </div>
       )}
+
+      {/* v4.2 突发事件决策卡：早晨没选的，名单上方还挂着——拖到睡觉落"没接住"。 */}
+      {(() => {
+        if (!state.pendingIncident || state.incidentResolved) return null;
+        const inc = INCIDENTS.find((i) => i.id === state.pendingIncident);
+        if (!inc) return null;
+        return (
+          <div className="beat-card inline incident">
+            <div className="beat-title">⚡ {inc.title}</div>
+            <div className="beat-body">{inc.body}</div>
+            <div className="beat-options">
+              {inc.options.map((opt, i) => (
+                <button key={i} className="btn small beat-opt" onClick={() => { playMessage(); store.dispatch({ type: 'resolve_incident', optionIndex: i }); }}>
+                  {opt.text}
+                </button>
+              ))}
+            </div>
+            <p className="muted small">不选也行——但今晚睡着之前，这事会自己了结。</p>
+          </div>
+        );
+      })()}
 
       {/* 白天：计划 + 事件 + 上午老头 */}
       {morning && (

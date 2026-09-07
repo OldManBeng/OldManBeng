@@ -53,12 +53,15 @@ import {
   ENERGY_EARLY_DAYS, ENERGY_EARLY_FACTOR,
   CHAIN_INTERLUDE_CHANCE,
   DIRECT_ASK_CHANCE_MULT, DIRECT_ASK_FAIL_WARINESS, DIRECT_ASK_SUCCESS_WARINESS, DIRECT_ASK_AMOUNT_WARINESS_DIV,
+  INCIDENT_CHANCE, INCIDENT_FIRST_DAY,
 } from '../data/constants';
 import {
   DIRECT_ASK_AMOUNTS, DIRECT_ASK_REASONS,
   DIRECT_ASK_OFFENDED, DIRECT_ASK_COOLDOWN, DIRECT_ASK_FAIL_CHAT, DIRECT_ASK_SUCCESS_CHAT,
   DIRECT_ASK_FOLLOWUP_SUCCESS, DIRECT_ASK_FOLLOWUP_FAIL,
 } from '../data/direct-ask';
+import { INCIDENTS, incidentsAvailable } from '../data/incidents';
+import type { IncidentDef, IncidentOption } from '../data/incidents';
 
 export const TARGET_MAP: Record<string, Target> = Object.fromEntries(TARGETS.map((t) => [t.id, t]));
 /** v2.0：含老头库的全量映射。 */
@@ -373,6 +376,8 @@ export function createInitialState(): GameState {
     pendingBeat: '',
     beatResolved: false,
     pinnedTargets: [],
+    pendingIncident: '',
+    incidentResolved: false,
   };
 }
 
@@ -688,6 +693,24 @@ function runMorning(state: GameState) {
       log(state, 'beat', `${beat.title}——${body}`);
       if (beat.options?.length && !state.beatResolved) {
         state.pendingBeat = beat.id;
+      }
+    }
+  }
+
+  // v4.2 突发事件：随机掷股（非日历）——约 1/5 的日子横生枝节，必须当场二选一。
+  // 与节奏日错开（beat 日不掷，压迫已经够重了）；首两日不触发；一次只来一件；
+  // 同一存档同一事件只来一次。选了才结算，拖到睡觉落"没接住"版。
+  {
+    const beatDay = !!WORLD_BEAT_BY_DAY[state.day];
+    if (state.day >= INCIDENT_FIRST_DAY && !beatDay && rng.chance(INCIDENT_CHANCE)) {
+      const discovered = new Set(state.targets.filter((t) => t.discoveredDay > 0).map((t) => t.targetId));
+      const pool = incidentsAvailable(state.day, discovered).filter((i) => !state.usedOneTimeEvents.includes(i.id));
+      if (pool.length) {
+        const inc = rng.pick(pool);
+        state.usedOneTimeEvents.push(inc.id);
+        state.pendingIncident = inc.id;
+        state.incidentResolved = false;
+        log(state, 'incident', `${inc.title}——${inc.body}`);
       }
     }
   }
@@ -1309,6 +1332,29 @@ export function dispatch(state: GameState, action: GameAction): GameState {
     case 'sleep': {
       s.dayPhase = 'morning';
       s.todayPlan = '';
+      // v4.2 突发事件落锤：拖到睡觉没选 → "没接住"版后果照付（不处理也是一种处理）。
+      if (s.pendingIncident && !s.incidentResolved) {
+        const inc = INCIDENTS.find((i) => i.id === s.pendingIncident);
+        if (inc) {
+          const eff = inc.staleEffects ?? {};
+          const t = eff.targetId ? s.targets.find((x) => x.targetId === eff.targetId) : null;
+          if (t) {
+            if (eff.trust) t.trust = clamp(t.trust + eff.trust, 0, 100);
+            if (eff.wariness) t.wariness = clamp(t.wariness + eff.wariness, 0, 100);
+          }
+          if (eff.money) {
+            s.money += eff.money;
+            s.ledger.push({ day: s.day, amount: eff.money, note: inc.title, kind: 'event' });
+          }
+          if (eff.conscience) s.conscience = clamp(s.conscience + eff.conscience, 0, 100);
+          if (eff.numbness) s.numbness = clamp(s.numbness + eff.numbness, 0, 100);
+          if (eff.risk) s.riskLevel = clamp(s.riskLevel + eff.risk, 0, 100);
+          if (eff.energy) s.energy = clamp(s.energy + eff.energy, 0, s.energyMax);
+          log(s, 'incident', `${inc.title}——${inc.options[0].stale}`, '（这一天过去了。没接住的事，也算了结。）');
+        }
+      }
+      s.pendingIncident = '';
+      s.incidentResolved = false;
       // v4.1 收工账：今天进账的每一笔，长在谁的哪件事上——睡前一行。
       {
         const todaysIn = s.ledger.filter((l) => l.day === s.day && (l.kind === 'packet' || l.kind === 'gift'));
@@ -1503,6 +1549,33 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       if (opt.energy) s.energy = clamp(s.energy + opt.energy, 0, s.energyMax);
       if (opt.flag) s.flags[opt.flag] = true;
       log(s, 'beat', opt.after);
+      return s;
+    }
+
+    case 'resolve_incident': {
+      // v4.2 突发事件决策：只能选一次，过夜落"没接住"。
+      if (!s.pendingIncident || s.incidentResolved) return s;
+      const inc = INCIDENTS.find((i) => i.id === s.pendingIncident);
+      if (!inc) return s;
+      const opt = inc.options[action.optionIndex];
+      if (!opt) return s;
+      s.incidentResolved = true;
+      const eff: Partial<IncidentOption> = opt;
+      const t = eff.targetId ? s.targets.find((x) => x.targetId === eff.targetId) : null;
+      if (t) {
+        if (eff.trust) t.trust = clamp(t.trust + eff.trust, 0, 100);
+        if (eff.wariness) t.wariness = clamp(t.wariness + eff.wariness, 0, 100);
+      }
+      if (eff.money) {
+        s.money += eff.money;
+        s.ledger.push({ day: s.day, amount: eff.money, note: inc.title, kind: 'event' });
+      }
+      if (eff.conscience) s.conscience = clamp(s.conscience + eff.conscience, 0, 100);
+      if (eff.numbness) s.numbness = clamp(s.numbness + eff.numbness, 0, 100);
+      if (eff.risk) s.riskLevel = clamp(s.riskLevel + eff.risk, 0, 100);
+      if (eff.energy) s.energy = clamp(s.energy + eff.energy, 0, s.energyMax);
+      if (eff.flag) s.flags[eff.flag] = true;
+      log(s, 'incident', `${inc.title}——${opt.after}`);
       return s;
     }
 

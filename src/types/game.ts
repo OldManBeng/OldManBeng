@@ -24,7 +24,8 @@ export type EventKind =
   | 'ending'
   | 'flag'
   | 'life'
-  | 'beat';
+  | 'beat'
+  | 'incident';
 
 export interface EventLogEntry {
   day: number;
@@ -183,6 +184,9 @@ export interface GameState {
   /** v4.1.2：「今天」名单置顶——把重要的老头钉在最顶（targetId 集合）。
    *  顺序即展示顺序：后钉的排前面（最近操作的人最显眼）。 */
   pinnedTargets: string[];
+  /** v4.2 突发事件：今天悬而未决的事件 id（'' = 无）。带选择卡，睡觉落锤。 */
+  pendingIncident: string;
+  incidentResolved: boolean;
 }
 
 export type GameAction =
@@ -214,4 +218,6 @@ export type GameAction =
   /** v4.1.2 名单置顶——targetId 进/出置顶集合（幂等切换）。 */
   | { type: 'toggle_pin'; targetId: string }
   /** v4.1.2 主动要钱——绕开剧情链直接开口（理由 + 金额自选，代价照付）。 */
-  | { type: 'direct_ask'; targetId: string; reasonId: string; amount: number };
+  | { type: 'direct_ask'; targetId: string; reasonId: string; amount: number }
+  /** v4.2 突发事件决策——今天的事件选了哪个选项（只能选一次，过夜落锤）。 */
+  | { type: 'resolve_incident'; optionIndex: number };;

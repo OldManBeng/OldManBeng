@@ -111,6 +111,13 @@ export const RISK_DECAY_PER_DAY = 10;
 export const RISK_EVENT_CHANCE = 0.25;
 export const RISK_EXPOSE_WARINESS = 30;
 
+/** ---- v4.2 突发事件 ----
+ *  每天早晨掷一次（区别于节奏日的日历必现）：约 1/5 的日子横生枝节。
+ *  首两日不触发（教节奏的日子先站稳）；同一存档同一事件只来一次；
+ *  拖到睡觉没选 → 落"没接住"后果——紧张感来自"必须当场二选一"。 */
+export const INCIDENT_CHANCE = 0.22;
+export const INCIDENT_FIRST_DAY = 3;
+
 /** ---- 产业化分支（M3）----
  *  姐妹的"课程"：一次性买断，之后每个早上代聊群替你维护一个老头
  *  （信任+5、断联清零），但话术全网共用——风险每天+3，麻木每天+2。

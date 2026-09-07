@@ -58,6 +58,9 @@ function migrate(saved: GameState): GameState {
     beatResolved: saved.beatResolved ?? false,
     // v4.1.2：名单置顶（旧档没有 → 无置顶）。
     pinnedTargets: saved.pinnedTargets ?? [],
+    // v4.2：突发事件决策状态（旧档没有 → 无待决事件）。
+    pendingIncident: saved.pendingIncident ?? '',
+    incidentResolved: saved.incidentResolved ?? false,
   };
 }
 
