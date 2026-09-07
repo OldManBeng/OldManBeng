@@ -31,11 +31,11 @@ export interface DirectAskReason {
 
 /** 理由池——金额高低都能配的通用理由；狠话留在大档，小钱用软话。 */
 export const DIRECT_ASK_REASONS: DirectAskReason[] = [
-  { id: 'boba', label: '奶茶钱 · 软开口', say: '哥，我请同事喝奶茶，差 {n} 块，你先垫一下？', weight: 0.1 },
-  { id: 'phone_bill', label: '话费 · 小事开口', say: '叔，我手机停机了，充 {n} 块话费，明天发工资就还你。', weight: 0.2 },
-  { id: 'meds', label: '药钱 · 救急', say: '哥，我突然发烧，药店说拿药要 {n} 块，我手里的不够……', weight: 0.45 },
-  { id: 'rent', label: '房租 · 硬理由', say: '叔，房东今天催房租，还差 {n}。我这个月真的周转不开了。', weight: 0.6 },
-  { id: 'mom_hospital', label: '妈住院 · 最狠的话', say: '哥，我妈住院押金差 {n}，我是真没办法了才开这个口。', weight: 0.8 },
+  { id: 'boba', label: '奶茶钱 · 软开口', say: '我请同事喝奶茶，差 {n} 块，你先帮我垫一下？', weight: 0.1 },
+  { id: 'phone_bill', label: '话费 · 小事开口', say: '我手机停机了，充 {n} 块话费，明天发了工资就还你。', weight: 0.2 },
+  { id: 'meds', label: '药钱 · 救急', say: '我突然发烧，药店说拿药要 {n} 块，我手里的不够……', weight: 0.45 },
+  { id: 'rent', label: '房租 · 硬理由', say: '房东今天催房租，还差 {n}。我这个月真的周转不开了。', weight: 0.6 },
+  { id: 'mom_hospital', label: '妈住院 · 最狠的话', say: '我妈住院押金差 {n}，我是真没办法了才开这个口。', weight: 0.8 },
 ];
 
 /** 门槛没过时他说的话（照发也行——但这是一次开口，代价照付）。
@@ -55,8 +55,8 @@ export const DIRECT_ASK_COOLDOWN: string[] = [
 
 /** 翻车判定——他的答复（当面拆穿/岔开/沉默）。 */
 export const DIRECT_ASK_FAIL_CHAT: string[] = [
-  '丫头，叔这个月的退休金，还没到日子。',
-  '你先别急。｜（他转了话题，问你今天吃饭了没有。这个字他没接。）',
+  '丫头，叔这个月的钱还没到日子。',
+  '你先别急。｜（他转了话题，问你今天吃饭了没有。这个话茬他没接。）',
   '（他回了个"好的"。然后是长长的一屏空白。）',
   '（他把这句话看了三遍。他什么都没说，但那晚他没睡。）',
   '丫头，上次那笔你还没说什么时候还呢。',
@@ -66,8 +66,8 @@ export const DIRECT_ASK_FAIL_CHAT: string[] = [
 export const DIRECT_ASK_SUCCESS_CHAT: string[] = [
   '别急，先拿着用。｜（他没问你到底干什么用。）',
   '我给你转。｜（他转得很快。快得像是怕自己下一秒想明白。）',
-  '（他把话费单看了两遍，还是转了。）省着点花，丫头。',
-  '（转账备注写着：吃饭要紧。就五个字。）',
+  '（他看了眼余额，还是转了。）省着点花，丫头。',
+  '（转账备注写着：吃饭要紧。就四个字。）',
 ];
 
 /** 通用追问选项文案（成/败后的一轮收尾——复用 ChainOption 形状，
@@ -85,8 +85,8 @@ export interface DirectAskFollowup {
 /** 成功后的追问：谢他（养关系）vs "下次再问你"（把他当提款机明说）。 */
 export const DIRECT_ASK_FOLLOWUP_SUCCESS: DirectAskFollowup = {
   texts: {
-    mild: '谢谢哥。等我缓过来请你吃饭。',
-    pushy: '哥你人真好。｜下次我再有急事，还找你。',
+    mild: '谢谢您。等我缓过来，请您吃饭。',
+    pushy: '您人真好。｜下次我再有急事，还找您。',
   },
   mildReplies: [
     '傻丫头，谢什么。｜吃饭就不用了，你好好的比什么都强。',
@@ -103,7 +103,7 @@ export const DIRECT_ASK_FOLLOWUP_SUCCESS: DirectAskFollowup = {
 /** 失败后的追问：体面退场（留余地）vs 软磨硬泡（警惕大涨）。 */
 export const DIRECT_ASK_FOLLOWUP_FAIL: DirectAskFollowup = {
   texts: {
-    mild: '没事哥，我就是随口一说。你别有负担。',
+    mild: '没事，我就是随口一说。您别有负担。',
     pushy: '真的就 {n}，我给你打欠条还不行吗……',
   },
   mildReplies: [
@@ -121,6 +121,6 @@ export const DIRECT_ASK_FOLLOWUP_FAIL: DirectAskFollowup = {
 /** 理由与金额的适配提示（UI 显示，帮玩家理解档位语义）。 */
 export function reasonForAmount(reason: DirectAskReason, amount: number): string {
   const n = amount >= 800 ? '大钱' : amount >= 200 ? '中钱' : '小钱';
-  const fit = reason.weight >= 0.45 && amount >= 200 ? '理由撑得起这个数' : reason.weight >= 0.45 || amount < 200 ? '说得过去' : '小钱配软话，别用狠话';
+  const fit = reason.weight >= 0.45 && amount >= 200 ? '理由撑得起这个数' : reason.weight >= 0.45 || amount < 200 ? '说得过去' : '这个数，这句软话撑不起来';
   return `${n} · ${fit}`;
 }

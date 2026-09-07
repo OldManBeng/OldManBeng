@@ -208,6 +208,8 @@ export const LIFE_EVENTS: LifeEventDef[] = [
   {
     id: 'zhou_exhibition', day: 18, targetId: 'zhou_teacher',
     text: '书法班秋季汇展的通知贴出来了。周老师的名字排在教员栏最后一个。他数了两遍，跟谁都没说。',
+    costText: '书法班秋季汇展贴出通知了。教员栏没有周老师的名字——他早就退了班，说不来就不来了。汇展那天，他自己在家临了一整天的帖。',
+    costFrom: 300,
   },
   {
     id: 'zhou_clock', day: 19, targetId: 'zhou_teacher',
@@ -354,7 +356,7 @@ export const WORLD_BEATS: WorldBeat[] = [
   {
     id: 'beat_half_ledger', day: 20,
     title: '半程账单',
-    body: '过半了。{packets} 个红包，{earned} 元。你妈的利息是这个数的一半。你不敢算另一本账：这个月你叫了多少声"哥哥"。',
+    body: '过半了。{packets} 个红包，{earned} 元。那笔网贷的利息，是这个数的一半。你不敢算另一本账：这个月你叫了多少声"哥哥"。',
     options: [
       {
         text: '算了算另一本账',

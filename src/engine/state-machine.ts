@@ -330,7 +330,9 @@ export function isMorningTarget(def: Target): boolean {
 
 /** A target is reachable during the current dayPhase by his active hour. */
 export function targetAwake(def: Target, dayPhase: GameState['dayPhase']): boolean {
-  if (dayPhase === 'night' || dayPhase === 'chat') return def.activeHour >= 20 || def.activeHour < 6;
+  // v4.2 修：夜晚窗口放宽到 ≥14 点——棋摊（15-17）/广场舞（18-19）本来就是
+  // 傍晚开始的场景，数据是对的，窗口没接住。原先 ≥20 让这批库人物永远"睡下了"。
+  if (dayPhase === 'night' || dayPhase === 'chat') return def.activeHour >= 14 || def.activeHour < 6;
   // morning: 上午在线的老头（activeHour 6-12）
   return isMorningTarget(def);
 }
