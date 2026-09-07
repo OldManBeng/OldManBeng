@@ -28,8 +28,15 @@ import {
 import { SHOP_ITEMS } from '../data/items';
 import { DAILY_GATHAS, TRIGGER_GATHAS } from '../data/gathas';
 import {
-  LIFE_BY_TARGET, LIFE_DAILY_CAP, ASK_COST_NARRATOR, ASK_COST_NARRATOR_GENERIC,
+  LIFE_BY_TARGET, LIFE_DAILY_CAP, ASK_COST_NARRATOR_GENERIC,
+  WORLD_BEAT_BY_DAY, interpolateBeat,
 } from '../data/life-events';
+import { LIBRARY_OPENERS, LIBRARY_INCOMING } from '../data/library-openers';
+import {
+  packetTierOf, PACKET_SOURCE_SUBTITLE, PACKET_SOURCE_GENERIC,
+  ASK_COST_NARRATOR_V2, GIFT_NARRATOR, GIFT_NARRATOR_GENERIC,
+  MONEY_HOME_TAGS, MONEY_HOME_GENERIC_TAG,
+} from '../data/cost-narratives';
 import {
   START_MONEY, MONTHLY_GOAL, DAYS_LIMIT, ENERGY_MAX, CHAT_SESSION_COST,
   TRUST_DECAY_PER_DAY, WARINESS_DECAY_PER_DAY, SILENT_TRUST_PENALTY,
@@ -43,6 +50,7 @@ import {
   INCOMING_DAILY_CAP, SELFIE_LINGER_DAYS, ARCHIVE_CAP, NUMBNESS_DAILY_CAP, NUMBNESS_REST_RECOVERY,
   PERSONA_NEED_MATCH, PERSONA_SESSION_TRUST, PERSONA_SESSION_WARINESS,
   RECALL_CHANCE, GREETING_CLOSE_TRUST, GREETING_FAR_TRUST, PERSONA_GREET_TRUST,
+  ENERGY_EARLY_DAYS, ENERGY_EARLY_FACTOR,
 } from '../data/constants';
 
 export const TARGET_MAP: Record<string, Target> = Object.fromEntries(TARGETS.map((t) => [t.id, t]));
@@ -342,6 +350,8 @@ export function createInitialState(): GameState {
     unseenMoments: 0,
     inventory: {},
     briefingDay: 0,
+    pendingBeat: '',
+    beatResolved: false,
   };
 }
 
@@ -454,20 +464,22 @@ function runMorning(state: GameState) {
     // 断联天数：拉黑的不算（结束了）；没被聊过的才积累。
     if (!t.blocked) t.daysSilent = silentYesterday ? Math.min(99, t.daysSilent + 1) : 0;
     if (t.blocked) continue;
-    // He sometimes gives without being asked — the money that costs the most.
-    if (!t.ended && t.trust >= 60 && t.stage !== 'stranger' && rng.chance(0.08)) {
-      let gift = rng.int(100, 200);
-      if (def?.traits.includes('generous')) gift = Math.round(gift * 1.4);
-      t.totalReceived += gift;
-      t.timesPaid += 1;
-      t.daysSincePaid = 0;
-      state.money += gift;
-      state.stats.totalEarned += gift;
-      state.stats.redPacketsReceived += 1;
-      state.stats.biggestPacket = Math.max(state.stats.biggestPacket, gift);
-      state.ledger.push({ day: state.day, amount: gift, note: `${def?.name ?? '他'} 主动转的（没人开口要过）`, kind: 'gift' });
-      log(state, 'packet', `早上醒来，${def?.name ?? '他'} 转了你 ${gift} 元。没有人开口要过这笔钱。`);
-    }
+      // He sometimes gives without being asked — the money that costs the most.
+      if (!t.ended && t.trust >= 60 && t.stage !== 'stranger' && rng.chance(0.08)) {
+        let gift = rng.int(100, 200);
+        if (def?.traits.includes('generous')) gift = Math.round(gift * 1.4);
+        t.totalReceived += gift;
+        t.timesPaid += 1;
+        t.daysSincePaid = 0;
+        state.money += gift;
+        state.stats.totalEarned += gift;
+        state.stats.redPacketsReceived += 1;
+        state.stats.biggestPacket = Math.max(state.stats.biggestPacket, gift);
+        state.ledger.push({ day: state.day, amount: gift, note: `${def?.name ?? '他'} 主动转的（没人开口要过）`, kind: 'gift' });
+        // v4.1 主动转账旁白：没人开口要过的钱，是最贵的——他的日子当时是什么时候。
+        const giftPool = (def && GIFT_NARRATOR[def.id]) || GIFT_NARRATOR_GENERIC;
+        log(state, 'packet', `早上醒来，${def?.name ?? '他'} 转了你 ${gift} 元。没有人开口要过这笔钱。`, giftPool[state.day % giftPool.length]);
+      }
     // Terminal endings by story drift.
     if (t.trust <= 0 && t.stage !== 'stranger' && !t.ended) {
       t.ended = 'walked_away';
@@ -537,16 +549,24 @@ function runMorning(state: GameState) {
     if (rng.chance(p)) {
       const script = scriptFor(t.targetId);
       const inc = script.incoming;
-      let reason: 'selfie' | 'missed_you' | 'wallet_open' = 'missed_you';
+      let reason: 'selfie' | 'missed_you' | 'wallet_open' | 'his_life' = 'missed_you';
       let pool = inc?.missed_you ?? ['（他发来一条消息。）'];
       if (selfieFresh && inc?.on_selfie?.length) { reason = 'selfie'; pool = inc.on_selfie; }
       else if (t.daysSincePaid >= 5 && inc?.wallet_open?.length) { reason = 'wallet_open'; pool = inc.wallet_open; }
+      // v4.1 库人物个人 incoming：他第一次来找你时说的话是他的，不是原型的——
+      // 从 bio 长出来（雷子的四十块屏幕/老翟的北门收音机），五个人不再共用一句话。
+      const rec = t.recentIncoming ?? (t.recentIncoming = []);
+      const personalLine = LIBRARY_INCOMING[t.targetId];
+      const usePersonal = !!personalLine && t.lastChatDay === 0 && !rec.includes(personalLine);
+      if (usePersonal && personalLine) rec.push(personalLine);
       state.incoming.push({
         targetId: t.targetId,
         day: state.day,
         reason,
         // v3.2：进场白也跨场去重——同一句"就是想你了"不连着来。
-        opener: fillProfileVars(pickFreshLine(rng, pool, '（他发来一条消息。）', t.recentIncoming ?? (t.recentIncoming = [])), state),
+        opener: fillProfileVars(usePersonal && personalLine
+          ? personalLine
+          : pickFreshLine(rng, pool, '（他发来一条消息。）', rec), state),
         stamp: nightStamp(def.activeHour, rng.int(0, 25)),
       });
       t.pingedToday = true;
@@ -637,6 +657,20 @@ function runMorning(state: GameState) {
     }
   }
 
+  // v4.1 节奏日（Day 5/10/15/20/25）：必现的世界节点——第 4-30 天的"停下来
+  // 看自己"。带决策卡的（options）落 pendingBeat，等 resolve_beat；纯压迫文案
+  // （电梯镜子）直接落日志。麻木门槛不到，镜子这面她看不见。
+  {
+    const beat = WORLD_BEAT_BY_DAY[state.day];
+    if (beat && (beat.minNumbness ?? 0) <= state.numbness) {
+      const body = interpolateBeat(beat.body, state.stats.totalEarned, state.stats.redPacketsReceived, Math.max(0, state.goal - state.stats.totalEarned));
+      log(state, 'beat', `${beat.title}——${body}`);
+      if (beat.options?.length && !state.beatResolved) {
+        state.pendingBeat = beat.id;
+      }
+    }
+  }
+
   // v2.3 老头发圈：每天早上随机一个认识的人发条自己的动态——
   // 你可以点赞（+1 信任）或评论（走心，+2）。评论是门手艺，也是门生意。
   // v4.0：今天已经发过人生线的老头不再重复发圈。
@@ -677,7 +711,10 @@ function runMorning(state: GameState) {
   }
 
   // v2.3：精力回填跟随上限（网红套餐 16→24 后，24 才是"满"）。
-  state.energy = state.energyMax;
+  // v4.1（P1-4）早期疲劳：第 1-3 天回填 ×0.75——刚起步时体力最薄，Day 4 恢复全量。
+  state.energy = state.day <= ENERGY_EARLY_DAYS
+    ? Math.round(state.energyMax * ENERGY_EARLY_FACTOR)
+    : state.energyMax;
 }
 
 /** Score the ending from run shape.
@@ -1021,6 +1058,8 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       // 一个人一天只聊一场：重复刷同一个老头没有额外收益——
       // 多线经营是这门生意的本质，也是风险的来源。
       if (t.lastChatDay === s.day) return s;
+      // v4.1：捕获"从未聊过"——lastChatDay 赋值后就再也读不到了。
+      const firstEverChat = t.lastChatDay === 0;
       t.lastChatDay = s.day;
       s.energy -= chatCost(s);
       s.dayPhase = 'chat';
@@ -1042,6 +1081,14 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       transcript.push({ speaker: 'system' as const, text: `和 ${def.name} 的${phaseLabel}对话`, stamp: nightStamp(def.activeHour, 0) });
       // 近 3 条开场白原文去重（问候/警示/断联共用一个"最近说过"列表，谁说过谁让路）。
       const recent = t.recentGreetings ?? (t.recentGreetings = []);
+      // v4.1 库人物个人开场白：第一次聊天必说自己的话（从 bio 长出来）——
+      // 五个保安不再说一模一样的话。播完进原型组。
+      const personalOpeners = LIBRARY_OPENERS[t.targetId];
+      if (firstEverChat && personalOpeners?.length) {
+        const line = personalOpeners[t.discoveredDay % personalOpeners.length] ?? personalOpeners[0];
+        recent.push(line);
+        pushBubbles(transcript, 'target', fillProfileVars(line, s), nightStamp(def.activeHour, 1));
+      } else
       // v3.2 距离层：信任不足时开场白走 greeting_far——客气、试探、没称呼、目的性弱。
       if (t.trust < GREETING_FAR_TRUST && lines.greeting_far?.length) {
         pushBubbles(transcript, 'target', fillProfileVars(pickFreshLine(rng, lines.greeting_far, '（他来了。）', recent), s), nightStamp(def.activeHour, 1));
@@ -1155,15 +1202,26 @@ export function dispatch(state: GameState, action: GameAction): GameState {
           s.ledger.push({ day: s.day, amount: result.amount, note: `${def.name} 的红包（${result.tierLabel}）`, kind: 'packet' });
           s.chat.transcript.push({ speaker: 'system' as const, label: `红包 +${result.amount} 元`, text: `（${result.tierLabel}）`, stamp: nightStamp(def.activeHour, 14) });
           if (result.line) pushBubbles(s.chat.transcript, 'target', result.line, nightStamp(def.activeHour, 15));
-          // v4.0 代价呈现层：要到钱的那一刻，插进她心里的一帧——用的全是他
+          // v4.1 红包来源字幕：到账即字幕——这笔钱在他的世界里是什么钱。
+          // （他的世界：夜班多跑的单/复查的单子/车库的烟钱。不耗 RNG，按天轮换。）
+          {
+            const tier = packetTierOf(result.amount);
+            const pool = PACKET_SOURCE_SUBTITLE[def.id]?.[tier] ?? PACKET_SOURCE_GENERIC[tier];
+            s.chat.transcript.push({
+              speaker: 'target' as const,
+              text: pool[s.day % pool.length],
+              stamp: nightStamp(def.activeHour, 16),
+            });
+          }
+          // v4.0/4.1 代价呈现层：要到钱的那一刻，插进她心里的一帧——用的全是他
           // 人生线里的事（手头紧/退休金/老婆查账/包夜钱/机票钱）。按天轮换、
           // 不耗 RNG。第 8 天起才出现：代价感是随着月份深入才浮上来的。
           if (s.day >= 8) {
-            const pool = ASK_COST_NARRATOR[def.id] ?? ASK_COST_NARRATOR_GENERIC;
+            const pool = ASK_COST_NARRATOR_V2[def.id] ?? ASK_COST_NARRATOR_GENERIC;
             s.chat.transcript.push({
               speaker: 'target' as const,
               text: pool[(s.day - 8) % pool.length],
-              stamp: nightStamp(def.activeHour, 16),
+              stamp: nightStamp(def.activeHour, 17),
             });
           }
           log(s, 'packet', `${def.name} 的红包：${result.amount} 元`);
@@ -1220,11 +1278,32 @@ export function dispatch(state: GameState, action: GameAction): GameState {
     case 'sleep': {
       s.dayPhase = 'morning';
       s.todayPlan = '';
+      // v4.1 收工账：今天进账的每一笔，长在谁的哪件事上——睡前一行。
+      {
+        const todaysIn = s.ledger.filter((l) => l.day === s.day && (l.kind === 'packet' || l.kind === 'gift'));
+        if (todaysIn.length) {
+          const byTarget = new Map<string, number>();
+          for (const l of todaysIn) {
+            const nm = l.note.split(' ')[0];
+            if (!nm) continue;
+            byTarget.set(nm, (byTarget.get(nm) ?? 0) + l.amount);
+          }
+          const names = [...byTarget.entries()].map(([n, amt]) => {
+            const tdef = ALL_TARGETS.find((x) => x.name === n);
+            const tag = (tdef && MONEY_HOME_TAGS[tdef.id]) || MONEY_HOME_GENERIC_TAG;
+            return `${n}：${amt}（${tag}）`;
+          });
+          log(s, 'packet', `收工账——${names.join('；')}。今天进账的钱，在他们的账本上各有名字。`);
+        }
+      }
       // v2.0：一晚没聊（0 场对话）→ 麻木自然缓解一点。表演的伤，休息能缓，但缓得慢。
       if (s.targets.every((t) => t.lastChatDay !== s.day)) {
         s.numbness = clamp(s.numbness - NUMBNESS_REST_RECOVERY, 0, 100);
       }
       s.numbnessToday = 0;
+      // v4.1 节奏日决策只能选一次：过夜即落锤（拖过今天 = 没选，机会过去）。
+      s.pendingBeat = '';
+      s.beatResolved = false;
       s.day += 1;
       if (s.day > s.daysLimit) {
         s.phase = 'ended';
@@ -1235,6 +1314,28 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       log(s, 'day', `第 ${s.day} 天。还差 ${Math.max(0, s.goal - s.stats.totalEarned)} 元。风险 ${Math.round(s.riskLevel)}%。`);
       // v3.1：新的一天——先弹简报（账单/事件/晨钟），确认后再进入计划列表。
       s.briefingDay = s.day;
+      return s;
+    }
+
+    case 'resolve_beat': {
+      // v4.1 节奏日决策：只能选一次，过夜即落锤。
+      if (!s.pendingBeat || s.beatResolved) return s;
+      const beat = WORLD_BEAT_BY_DAY[s.day];
+      if (!beat || beat.id !== s.pendingBeat) return s;
+      const opt = beat.options?.[action.optionIndex];
+      if (!opt) return s;
+      s.beatResolved = true;
+      s.pendingBeat = '';
+      if (opt.money) {
+        s.money += opt.money;
+        s.ledger.push({ day: s.day, amount: opt.money, note: beat.title, kind: 'event' });
+      }
+      if (opt.conscience) s.conscience = clamp(s.conscience + opt.conscience, 0, 100);
+      if (opt.numbness) s.numbness = clamp(s.numbness + opt.numbness, 0, 100);
+      if (opt.risk) s.riskLevel = clamp(s.riskLevel + opt.risk, 0, 100);
+      if (opt.energy) s.energy = clamp(s.energy + opt.energy, 0, s.energyMax);
+      if (opt.flag) s.flags[opt.flag] = true;
+      log(s, 'beat', opt.after);
       return s;
     }
 

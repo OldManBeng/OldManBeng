@@ -12,6 +12,11 @@ export const MONTHLY_GOAL = 1500;
 /** One run lasts this many days; retire or keep grinding to the wire. */
 export const DAYS_LIMIT = 30;
 
+/** v4.1（P1-4）早期疲劳：第 1-3 天精力回填打折——刚起步时体力最薄，
+ *  Day 4 恢复全量。不动 energyMax（网红套餐的 24 是永久资产）。 */
+export const ENERGY_EARLY_DAYS = 3;
+export const ENERGY_EARLY_FACTOR = 0.75;
+
 
 
 /** Trust/wariness drift, GL2-style per-turn decay.

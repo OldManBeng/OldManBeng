@@ -8,6 +8,7 @@ import { INDUSTRY_COURSE_COST, CHAT_SESSION_COST } from '../data/constants';
 import { DAILY_PLANS } from '../data/plans';
 import { SELFIE_META, MOMENT_PLAYER_COMMENTS } from '../data/moments';
 import { SHOP_ITEMS } from '../data/items';
+import { WORLD_BEAT_BY_DAY, interpolateBeat } from '../data/life-events';
 import type { PlayerProfile } from '../types/game';
 
 /** 打字机入场：每个气泡先露一个字，再逐字打完（收到新气泡时也走这个）。 */
@@ -113,6 +114,16 @@ function DayBriefingModal() {
   for (const l of entries) {
     if (l.kind === 'life') rows.push({ ico: '🕰', label: '他的今天', text: l.details });
   }
+  // v4.1 节奏日：Day 5/10/15/20/25 必现的世界节点——正文走 beat 行（⏳），
+  // 有决策的（妈的电话/群里出事/半程账单）紧跟着出决策卡。
+  const beatLog = entries.find((l) => l.kind === 'beat');
+  if (beatLog) {
+    rows.push({ ico: '⏳', label: '这个月', text: beatLog.details.replace(/^[^——]+——/, '') });
+  }
+  const beatDef = beatLog ? WORLD_BEAT_BY_DAY[day] : undefined;
+  const beatBody = beatDef
+    ? interpolateBeat(beatDef.body, state.stats.totalEarned, state.stats.redPacketsReceived, Math.max(0, state.goal - state.stats.totalEarned))
+    : '';
   const step = 150;
   const delay = (i: number) => `${300 + i * step}ms`;
   let rowIdx = 0;
@@ -141,6 +152,19 @@ function DayBriefingModal() {
             </div>
           );
         })}
+        {beatDef && beatDef.options?.length && state.pendingBeat === beatDef.id && (
+          <div className="beat-card" style={{ animationDelay: delay(rowIdx) }}>
+            <div className="beat-title">{beatDef.title}</div>
+            <div className="beat-body">{beatBody}</div>
+            <div className="beat-options">
+              {beatDef.options.map((opt, i) => (
+                <button key={i} className="btn small beat-opt" onClick={() => store.dispatch({ type: 'resolve_beat', optionIndex: i })}>
+                  {opt.text}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         {verse && (
           <div className="briefing-row briefing-gatha" style={{ animationDelay: delay(rowIdx) }}>
             <div className="gatha-verse">{verse}</div>
@@ -212,7 +236,7 @@ export function MainScreen() {
           <span className="goal">还差 {formatMoney(Math.max(0, state.goal - state.stats.totalEarned))}</span>
         </div>
       </header>
-      <div className={`risk-strip ${risk.cls}`}>
+      <div className={`risk-strip ${risk.cls}`} title="多线经营的风险——活跃的「哥哥」越多，他们越容易在你的评论区看见彼此。">
         <span>朋友圈</span>
         <span className="risk-meter"><i /></span>
         <span>{risk.text}（{Math.round(state.riskLevel)}%）</span>
@@ -335,6 +359,25 @@ function TodayPanel({ phaseLabel }: { phaseLabel: string }) {
       {morning && (
         <>
           <PlanPanel />
+          {/* v4.1 节奏日决策卡：简报点掉了还能在"今天"面板选——过夜落锤。 */}
+          {(() => {
+            const bd = WORLD_BEAT_BY_DAY[state.day];
+            if (!bd || !bd.options?.length || state.pendingBeat !== bd.id) return null;
+            const body = interpolateBeat(bd.body, state.stats.totalEarned, state.stats.redPacketsReceived, Math.max(0, state.goal - state.stats.totalEarned));
+            return (
+              <div className="beat-card inline">
+                <div className="beat-title">{bd.title}</div>
+                <div className="beat-body">{body}</div>
+                <div className="beat-options">
+                  {bd.options.map((opt, i) => (
+                    <button key={i} className="btn small beat-opt" onClick={() => store.dispatch({ type: 'resolve_beat', optionIndex: i })}>
+                      {opt.text}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
           <div className="event-feed">
             {state.log.slice(-6).map((l, i) => (
               <div key={i} className={`log-entry log-${l.kind}`}>

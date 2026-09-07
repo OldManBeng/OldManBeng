@@ -185,6 +185,90 @@ export const LIFE_EVENTS: LifeEventDef[] = [
     id: 'chen_christmas', day: 26, targetId: 'chen_gong',
     text: '德国的儿子说，圣诞节也不回来了。第三年。陈工回："忙就好，忙说明有事业。"发完他去擦了台钳。',
   },
+
+  // ---- v4.1 人生线第二卷：中段加密（每个老头的线从 4-7 站加深到 6-9 站）----
+  {
+    id: 'li_shift_week', day: 7, targetId: 'lao_li',
+    text: '老李这周跑了六天连班。车队群里有人说他"上岁数了别硬撑"，他退了群——十分钟后又加了回来。退群那一下，是他这十年里最硬气的一回。',
+  },
+  {
+    id: 'li_daughter_voice', day: 12, targetId: 'lao_li',
+    text: '闺女发来一条三秒的语音："爸，钱收到了。"他听了十七遍。三秒。他这个月跑了六天连班换来的，是三秒。',
+    costText: '闺女发来一条三秒的语音："爸，钱收到了。"他听了十七遍。这三秒里的钱，有一笔本来是他留着修腰的。',
+    costFrom: 300,
+  },
+  {
+    id: 'li_waist_film', day: 20, targetId: 'lao_li',
+    text: '老李去医院拿了腰的片子。医生说再这样坐下去，以后就不用修了。他把片子收进了副驾的储物格——那格子里，全是闺女的东西。',
+  },
+  {
+    id: 'li_month_end', day: 30, targetId: 'lao_li',
+    text: '月底最后一天。老李把车洗了，里外都洗。他说要干干净净地进下个月——像是要去见什么人。',
+  },
+  {
+    id: 'zhou_exhibition', day: 18, targetId: 'zhou_teacher',
+    text: '书法班秋季汇展的通知贴出来了。周老师的名字排在教员栏最后一个。他数了两遍，跟谁都没说。',
+  },
+  {
+    id: 'zhou_clock', day: 19, targetId: 'zhou_teacher',
+    text: '周老师把阳台的挂钟拆开修好了——其实没坏，他就是想拆点什么。装回去的时候，他把它调慢了两分钟。',
+  },
+  {
+    id: 'wang_support_retracted', day: 16, targetId: 'boss_wang',
+    text: '建材城商户群里在传"整体升级改造"的评估方案。王总在群里发了条"支持"，凌晨一点撤回了。',
+  },
+  {
+    id: 'wang_class_group', day: 21, targetId: 'boss_wang',
+    text: '王总今晚在车里坐到两点。他给儿子的班级群发了个"收到"——那是他今天说过的唯一一句话。',
+  },
+  {
+    id: 'wang_stocktake', day: 29, targetId: 'boss_wang',
+    text: '月底盘货。王总蹲在卷帘门里算了很久，算完他把计算器扣在货箱上，像扣了一张牌。',
+    costText: '月底盘货。王总蹲在卷帘门里算了很久。有两栏数字对不上——哪两栏，他心里清楚，账本也清楚。',
+    costFrom: 500,
+  },
+  {
+    id: 'hao_cat_spill', day: 22, targetId: 'hao_ge',
+    text: '"键盘"（那只橘猫）今早把一杯奶茶碰翻在主板上。阿豪没生气，他把猫抱起来举了一会儿——店里就它不会走。',
+  },
+  {
+    id: 'hao_study_room', day: 27, targetId: 'hao_ge',
+    text: '网吧对面新开了家自习室，灯亮到后半夜。阿豪隔着马路看了一会儿，把"通宵特价"的牌子翻了个面。',
+  },
+  {
+    id: 'chen_tolerance', day: 13, targetId: 'chen_gong',
+    text: '陈工把手机支架第二版的公差从 ±0.1 调到了 ±0.02。没人会量这个。他知道没人会量。',
+  },
+  {
+    id: 'chen_student_car', day: 14, targetId: 'chen_gong',
+    text: '当年带过的徒弟今天在朋友圈晒了新车，配文"感谢师傅当年不弃"。陈工看了很久，没点赞——他的赞停在了三年前那条。',
+  },
+  {
+    id: 'chen_handover_bag', day: 25, targetId: 'chen_gong',
+    text: '陈工今天没画图。他把图纸都收进了那个牛皮纸袋——袋子上写着"退休交接"，日期空着。',
+  },
+
+  // ---- v4.1 库人物人生线：他们也要过日子（5 个最有戏的）----
+  {
+    id: 'f8_son_card', day: 2, targetId: 'f8',
+    text: '儿子的钓鱼卡到期了，续费六百八。宁叔盯着短信看了一会儿，回了儿子一句"好，续"。他不会调漂，他续的是那个"坐一下午"。',
+  },
+  {
+    id: 'g5_hall_lights', day: 7, targetId: 'g5',
+    text: '商场四楼那家倒闭的火锅店，灯又亮了一夜。毕师傅巡逻路过给它关了——第二天它还亮着。他在巡查表上写：电路异常，已处理。其实没处理，它比他有主意。',
+  },
+  {
+    id: 'c8_second_talk', day: 11, targetId: 'c8',
+    text: '棋摊今天有人跟老雷搭话了——第二回。第一回是谁，他记着。他把这两句话都记在心里，跟下棋记谱一样记。',
+  },
+  {
+    id: 'd2_speaker_stairs', day: 24, targetId: 'd2',
+    text: '搬音响上五楼的时候，蒋叔在四楼半歇了一次。就一次。队里没人看见——他歇的那半层，窗帘正好好看。',
+  },
+  {
+    id: 'c4_grandson_call', day: 30, targetId: 'c4',
+    text: '孙子今天打来了视频电话，五分钟。孙老爷子把那盘"马走日"的教棋视频翻出来发过去。孙子那头说"爷爷我看看"——第四十一期，头一回有人说要看看。',
+  },
 ];
 
 /** 按 targetId 建索引（引擎 O(1) 查询）。 */
@@ -193,40 +277,118 @@ for (const ev of LIFE_EVENTS) {
   (LIFE_BY_TARGET[ev.targetId] ??= []).push(ev);
 }
 
-/**
- * v4.0 代价呈现层（评审 P0-4 路线 A）：开口要到钱的那一刻，她的内心反应。
- * 第 8 天起生效（代价感是随着月份深入才浮现的）；按天轮换，不耗 RNG。
- * 她看见的是他那边的事——男性玩家在这里看见的是：钱是从哪个人身上来的。
- */
-export const ASK_COST_NARRATOR: Record<string, string[]> = {
-  lao_li: [
-    '（他转账的这几秒，你想起他说过这个月手头有点紧。你把这个念头关掉了。）',
-    '（红包到账的提示音很短。他多跑的那些个夜班，听不见这声响。）',
-    '（他说"够不够？不够再说"。你数了一下余额，没数他这句话。）',
-  ],
-  zhou_teacher: [
-    '（他的退休金每月十号到账。你把这个日子记得比自己的生日清楚。）',
-    '（他写了一上午的字，才等来你这一句。红包里装的不是钱，是他今天仅有的回音。）',
-    '（他跟你说"放着也是放着"。他没说那是留着做什么的。）',
-  ],
-  boss_wang: [
-    '（备注又是"零花钱"。他老婆的账本上，今晚多了一行对不上的数。）',
-    '（车库那四十分钟，挣不来这个数。但他说：别回，让她看见。）',
-    '（他说"王总还行"。你回了个笑脸。今天说这四个字的，只有你一个人。）',
-  ],
-  hao_ge: [
-    '（38块的通宵包早面。这一笔，够他一百个包夜。你算过。）',
-    '（他打字还是那么快。快得像怕你等不及就走了。）',
-    '（他那个月的亏损是两千二。他给你的这笔，你算过能占几台机器的电费。）',
-  ],
-  chen_gong: [
-    '（他把给儿子攒的机票钱挪了一格。他没说。你装作不知道。）',
-    '（标题栏里那个"审核：陈"，今晚审的是他自己的钱包。）',
-    '（他这辈子公差不超过0.02毫米。给你的钱，他没量过。）',
-  ],
-};
+// ---------------------------------------------------------------------------
+// v4.1 节奏日（评审 P0-1 修复）：Day 5/10/15/20/25 的强置叙事节点 + 决策。
+// 与骰子事件的区别：必现、按日历、承载主题——第 4-30 天的"停下来看自己"。
+// ---------------------------------------------------------------------------
 
-/** 库目标（无人生线的偶遇老头）共用的代价旁白。 */
+/** 节奏日的决策选项——她在这一天必须选一次，两个选项都有代价。 */
+export interface BeatOption {
+  /** 按钮文案。 */
+  text: string;
+  /** 选完落日志的一行（她的选择之后，叙述视角）。 */
+  after: string;
+  money?: number;
+  conscience?: number;
+  numbness?: number;
+  risk?: number;
+  energy?: number;
+  flag?: string;
+}
+
+export interface WorldBeat {
+  id: string;
+  day: number;
+  title: string;
+  /** 正文（{earned}/{packets}/{gap} 由引擎按 state 插值）。 */
+  body: string;
+  /** 有 options 才出决策卡；没有就是纯压迫文案。 */
+  options?: BeatOption[];
+  /** 麻木门槛：numbness ≥ 才触发（麻木不到，她看不见镜子里的自己）。 */
+  minNumbness?: number;
+}
+
+export const WORLD_BEATS: WorldBeat[] = [
+  {
+    id: 'beat_mom_album', day: 5,
+    title: '妈的相册',
+    body: '妈妈发了条朋友圈：你小时候的照片，两岁，扎着歪辫子。配文只有两个字——"想你"。点赞的是你三个姨。',
+    options: [
+      {
+        text: '打个电话回去',
+        after: '电话里她说"你声音听着累"。你说不累。挂了以后你在楼梯间站了十分钟。这四十分钟，是这个月你最像自己的四十分钟。',
+        conscience: 10,
+      },
+      {
+        text: '回个笑脸，接着背话术',
+        after: '那张照片你看了三秒就锁了屏。你熟的话术里有八种回应"想你"的套路——没有一种用在这。',
+        conscience: -4,
+        numbness: 4,
+      },
+    ],
+  },
+  {
+    id: 'beat_group_exposed', day: 10,
+    title: '群里出事了',
+    body: '姐妹的群炸了——有人被挂了。受害人的女儿把聊天记录贴到了网上，头像是打码的，话术一条没码。你翻了翻：那些句式，跟你手机里的，是同一套。',
+    options: [
+      {
+        text: '这几天收着点',
+        after: '你把和每个人的聊天记录翻了一遍，删了几句最露骨的。删的时候你发现你在用他们的口吻检查自己——这手艺你太熟了。',
+        risk: -12,
+        numbness: 2,
+      },
+      {
+        text: '照常上号',
+        after: '被挂的那个，手法跟你一模一样。你把"可惜了"打完又删了——群里发这个的都会被记一笔。你回了句"稳住"。',
+        risk: 6,
+      },
+    ],
+  },
+  {
+    id: 'beat_mirror', day: 15,
+    title: '电梯里的镜子',
+    body: '电梯里的镜面，你跟里头那个人对了两秒。你没认出来——认出来了，是第一天的你。你伸手按了关门。',
+    minNumbness: 40,
+  },
+  {
+    id: 'beat_half_ledger', day: 20,
+    title: '半程账单',
+    body: '过半了。{packets} 个红包，{earned} 元。你妈的利息是这个数的一半。你不敢算另一本账：这个月你叫了多少声"哥哥"。',
+    options: [
+      {
+        text: '算了算另一本账',
+        after: '你翻了聊天记录，搜了"哥哥"。搜出来的数字你看了很久，没告诉任何人——包括现在。',
+        conscience: 6,
+      },
+      {
+        text: '别算了，还差得远',
+        after: '你把计算器关了。"还差得远"这四个字你一个月说了二十几遍——以前是对老头们说。这一次是说给你自己的。',
+        numbness: 5,
+      },
+    ],
+  },
+  {
+    id: 'beat_countdown', day: 25,
+    title: '最后五天',
+    body: '还剩五天。差 {gap} 元。够了，或者差远了——这个月的答案，五天后揭晓。他们那边没有人知道期限。',
+  },
+];
+
+/** 节奏日按日查表。 */
+export const WORLD_BEAT_BY_DAY: Record<number, WorldBeat> = {};
+for (const b of WORLD_BEATS) WORLD_BEAT_BY_DAY[b.day] = b;
+
+/** 正文插值：{earned} 总入账 / {packets} 红包笔数 / {gap} 距目标差额。 */
+export function interpolateBeat(text: string, earned: number, packets: number, gap: number): string {
+  return text
+    .replace(/\{earned\}/g, String(earned))
+    .replace(/\{packets\}/g, String(packets))
+    .replace(/\{gap\}/g, String(gap));
+}
+
+/** v4.0/4.1 代价呈现层：开口旁白已迁至 cost-narratives.ts 的 ASK_COST_NARRATOR_V2
+ *  （每人 6 条，覆盖人生线全节点）。此处仅留库目标（无专属人生线的偶遇老头）兜底。 */
 export const ASK_COST_NARRATOR_GENERIC: string[] = [
   '（到账了。这是这个月你听过的最顺耳的声响。）',
   '（你盯着余额看了两秒，退出去，开始下一个。）',

@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { createInitialState, dispatch } from '../state-machine';
 import { scriptFor } from '../../data/script-registry';
-import { LIFE_EVENTS, LIFE_DAYS, ASK_COST_NARRATOR, ASK_COST_NARRATOR_GENERIC } from '../../data/life-events';
+import { LIFE_EVENTS, LIFE_DAYS, WORLD_BEATS, ASK_COST_NARRATOR_GENERIC } from '../../data/life-events';
+import { ASK_COST_NARRATOR_V2 } from '../../data/cost-narratives';
 import type { GameState } from '../../types/game';
 
 /** 跳到指定天：从新局起连睡 N 晚（走完整 runMorning，不抄近路）。 */
@@ -112,23 +113,23 @@ describe('v4.0: 老头人生线——日历驱动的中期内容', () => {
     const s = askSession(501, 10);
     const texts = s.chat!.transcript.map((m) => m.text);
     // 红包成功 → 落一条 ASK_COST_NARRATOR（老李的池子，第 10 天 = 下标 2）。
-    const pool = ASK_COST_NARRATOR.lao_li;
+    const pool = ASK_COST_NARRATOR_V2.lao_li;
     const hit = texts.some((t) => pool.includes(t));
     expect(hit, `代价旁白未注入，气泡: ${texts.join(' / ')}`).toBe(true);
   });
 
   it('第 8 天之前要到钱：没有代价旁白（代价感是后来才浮上来的）', () => {
     const s = askSession(521, 6);
-    const allNarr = [...ASK_COST_NARRATOR.lao_li, ...ASK_COST_NARRATOR_GENERIC];
+    const allNarr = [...ASK_COST_NARRATOR_V2.lao_li, ...ASK_COST_NARRATOR_GENERIC];
     const texts = s.chat!.transcript.map((m) => m.text);
     expect(texts.some((t) => allNarr.includes(t))).toBe(false);
   });
 
-  it('没人找你也不影响他的月历：30 天睡穿，每天最多 2 条 life 行、总共 28 个节点全部落地', () => {
+  it('没人找你也不影响他的月历：30 天睡穿，主线 41 个节点全部落地，每天最多 2 条 life 行', () => {
     const s = toDay(601, 30);
     const lifeLogs = s.log.filter((l) => l.kind === 'life');
-    // 30 天里：周老师 7 + 老李 6 + 王总 5 + 阿豪 5 + 陈工 4 = 27 个节点（Day 30 无节点）。
-    expect(lifeLogs.length).toBe(27);
+    // 30 天里：周老师 9 + 老李 10 + 王总 8 + 阿豪 7 + 陈工 7 = 41（库人物未偶遇不触发）。
+    expect(lifeLogs.length).toBe(41);
     // 任一天的 life 行数不超过简报上限。
     const byDay = new Map<number, number>();
     for (const l of lifeLogs) byDay.set(l.day, (byDay.get(l.day) ?? 0) + 1);

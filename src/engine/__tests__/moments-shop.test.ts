@@ -235,7 +235,7 @@ describe('v2.3: 钱包商店', () => {
     expect(s.inventory.lipstick).toBeUndefined(); // 用完删掉
   });
 
-  it('网红套餐：energyMax 16→24，次日回填 24；风险 +10', () => {
+  it('网红套餐：energyMax 16→24，第 4 天起回填 24；风险 +10', () => {
     let s = fresh(36);
     s.money = 2000;
     const risk0 = s.riskLevel;
@@ -243,8 +243,14 @@ describe('v2.3: 钱包商店', () => {
     expect(s.energyMax).toBe(24);
     expect(s.riskLevel).toBe(risk0 + 10);
     s.energy = 0;
+    // v4.1 早期疲劳：第 1-3 天回填 ×0.75（24→18），第 4 天全量 24。
     s = dispatch(s, { type: 'sleep' });
-    expect(s.energy).toBe(24); // 回填跟随上限，不再写死 16
+    expect(s.energy).toBe(18);
+    s.energy = 0;
+    s = dispatch(s, { type: 'sleep' });
+    s = dispatch(s, { type: 'sleep' });
+    s = dispatch(s, { type: 'sleep' });
+    expect(s.energy).toBe(24);
   });
 
   it('充电宝：本局每场对话精力 4 → 3', () => {

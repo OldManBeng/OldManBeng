@@ -23,7 +23,8 @@ export type EventKind =
   | 'target_ending'
   | 'ending'
   | 'flag'
-  | 'life';
+  | 'life'
+  | 'beat';
 
 export interface EventLogEntry {
   day: number;
@@ -176,6 +177,9 @@ export interface GameState {
   /** v3.1 待展示的"新的一天"简报（= 那一天的天数；0 = 无）。弹框确认后清零，
    *  内容从当天 log（bill/event/gatha 条目）组装，不在 state 里重复存文案。 */
   briefingDay: number;
+  /** v4.1 节奏日：今天的 beat id（'' = 无）+ 是否已决策。决策卡与简报同屏。 */
+  pendingBeat: string;
+  beatResolved: boolean;
 }
 
 export type GameAction =
@@ -201,4 +205,6 @@ export type GameAction =
   /** v2.3 钱包商店购买。钱不够/唯一道具已购 → no-op。 */
   | { type: 'buy_item'; itemId: string }
   /** v3.1 关闭"新的一天"简报弹框（纯 UI 确认，无结算）。 */
-  | { type: 'dismiss_briefing' };
+  | { type: 'dismiss_briefing' }
+  /** v4.1 节奏日决策——今天的 beat 选了哪个选项（只能选一次）。 */
+  | { type: 'resolve_beat'; optionIndex: number };

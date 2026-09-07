@@ -32,6 +32,8 @@ function discover(s: GameState, targetId: string): GameState {
 describe('v2.0: 精力经济 —— 每晚 3-4 场', () => {
   it('满精力可以连开 4 场对话，第 5 场拒绝', () => {
     let s = fresh(11);
+    // v4.1 早期疲劳：第 1-3 天回填 ×0.75（16→12，3 场）。睡到第 4 天测全量契约。
+    while (s.day < 4) s = dispatch(s, { type: 'sleep' });
     s = dispatch(s, { type: 'enter_night' });
     // 解锁四个深夜在线的老头（库里 5 个保安都是深夜在线的 night_guard）。
     const guards = ALL_TARGETS.filter((d) => d.archetype === 'night_guard' && LIBRARY_IDS.includes(d.id)).slice(0, 4);
@@ -88,7 +90,8 @@ describe('v2.0: 计划 → 偶遇解锁通讯录', () => {
     const snap = JSON.stringify(s);
     s = dispatch(s, { type: 'choose_plan', planId: 'plan_gym' });
     expect(JSON.stringify(s)).toBe(snap); // 已选过 → no-op
-    expect(energyAfterPlan).toBe(ENERGY_MAX); // 宅家不花精力
+    // v4.1 早期疲劳：第 1 天回填 12（=16×0.75），宅家不花精力 → 还是 12。
+    expect(energyAfterPlan).toBe(Math.round(ENERGY_MAX * 0.75));
     s = dispatch(s, { type: 'enter_night' });
     expect(s.dayPhase).toBe('night');
   });

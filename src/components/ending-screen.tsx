@@ -3,6 +3,7 @@ import { ENDINGS } from '../data/endings';
 import { formatMoney } from '../utils/format';
 import { playEnding } from '../utils/sound';
 import { TARGET_MAP, PERSONA_MAP } from '../engine/state-machine';
+import { OldManAvatar } from './character-art';
 import { PERSONA_EPILOGUE } from '../data/personas';
 import { ENDING_EPIGRAPHS, TRIGGER_GATHAS } from '../data/gathas';
 import { GathaBlock } from './gatha-block';
@@ -113,6 +114,37 @@ export function EndingScreen() {
       </div>
 
       <div className="target-epilogue">
+        {/* v4.1 结局归档：五个人的最后一行账——头像 × 总转账 × 状态（P1-2）。 */}
+        <h3>五个人的最后一行账</h3>
+        <div className="final-roster">
+          {state.targets
+            .filter((t) => t.discoveredDay > 0 && TARGET_MAP[t.targetId])
+            .map((t) => {
+              const def = TARGET_MAP[t.targetId];
+              const status = t.blocked
+                ? '把你删了'
+                : t.totalReceived >= 1000
+                  ? '掏空了'
+                  : t.totalReceived > 0
+                    ? '还在等你上线'
+                    : t.trust >= 60
+                      ? '一分钱没给过——他在等的不是这个'
+                      : '刚认识';
+              return (
+                <div key={t.targetId} className="final-roster-row">
+                  <OldManAvatar target={def} state={t} size={36} />
+                  <div className="final-roster-main">
+                    <strong>{def.name}</strong>
+                    <span className={`final-status ${t.blocked ? 'gone' : ''}`}>{status}</span>
+                  </div>
+                  <div className="final-roster-num">
+                    <strong>{t.totalReceived > 0 ? formatMoney(t.totalReceived) : '—'}</strong>
+                    <span>{t.timesPaid > 0 ? `${t.timesPaid} 笔` : '0 笔'}</span>
+                  </div>
+                </div>
+              );
+            })}
+        </div>
         <h3>他们后来</h3>
         {state.targets.map((t) => {
           const def = TARGET_MAP[t.targetId];
