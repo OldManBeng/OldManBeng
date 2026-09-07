@@ -28,45 +28,66 @@ function nightChat(s: GameState, targetId: string): GameState {
 
 describe('v3.0: 人设专属剧情节点（onlyPersona 门控）', () => {
   it('知心姐姐走到老李的人设专属节点；御姐走不到（落回闲聊组）', () => {
-    // 知心姐姐：主线吃完后触发 c_li_wise
-    let s = chainDone(fresh(21, 'wise_sister'));
-    const tl = s.targets.find((x) => x.targetId === 'lao_li')!;
-    tl.trust = 60;
-    tl.wariness = 10;
-    s = nightChat(s, 'lao_li');
-    const wiseTexts = s.chat!.transcript.map((m) => m.text).join('|');
-    expect(wiseTexts).toContain('收音机都没说过');
+    // 知心姐姐：主线吃完后触发 c_li_wise。
+    // v4.1.2：链夜 30% 随机穿插闲聊组（节点原地保留到下一晚）——
+    // 单种子断言不稳，扫种子直到专属节点上场（~70%/种子，60 个内必中）。
+    let wiseTexts = '';
+    for (let seed = 1; seed <= 60 && !wiseTexts; seed++) {
+      let s = chainDone(fresh(seed, 'wise_sister'));
+      const tl = s.targets.find((x) => x.targetId === 'lao_li')!;
+      tl.trust = 60;
+      tl.wariness = 10;
+      s = nightChat(s, 'lao_li');
+      if (s.chat?.pendingNodeId === 'c_li_wise') {
+        wiseTexts = s.chat.transcript.map((m) => m.text).join('|');
+      }
+    }
+    expect(wiseTexts).toContain('收音机都没说过'); // 空串=60 种子全被穿插（概率≈0）
 
-    // 御姐：同状态下，专属节点被跳过——不会出现知心线内容
-    let s2 = chainDone(fresh(21, 'femme_fatale'));
-    const tl2 = s2.targets.find((x) => x.targetId === 'lao_li')!;
-    tl2.trust = 60;
-    tl2.wariness = 10;
-    s2 = nightChat(s2, 'lao_li');
-    const ffTexts = s2.chat!.transcript.map((m) => m.text).join('|');
-    expect(ffTexts).not.toContain('收音机都没说过');
+    // 御姐：同状态下，专属节点被 onlyPersona 挡死——链池为空必落闲聊组，
+    // 任何种子都不会出现知心线内容。
+    let ffLeak = false;
+    for (let seed = 1; seed <= 20 && !ffLeak; seed++) {
+      let s2 = chainDone(fresh(seed, 'femme_fatale'));
+      const tl2 = s2.targets.find((x) => x.targetId === 'lao_li')!;
+      tl2.trust = 60;
+      tl2.wariness = 10;
+      s2 = nightChat(s2, 'lao_li');
+      if (s2.chat?.transcript.some((m) => m.text.includes('收音机都没说过'))) ffLeak = true;
+    }
+    expect(ffLeak).toBe(false);
   });
 
   it('文青专属：周老师的对诗线只对文青开放', () => {
-    let s = fresh(33, 'artistic_soul');
-    const tz = s.targets.find((x) => x.targetId === 'zhou_teacher')!;
-    for (let i = 1; i <= 8; i++) s.flags[`chain_c_zhou_${i}`] = true;
-    tz.trust = 60;
-    tz.wariness = 10;
-    s = dispatch(s, { type: 'enter_night' });
-    // 周老师上午在线——深夜开不了。回早上再开聊。
-    s = dispatch(s, { type: 'sleep' });
-    s = dispatch(s, { type: 'start_chat', targetId: 'zhou_teacher' });
-    expect(s.chat).not.toBeNull();
-    const texts = s.chat!.transcript.map((m) => m.text).join('|');
-    expect(texts).toContain('此水几时休');
+    // v4.1.2：链夜随机穿插——扫种子直到对诗节点上场（~70%/种子）。
+    let sawPoem = false;
+    for (let seed = 1; seed <= 60 && !sawPoem; seed++) {
+      let s = fresh(seed, 'artistic_soul');
+      const tz = s.targets.find((x) => x.targetId === 'zhou_teacher')!;
+      for (let i = 1; i <= 8; i++) s.flags[`chain_c_zhou_${i}`] = true;
+      tz.trust = 60;
+      tz.wariness = 10;
+      s = dispatch(s, { type: 'enter_night' });
+      // 周老师上午在线——深夜开不了。回早上再开聊。
+      s = dispatch(s, { type: 'sleep' });
+      s = dispatch(s, { type: 'start_chat', targetId: 'zhou_teacher' });
+      if (!s.chat) continue;
+      if (s.chat.pendingNodeId === 'c_zhou_art') {
+        const texts = s.chat.transcript.map((m) => m.text).join('|');
+        if (texts.includes('此水几时休')) sawPoem = true;
+      }
+    }
+    expect(sawPoem).toBe(true); // 60 种子全被穿插的概率≈0
   });
 });
 
 describe('v3.0: personaText——同一句话，人设嘴里不同说法', () => {
   it('老李的关键开口：知心姐姐版/学妹版/默认版各不相同', () => {
-    const runPick = (personaId: PersonaId, seed: number) => {
-      let s = fresh(seed, personaId);
+    // v4.1.2：c_li_8 上场前可能被随机穿插拦一晚——扫种子直到今晚真是 c_li_8
+    //（~70%/种子），三个人设用同一个"命中种子"比话术才可比。
+    let hitSeed = -1;
+    for (let seed = 1; seed <= 60 && hitSeed < 0; seed++) {
+      let s = fresh(seed, 'wise_sister');
       s = chainDone(s, 7); // 只吃掉 1-7，让 c_li_8 可触发
       const tl = s.targets.find((x) => x.targetId === 'lao_li')!;
       tl.trust = 80;
@@ -74,14 +95,27 @@ describe('v3.0: personaText——同一句话，人设嘴里不同说法', () =>
       tl.wariness = 10;
       tl.daysSincePaid = 9;
       s = nightChat(s, 'lao_li');
-      expect(s.chat).not.toBeNull();
+      if (s.chat?.pendingNodeId === 'c_li_8') hitSeed = seed;
+    }
+    expect(hitSeed).toBeGreaterThan(0); // 60 种子全被穿插的概率≈0
+
+    const runPick = (personaId: PersonaId): string => {
+      let s = fresh(hitSeed, personaId);
+      s = chainDone(s, 7);
+      const tl = s.targets.find((x) => x.targetId === 'lao_li')!;
+      tl.trust = 80;
+      tl.stage = 'harvest';
+      tl.wariness = 10;
+      tl.daysSincePaid = 9;
+      s = nightChat(s, 'lao_li');
+      expect(s.chat?.pendingNodeId).toBe('c_li_8'); // 同种子同节奏：链夜判定与数值无关
       s = dispatch(s, { type: 'pick_option', optionIndex: 0 }); // c_li_8 的开口选项
       const mine = s.chat!.transcript.find((m) => m.speaker === 'player')!;
       return mine.text;
     };
-    const wise = runPick('wise_sister', 41);
-    const sweet = runPick('sweet_daughter', 41);
-    const arts = runPick('artistic_soul', 41);
+    const wise = runPick('wise_sister');
+    const sweet = runPick('sweet_daughter');
+    const arts = runPick('artistic_soul');
     expect(wise).toContain('姐跟你直说');
     expect(sweet).toContain('一点点嘛');
     expect(arts).toBe('（要红包——「叔叔，我这个月房租差一点……」）'); // 未命中人设回落原文

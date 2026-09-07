@@ -51,6 +51,7 @@ import {
   PERSONA_NEED_MATCH, PERSONA_SESSION_TRUST, PERSONA_SESSION_WARINESS,
   RECALL_CHANCE, GREETING_CLOSE_TRUST, GREETING_FAR_TRUST, PERSONA_GREET_TRUST,
   ENERGY_EARLY_DAYS, ENERGY_EARLY_FACTOR,
+  CHAIN_INTERLUDE_CHANCE,
 } from '../data/constants';
 
 export const TARGET_MAP: Record<string, Target> = Object.fromEntries(TARGETS.map((t) => [t.id, t]));
@@ -297,6 +298,19 @@ function pickFreeNode(state: GameState, t: Target, tstate: TargetState) {
   state.rngSeed = (state.rngSeed * 1664525 + 1013904223) >>> 0;
   const pool = scriptFor(t.id).free.filter((n) => (n.minTrust ?? 0) <= tstate.trust);
   return pool.length ? rng.pick(pool) : null;
+}
+
+/** v4.1.2：链夜随机穿插——今晚推不推剧情由种子决定（30% 改聊闲聊组）。
+ *  剧情弧保序不乱（节点原地保留到下一晚），随机的是节奏：重开后
+ *  前几晚的剧情/闲聊交错不再逐字相同。首晚不穿插（见常量注释）。
+ *  消耗 RNG：无（seed mod 10 做确定性分派——不同种子给不同节奏，
+ *  同一存档同一天重放结果一致，且不挤占话术池的随机流）。 */
+function chainInterludeTonight(state: GameState, tstate: TargetState, chainNode: ChainNode | null): boolean {
+  if (!chainNode) return false;
+  // 本局第一次走到剧情链（一个节点都没消费过）——首晚保稳，不穿插。
+  const consumed = Object.keys(scriptFor(tstate.targetId).chain).filter((id) => state.flags[`chain_${id}`]).length;
+  if (consumed === 0) return false;
+  return state.rngSeed % 10 < Math.round(CHAIN_INTERLUDE_CHANCE * 10);
 }
 
 /** Morning-online targets: 06:00–12:00. Late-night targets (activeHour < 6)
@@ -1001,10 +1015,15 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       s.stats.nightsWorked += 1;
       applyAffinity(s, t, def);
       const lines = scriptFor(t.targetId).lines;
+      // v3.0：话术优先级 = 剧情节点 > 闲聊组（60套，去重轮换）> 空闲节点 > 两句话。
+      // 老头库目标没有剧情链，直接走话术组。
+      // v4.1.2：他来找你的链夜同样随机穿插——剧情节奏两路一致。
       const chainNode = t.discoveredDay === 1 ? pickChainNode(s, def, t) : null;
-      const pack = chainNode ? null : pickPack(s, t, def);
-      const freeNode = chainNode || pack ? null : pickFreeNode(s, def, t);
-      const node = chainNode ?? pack ?? freeNode;
+      const interlude = chainInterludeTonight(s, t, chainNode);
+      const activeChain = chainNode && !interlude ? chainNode : null;
+      const pack = activeChain ? null : pickPack(s, t, def);
+      const freeNode = activeChain || pack ? null : pickFreeNode(s, def, t);
+      const node = activeChain ?? pack ?? freeNode;
       const transcript: ChatMsg[] = [];
       const phaseLabel = def.activeHour >= 6 && def.activeHour <= 12 ? '上午' : '深夜';
       transcript.push({ speaker: 'system' as const, text: `和 ${def.name} 的${phaseLabel}对话（他先找的你）`, stamp: msg.stamp });
@@ -1021,11 +1040,11 @@ export function dispatch(state: GameState, action: GameAction): GameState {
           targetId: t.targetId,
           transcript,
           pendingOptions: node.options,
-          pendingNodeId: chainNode ? chainNode.id : '',
+          pendingNodeId: activeChain ? activeChain.id : '',
           awaiting: 'player',
           closingNote: null,
         };
-        if (chainNode) t.pendingChain = chainNode.next;
+        if (activeChain) t.pendingChain = activeChain.next;
       } else {
         transcript.push({ speaker: 'target' as const, text: '（他今天就想说这么多。）', stamp: nightStamp(def.activeHour, 9) });
         s.chat = { targetId: t.targetId, transcript, pendingOptions: [], pendingNodeId: '', awaiting: 'closed', closingNote: null };
@@ -1069,11 +1088,15 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       applyAffinity(s, t, def);
       // v3.0：话术优先级 = 剧情节点 > 闲聊组（60套，去重轮换）> 空闲节点 > 两句话。
       // 老头库目标没有剧情链，直接走话术组。
+      // v4.1.2：链夜随机穿插——30% 的链夜改聊闲聊组，剧情节点原地保留。
+      // 重开后"哪一晚推剧情"随种子变化（剧情弧仍保序），不再每局逐字相同。
       const chainNode = t.discoveredDay === 1 ? pickChainNode(s, def, t) : null;
+      const interlude = chainInterludeTonight(s, t, chainNode);
+      const activeChain = chainNode && !interlude ? chainNode : null;
       const prevTopic = t.lastTopic; // v3.0：pickPack 会覆盖 lastTopic，先留住昨晚的
-      const pack = chainNode ? null : pickPack(s, t, def);
-      const freeNode = chainNode || pack ? null : pickFreeNode(s, def, t);
-      const node = chainNode ?? pack ?? freeNode;
+      const pack = activeChain ? null : pickPack(s, t, def);
+      const freeNode = activeChain || pack ? null : pickFreeNode(s, def, t);
+      const node = activeChain ?? pack ?? freeNode;
       const transcript = [];
       const rng = makeRng(s.rngSeed);
       s.rngSeed = (s.rngSeed * 1664525 + 1013904223) >>> 0;
@@ -1083,10 +1106,10 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       const recent = t.recentGreetings ?? (t.recentGreetings = []);
       // v4.1 库人物个人开场白：第一次聊天必说自己的话（从 bio 长出来）——
       // 五个保安不再说一模一样的话。播完进原型组。
+      // v4.1.2：两条池随机抽（原为按天索引——重开游戏同一天遇到他就永远是同一条）。
       const personalOpeners = LIBRARY_OPENERS[t.targetId];
       if (firstEverChat && personalOpeners?.length) {
-        const line = personalOpeners[t.discoveredDay % personalOpeners.length] ?? personalOpeners[0];
-        recent.push(line);
+        const line = pickFreshLine(rng, personalOpeners, personalOpeners[0], recent);
         pushBubbles(transcript, 'target', fillProfileVars(line, s), nightStamp(def.activeHour, 1));
       } else
       // v3.2 距离层：信任不足时开场白走 greeting_far——客气、试探、没称呼、目的性弱。
@@ -1107,7 +1130,8 @@ export function dispatch(state: GameState, action: GameAction): GameState {
         pushBubbles(transcript, 'target', greeting, nightStamp(def.activeHour, 1));
       }
       // v3.0 语境连续性：昨晚聊过带话题标签的闲聊，今晚有概率先"接昨天的话"。
-      if (!chainNode && prevTopic && lines.recall?.length && rng.chance(RECALL_CHANCE)) {
+      // （穿插晚也算"没推链"——昨晚的闲聊话题今晚可接。）
+      if (!activeChain && prevTopic && lines.recall?.length && rng.chance(RECALL_CHANCE)) {
         const recent = t.recentGreetings ?? (t.recentGreetings = []);
         const line = pickFreshLine(rng, lines.recall, '', recent).replace(/\{topic\}/g, prevTopic);
         if (line) pushBubbles(transcript, 'target', fillProfileVars(line, s), nightStamp(def.activeHour, 2));
@@ -1121,11 +1145,11 @@ export function dispatch(state: GameState, action: GameAction): GameState {
           targetId: t.targetId,
           transcript,
           pendingOptions: node.options,
-          pendingNodeId: chainNode ? chainNode.id : '',
+          pendingNodeId: activeChain ? activeChain.id : '',
           awaiting: 'player',
           closingNote: null,
         };
-        if (chainNode) t.pendingChain = chainNode.next;
+        if (activeChain) t.pendingChain = activeChain.next;
       } else {
         transcript.push({ speaker: 'target' as const, text: '（今天就这么两句。）', stamp: nightStamp(def.activeHour, 8) });
         s.chat = { targetId: t.targetId, transcript, pendingOptions: [], pendingNodeId: '', awaiting: 'closed', closingNote: null };
