@@ -47,8 +47,10 @@ export interface AskResult {
 
 /** Resolve one red-packet ask roll (consumes seed from state).
  *  Packet size scales with relationship stage — the deeper the con, the
- *  bigger the "心意" he thinks it is. */
-export function resolveAsk(state: GameState, target: Target, tstate: TargetState): AskResult {
+ *  bigger the "心意" he thinks it is.
+ *  v4.2.1（S4）：剧本写死金额的开口（如王总"四千三"）按剧本结算——
+ *  叙事说多少，账本就记多少，不再各说各话。 */
+export function resolveAsk(state: GameState, target: Target, tstate: TargetState, askAmount?: number): AskResult {
   const rng = makeRng(state.rngSeed);
   state.rngSeed = (state.rngSeed * 1664525 + 1013904223) >>> 0;
   const lines = scriptFor(target.id).lines;
@@ -56,6 +58,9 @@ export function resolveAsk(state: GameState, target: Target, tstate: TargetState
   if (!success) {
     const line = rng.pick(lines.ask_fail ?? []);
     return { success: false, amount: 0, tierLabel: '', line };
+  }
+  if (askAmount !== undefined) {
+    return { success: true, amount: askAmount, tierLabel: askAmount > 500 ? '心意' : askAmount > 100 ? '零花钱' : '奶茶钱', line: rng.pick(lines.ask_success ?? []) };
   }
   const stage = tstate.stage === 'harvest' ? 'harvest' : tstate.stage === 'trusted' ? 'trusted' : 'warming';
   const tiers = PACKET_TIERS[stage];

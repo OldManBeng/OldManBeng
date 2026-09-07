@@ -34,6 +34,9 @@ export interface ChainOption {
   replies?: string[] | ({ default?: string[] } & Partial<Record<PersonaId, string[]>>);
   /** Marks this branch as the scripted red-packet ask. */
   isAsk?: boolean;
+  /** v4.2.1（S4）：剧本写死的红包金额（如王总的"四千三"）——
+   *  让引擎结算与叙事金额一致。缺省走随机档位。 */
+  askAmount?: number;
   /** Marks a story flag set by this option. */
   setFlag?: string;
 }

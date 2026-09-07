@@ -71,7 +71,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
     minTrust: 14,
     openers: [
       '跟你说个事，你别笑话我',
-      '上礼拜我闺女给我发语音，就三个字："爸，打钱。"',
+      '上礼拜我闺女给我发语音，就仨字：爸，打钱。',
       '我盯着那三个字看了半小时，还是高兴的——她好歹还找我',
     ],
     options: [
@@ -171,7 +171,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         trust: 10,
         numbness: 8,
         conscience: -2,
-        replies: ['……唉。', '这话我闺女从来跟我说过。', '（很晚）｜今晚睡不着了。高兴的。'],
+        replies: ['……唉。', '这话我闺女从来没跟我说过。', '（很晚）｜今晚睡不着了。高兴的。'],
       },
       {
         text: '那你把我当妹妹看呗，我也缺个哥',
@@ -185,7 +185,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         text: '（不接这茬）夜班别抽太多烟',
         style: 'caring',
         trust: 6,
-        replies: ['知道了，丫头。', '（后来他真的少抽了——烟盒数着抽的。'],
+        replies: ['知道了，丫头。', '（后来他真的少抽了——烟盒数着抽的。）'],
       },
     ],
     next: 'c_li_7',

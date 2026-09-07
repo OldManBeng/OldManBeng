@@ -97,7 +97,7 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
   c_wang_4: {
     id: 'c_wang_4',
     minTrust: 36,
-    openers: ['今天儿子月考,数学59。', '他妈说了我一路。说我一天到晚不着家,儿子考这样都是随我。', '我坐车里没上去。抽了两根。'],
+    openers: ['今天儿子月考,数学41。', '他妈说了我一路。说我一天到晚不着家,儿子考这样都是随我。', '我坐车里没上去。抽了两根。'],
     options: [
       {
         text: '「她怎么能这么说你」',
@@ -111,7 +111,7 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
         trust: 10,
         numbness: 8,
         conscience: -2,
-        replies: ['（片刻后）', '「领导,你这句话,我存着了。」', '（他真的截图了。你后来在他朋友圈的草稿箱里见过——那是另一个人发给你的截图。）'],
+        replies: ['（片刻后）', '「领导,你这句话,我存着了。」', '（他真的截图了。你后来在另一个"妹妹"那儿见过同一句——她也收到了这张截图。）'],
       },
       {
         text: '「59 比我当年强多了」',
@@ -195,7 +195,7 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
     id: 'c_wang_7',
     minTrust: 55,
     minStage: 'trusted',
-    openers: ['（02:40）｜出事了。', '她翻我手机了。', '其实没翻到什么。你给我设的备注是「材料商王经理」。', '但她问我:一个材料商,为什么凌晨两点给你发「晚安」。'],
+    openers: ['（02:40）｜出事了。', '她翻我手机了。', '其实没翻到什么。我给你设的备注是「材料商王经理」。', '但她问我:一个材料商,为什么凌晨两点给你发「晚安」。'],
     options: [
       {
         text: '「就说是普通客户! 王总你稳住」',
@@ -262,8 +262,10 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
         wariness: 15,
         numbness: 10,
         conscience: -8,
+        isAsk: true,
+        askAmount: 4300,
         setFlag: 'wang_took_it_all',
-        replies: ['（转账来了。备注:拿着,别回,让她看见。）', '（那天之后,他的头像再没亮过。凌晨三点,车库里再没有那点烟头的光。）'],
+        replies: ['（转账来了。备注:拿着,别回,别让她看见。）', '（那天之后,他的头像再没亮过。凌晨三点,车库里再没有那点烟头的光。）'],
       },
     ],
     next: '',
@@ -467,7 +469,7 @@ export const WANG_LINES: TargetScript['lines'] = {
     '哥有钱了 先想着你',
   ],
   ask_success: [
-    '拿着 别回 让她看见',
+    '拿着 别回 别让她看见',
     '领导基金 专款专用',
     '别谢 谢了见外',
     '这钱不是店里的 是遮阳板那笔',

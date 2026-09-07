@@ -156,10 +156,12 @@ function chatCost(s: GameState): number {
   return (s.inventory.powerbank ?? 0) > 0 ? CHAT_SESSION_COST - 1 : CHAT_SESSION_COST;
 }
 
-/** v2.0：话术里的 {selfie}/{age}/{trait} 占位符——他的台词会念到你的资料。 */
+/** v2.0：话术里的 {selfie}/{age}/{trait} 占位符——他的台词会念到你的资料。
+ *  v4.2.1 修复（S2）：标签只存纯名词——"那张/这只"由话术模板自己带。
+ *  旧标签自带前缀，"你那张{selfie}"会拼出"你那张那张闺蜜照"这类叠字病句。 */
 export const SELFIE_LABEL: Record<string, string> = {
-  bestie: '那张闺蜜照', gym: '夜跑那几张', pool: '泳池照', cat: '那只橘猫',
-  grind: '加班那几张', travel: '旅游照', boba: '那杯奶茶', sick: '输液那几张',
+  bestie: '闺蜜照', gym: '夜跑照', pool: '泳池照', cat: '橘猫照',
+  grind: '加班照', travel: '旅游照', boba: '奶茶照', sick: '输液照',
 };
 export const TRAIT_LABEL: Record<string, string> = {
   sweet_mouth: '嘴甜', cold_queen: '清冷', straight_shooter: '直性子', soft_artsy: '文艺',
@@ -174,13 +176,18 @@ function fillProfileVars(text: string, s: GameState): string {
 /** v3.3 话风卡合规：
  *  1. 一条数据可含 ｜ 连发分隔——拆成多条气泡（一个气泡一行）；
  *  2. 剥掉条内旧式时间戳前缀（23:47）——引擎给每条气泡盖真实时间戳，条内戳既冗余又矛盾；
- *  3. 空段不产出。 */
+ *  3. 空段不产出。
+ *  v4.2.1（S1）："（你…"开头的段是**她的**内心旁白，不是他的消息——
+ *  以 narrator 身份入档，不再借他的气泡发出去（他不能"说出"只有她知道的事）。 */
 function pushBubbles(transcript: ChatMsg[], speaker: ChatMsg['speaker'], raw: string, stamp: string): number {
   const clean = raw.replace(/^（\d{1,2}:\d{2}）\s*/, '');
   let n = 0;
   for (const seg of clean.split('｜')) {
     const t = seg.trim();
-    if (t) { transcript.push({ speaker, text: t, stamp }); n += 1; }
+    if (!t) continue;
+    const who = speaker === 'target' && t.startsWith('（你') ? 'narrator' as const : speaker;
+    transcript.push({ speaker: who, text: t, stamp });
+    n += 1;
   }
   return n;
 }
@@ -1244,7 +1251,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
           s.chat.closingNote = '同一个钱包挖得太快了。';
           return s;
         }
-        const result = resolveAsk(s, def, t);
+        const result = resolveAsk(s, def, t, option.askAmount);
         if (result.success) {
           if (pendingFlag) s.flags[pendingFlag] = true;
           t.wariness = clamp(t.wariness + ASK_SUCCESS_WARINESS, 0, 100);
@@ -1257,7 +1264,15 @@ export function dispatch(state: GameState, action: GameAction): GameState {
           s.stats.biggestPacket = Math.max(s.stats.biggestPacket, result.amount);
           s.ledger.push({ day: s.day, amount: result.amount, note: `${def.name} 的红包（${result.tierLabel}）`, kind: 'packet' });
           s.chat.transcript.push({ speaker: 'system' as const, label: `红包 +${result.amount} 元`, text: `（${result.tierLabel}）`, stamp: nightStamp(def.activeHour, 14) });
-          if (result.line) pushBubbles(s.chat.transcript, 'target', result.line, nightStamp(def.activeHour, 15));
+          // v4.2.1（S4）：开口选项若带手写场景反馈，用场景替代通用成功台词。
+          // 此前主五人 6 组手写反馈是死数据——extra 里 replies:[] 压着，引擎也不读。
+          // （场景文案已去掉写死金额，红包数由引擎按阶段照发——两边不再对不上。）
+          const askScene = linesFor(option, s.personaId);
+          if (askScene.length) {
+            for (const r of askScene) pushBubbles(s.chat.transcript, 'target', r, nightStamp(def.activeHour, 15));
+          } else if (result.line) {
+            pushBubbles(s.chat.transcript, 'target', result.line, nightStamp(def.activeHour, 15));
+          }
           // v4.1 红包来源字幕：到账即字幕——这笔钱在他的世界里是什么钱。
           // （他的世界：夜班多跑的单/复查的单子/车库的烟钱。不耗 RNG，按天轮换。）
           {

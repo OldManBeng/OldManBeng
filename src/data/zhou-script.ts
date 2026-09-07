@@ -62,7 +62,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
         style: 'intellectual',
         trust: 3,
         wariness: 2,
-        replies: ['没坏。走得很好。', '……你问这个做什么。｜（笑了笑）｜没事，随口一问就好。'],
+        replies: ['没坏。走得很好。', '……你问这个做什么。｜（笑了笑）｜不碍事，你随口一问就好。'],
       },
     ],
     next: 'c_zhou_3',
@@ -313,7 +313,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
     ],
     options: [
       {
-        text: '「××呀。老师要给我留什么作业？」',
+        text: '「老师先说要留什么作业呀，我再报名字。」',
         personaText: {
           sweet_daughter: '「哥哥你先说留什么作业，我再报名字——万一你说罚抄课文呢」',
         },
@@ -363,7 +363,7 @@ export const ZHOU_FREE: FreeNode[] = [
     openers: ['[图片: 他发来一张字。今天写的是：「静」]'],
     options: [
       { text: '「老师今天怎么写这个字」', style: 'caring', trust: 7, replies: ['写着写着就写了这个字。', '手比脑子老实。'] },
-      { text: '「好字！ Lehrer 周赛过田英章」', style: 'playful', trust: 4, replies: ['（他没懂这个梗。但他认真地去查了田英章是谁。）', '查到了。不敢比不敢比。'] },
+      { text: '「好字！周老师这字赛过田英章了」', style: 'playful', trust: 4, replies: ['（他没懂这个梗。但他认真地去查了田英章是谁。）', '查到了。不敢比不敢比。'] },
       { text: '（收藏）', style: 'sweet', trust: 5, replies: ['（他的状态亮了一上午。）'] },
     ],
   },
@@ -394,7 +394,7 @@ export const ZHOU_LINES: TargetScript['lines'] = {
     '今日无事 有你问一声 就圆满',
     '留了半阕 下阕等你',
     '桂花夹进你的那页了',
-    '写字的人 不说虚话 想你了',
+    '写字的人 不说虚话 今日写的每个字 都在替我问你安',
     '今日替你描了红 描的是"安"字',
     '挂钟响了三十下 我在想你在做什么',
     '晨安 今日也等你',

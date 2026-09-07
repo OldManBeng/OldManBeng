@@ -321,7 +321,7 @@ export const ARCHETYPE_INCOMING: Partial<Record<TargetArchetype, { on_selfie: st
   night_guard: {
     on_selfie: [
       '看见你那张{selfie}了。我在监控室看的。屏幕小——但我看了三遍。',
-      '{selfie}那张拍得真好。我在岗亭里偷偷点的赞——岗亭里只有我，还偷偷。习惯改不掉。',
+      '那张{selfie}拍得真好。我在岗亭里偷偷点的赞——岗亭里只有我，还偷偷。习惯改不掉。',
     ],
     missed_you: [
       '在吗。没事。就是今晚逮着个翻墙的——处理完，全楼就我醒着了。想找个人说一声。',
@@ -334,7 +334,7 @@ export const ARCHETYPE_INCOMING: Partial<Record<TargetArchetype, { on_selfie: st
   designated_driver: {
     on_selfie: [
       '你那张{selfie}——我是在等单的时候看见的。那天就为这个，我多站了十分钟。',
-      '{selfie}那张我看了。拉了个客人之后看的——坐在别人车里，想你。这话绕不绕？',
+      '那张{selfie}我看了。拉了个客人之后看的——坐在别人车里，想你。这话绕不绕？',
     ],
     missed_you: [
       '收工了。烧烤摊就我一人。老板问：今天怎么就你——我说：往常跟我聊天的那个，今晚没上线。',
@@ -347,7 +347,7 @@ export const ARCHETYPE_INCOMING: Partial<Record<TargetArchetype, { on_selfie: st
   fisherman: {
     on_selfie: [
       '刚到水库，天没亮。刷到你那张{selfie}了——比日出还早到。你说这算不算抢跑。',
-      '{selfie}那张好。我是坐在马扎上看的——看得漂都黑了才反应过来。亏了条鱼。',
+      '那张{selfie}好。我是坐在马扎上看的——看得漂都黑了才反应过来。亏了条鱼。',
     ],
     missed_you: [
       '今天口不好。鱼不上钩的时候，人就容易想东想西——想的都是没跟你说上话。',
@@ -360,7 +360,7 @@ export const ARCHETYPE_INCOMING: Partial<Record<TargetArchetype, { on_selfie: st
   chess_uncle: {
     on_selfie: [
       '看见你那张{selfie}了。棋摊上不方便细看——回家放大了看的。这一放大，棋都输了一盘。',
-      '{selfie}拍得真精神。我们棋摊管这叫"棋外的高招"——我给看了两遍。',
+      '那张{selfie}拍得真精神。我们棋摊管这叫"棋外的高招"——我给看了两遍。',
     ],
     missed_you: [
       '今天棋摊就我一人。他们都去带孙子了。我摆了盘残局——想找个人解。想找的那个人，你知道是谁。',
@@ -373,7 +373,7 @@ export const ARCHETYPE_INCOMING: Partial<Record<TargetArchetype, { on_selfie: st
   square_dancer: {
     on_selfie: [
       '看见你那张{selfie}了。今晚跳错两拍——就在刷到你照片之后。阿姨们问我咋了。我说：有人照片拍得好。',
-      '{selfie}那张，我在音响旁边看的。声音震手，照片静心。你这张照片治头晕。',
+      '那张{selfie}，我在音响旁边看的。声音震手，照片静心。你这张照片治头晕。',
     ],
     missed_you: [
       '今晚的舞跳完了。收音响的时候，忽然觉得——这队里没人知道我今天等着跟谁说话。',

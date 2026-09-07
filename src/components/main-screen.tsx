@@ -713,7 +713,7 @@ function HistoryPanel() {
               {openIdx === realIdx && (
                 <div className="history-transcript">
                   {a.transcript.map((m, j) => (
-                    <div key={j} className={`bubble ${m.speaker} ${m.label ? 'packet' : ''} ${m.speaker === 'target' && /^（[^）]*）$/.test(m.text) && !m.photoId ? 'narrator' : ''}`}>
+                    <div key={j} className={`bubble ${m.speaker} ${m.label ? 'packet' : ''} ${(m.speaker === 'narrator' || (m.speaker === 'target' && /^（[^）]*）$/.test(m.text) && !m.photoId)) ? 'narrator' : ''}`}>
                       {m.label && <div className="packet-label">{m.label}</div>}
                       <div className="bubble-text">{m.text}</div>
                       {m.photoId && (
@@ -928,8 +928,8 @@ function ChatView() {
     const delay = isPlayerMsg ? 40 : Math.min(1200, 350 + cur.text.length * 6);
     const id = window.setTimeout(() => {
       const next = chat.transcript[bubbleCount];
-      // 到达音随气泡：红包系统条用金币声，他的话用消息声，你自己的话不出声。
-      if (next && next.speaker !== 'player') {
+      // 到达音随气泡：红包系统条用金币声，他的话用消息声；你自己的话和旁白不出声。
+      if (next && next.speaker !== 'player' && next.speaker !== 'narrator') {
         if (next.label) playPacket();
         else playMessage();
       }
@@ -981,7 +981,7 @@ function ChatView() {
         {visible.map((m, i) => {
           const isTyping = typingBubble === m && i === visible.length - 1;
           const text = isTyping ? m.text.slice(0, typed) : m.text;
-          const narrator = m.speaker === 'target' && /^（[^）]*）$/.test(m.text) && !m.photoId;
+          const narrator = m.speaker === 'narrator' || (m.speaker === 'target' && /^（[^）]*）$/.test(m.text) && !m.photoId);
           return (
             <div key={i} className={`bubble ${m.speaker} ${m.label ? 'packet' : ''} ${narrator ? 'narrator' : ''} ${isTyping ? 'typing' : ''}`}>
               {m.label && <div className="packet-label">{m.label}</div>}

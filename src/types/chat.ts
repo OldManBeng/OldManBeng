@@ -1,5 +1,7 @@
-/** Chat bubbles in a session transcript. */
-export type ChatSpeaker = 'target' | 'player' | 'system';
+/** Chat bubbles in a session transcript.
+ *  narrator：v4.2.1（S1）旁白通道——"（你…"开头的她的内心独白不再借
+ *  他的名义发出。渲染上与（…）叙事段同款（居中、淡色、斜体）。 */
+export type ChatSpeaker = 'target' | 'player' | 'system' | 'narrator';
 
 export interface ChatMessage {
   speaker: ChatSpeaker;
