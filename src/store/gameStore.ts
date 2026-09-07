@@ -56,6 +56,8 @@ function migrate(saved: GameState): GameState {
     // v4.1：节奏日决策状态（旧档没有 → 视为已过/未决均可，0 = 无待决）。
     pendingBeat: saved.pendingBeat ?? '',
     beatResolved: saved.beatResolved ?? false,
+    // v4.1.2：名单置顶（旧档没有 → 无置顶）。
+    pinnedTargets: saved.pinnedTargets ?? [],
   };
 }
 

@@ -13,16 +13,16 @@ import { scriptFor } from '../data/script-registry';
 import { DAY_EVENTS } from '../data/events';
 import { ENDINGS } from '../data/endings';
 import { makeRng } from '../utils/random';
-import { nightStamp } from '../utils/format';
+import { nightStamp, formatMoney } from '../utils/format';
 import {
-  clamp, replyMultiplier, applyOptionToTrust, resolveAsk, walletReady,
+  clamp, replyMultiplier, applyOptionToTrust, resolveAsk, walletReady, askChance,
 } from './chat';
 import { DAILY_PLANS } from '../data/plans';
 import { ALL_TARGETS, LIBRARY_IDS, libraryTargetById } from '../data/target-library';
 import { ARCHETYPE_PACKS } from '../data/archetype-packs';
 import {
   MOMENT_CAPTIONS, MOMENT_EFFECT, MOMENT_REACTIONS, MOMENT_SUSPICION, MOMENT_SUSPICION_EFFECT,
-  MOMENT_PLAYER_COMMENTS, MOMENTS_CAP, targetMomentPosts, hasReacted, SELFIE_REACTIONS,
+  MOMENT_PLAYER_COMMENTS, playerCommentPool, MOMENTS_CAP, targetMomentPosts, hasReacted, SELFIE_REACTIONS,
   MOMENT_REACTIONS_FAR, MOMENT_REACTIONS_CLOSE,
 } from '../data/moments';
 import { SHOP_ITEMS } from '../data/items';
@@ -52,7 +52,9 @@ import {
   RECALL_CHANCE, GREETING_CLOSE_TRUST, GREETING_FAR_TRUST, PERSONA_GREET_TRUST,
   ENERGY_EARLY_DAYS, ENERGY_EARLY_FACTOR,
   CHAIN_INTERLUDE_CHANCE,
+  DIRECT_ASK_CHANCE_MULT, DIRECT_ASK_FAIL_WARINESS, DIRECT_ASK_SUCCESS_WARINESS, DIRECT_ASK_AMOUNT_WARINESS_DIV,
 } from '../data/constants';
+import { DIRECT_ASK_AMOUNTS, DIRECT_ASK_REASONS, DIRECT_ASK_FAIL_LINES, DIRECT_ASK_SUCCESS_NOTE } from '../data/direct-ask';
 
 export const TARGET_MAP: Record<string, Target> = Object.fromEntries(TARGETS.map((t) => [t.id, t]));
 /** v2.0：含老头库的全量映射。 */
@@ -366,6 +368,7 @@ export function createInitialState(): GameState {
     briefingDay: 0,
     pendingBeat: '',
     beatResolved: false,
+    pinnedTargets: [],
   };
 }
 
@@ -695,7 +698,7 @@ function runMorning(state: GameState) {
   if (discovered.length && rng.chance(0.75)) {
     const poster = rng.pick(discovered);
     const def = ALL_TARGET_MAP[poster.targetId];
-    const posts = targetMomentPosts(poster.targetId);
+    const posts = targetMomentPosts(poster.targetId, def.archetype);
     const pick = posts.length ? rng.pick(posts) : null;
     if (def && pick) {
       state.moments.push({
@@ -939,7 +942,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       } else {
         const already = post.comments.some((c) => c.by === 'player');
         if (already) return s; // 一条圈只评论一次
-        const pool = MOMENT_PLAYER_COMMENTS[def.need] ?? ['（你点了赞。）'];
+        const pool = playerCommentPool(def);
         post.comments.push({ by: 'player', text: action.text ?? rng01(s).pick(pool) });
         t.trust = clamp(t.trust + 2, 0, 100);
         advanceStage(t);
@@ -1338,6 +1341,71 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       log(s, 'day', `第 ${s.day} 天。还差 ${Math.max(0, s.goal - s.stats.totalEarned)} 元。风险 ${Math.round(s.riskLevel)}%。`);
       // v3.1：新的一天——先弹简报（账单/事件/晨钟），确认后再进入计划列表。
       s.briefingDay = s.day;
+      return s;
+    }
+
+    case 'toggle_pin': {
+      // v4.1.2 名单置顶：把重要的老头钉到「今天」名单最顶（纯 UI 偏好，无代价）。
+      // 后钉的排前面——最近置顶的人最显眼。
+      const known = s.targets.find((t) => t.targetId === action.targetId && t.discoveredDay > 0);
+      if (!known) return s;
+      s.pinnedTargets = s.pinnedTargets.includes(action.targetId)
+        ? s.pinnedTargets.filter((id) => id !== action.targetId)
+        : [...s.pinnedTargets, action.targetId];
+      return s;
+    }
+
+    case 'direct_ask': {
+      // v4.1.2 主动要钱：绕开剧情链的直接开口——金额、理由都玩家自选。
+      // 代价照付且比链上开口贵：概率打折、警惕涨更狠、金额越大越像冲钱来的。
+      // 门槛与剧情链开口一致：认识的人、没拉黑、阶段 ≥ warming、钱包冷却完；
+      // 门槛不达标照发也行——但和链上开口一样算一次开口、一样付冒犯的代价。
+      const t = s.targets.find((x) => x.targetId === action.targetId);
+      const def = ALL_TARGET_MAP[action.targetId];
+      const reason = DIRECT_ASK_REASONS.find((r) => r.id === action.reasonId);
+      if (!t || !def || t.blocked || !t.discoveredDay) return s;
+      if (!reason || !DIRECT_ASK_AMOUNTS.includes(action.amount as (typeof DIRECT_ASK_AMOUNTS)[number])) return s;
+      if (s.dayPhase === 'chat') return s;
+      s.stats.asksMade += 1;
+      if (stageOrder(t.stage) < stageOrder(ASK_MIN_STAGE)) {
+        s.stats.asksFailed += 1;
+        t.wariness = clamp(t.wariness + ASK_FAIL_WARINESS, 0, 100);
+        t.trust = clamp(t.trust - 6, 0, 100);
+        log(s, 'ask_fail', `你跟还没混熟的 ${def.name} 直接开了口——他被这种话吓着了。他没接。`, '（这种叔叔，要的是脸。直接开口只会吓跑他。）');
+        return s;
+      }
+      if (!walletReady(t)) {
+        s.stats.asksFailed += 1;
+        t.wariness = clamp(t.wariness + ASK_FAIL_WARINESS, 0, 100);
+        log(s, 'ask_fail', `${def.name} 这个钱包刚开过——再张口就是同一个钱包挖两次。他很久没回。`, '（挖得太快了。他会开始算。）');
+        return s;
+      }
+      const amountWariness = Math.min(12, Math.round(action.amount / DIRECT_ASK_AMOUNT_WARINESS_DIV));
+      const failLine = rng01(s).pick(DIRECT_ASK_FAIL_LINES);
+      // 成功率：askChance 打 direct 折扣，狠理由有小额加成（急用救命难拒绝）。
+      const chance = askChance(def, t) * DIRECT_ASK_CHANCE_MULT * (0.85 + reason.weight * 0.3);
+      const sayText = reason.say.replace('{n}', String(action.amount));
+      if (!rng01(s).chance(chance)) {
+        s.stats.asksFailed += 1;
+        t.wariness = clamp(t.wariness + DIRECT_ASK_FAIL_WARINESS + amountWariness, 0, 100);
+        t.trust = clamp(t.trust - 5, 0, 100);
+        s.numbness = clamp(s.numbness + 2, 0, 100);
+        log(s, 'ask_fail', `你跟 ${def.name} 开了口（${reason.label}，要 ${formatMoney(action.amount)}）——他没接。${failLine}`, '（没有剧情铺到这里就开的口，最生硬。他记住了这个感觉。）');
+        return s;
+      }
+      // 到账：与红包同账（totalReceived/timesPaid/ledger/stats），代价字幕跟上。
+      const note = rng01(s).pick(DIRECT_ASK_SUCCESS_NOTE);
+      t.wariness = clamp(t.wariness + DIRECT_ASK_SUCCESS_WARINESS + amountWariness, 0, 100);
+      t.totalReceived += action.amount;
+      t.timesPaid += 1;
+      t.daysSincePaid = 0;
+      s.money += action.amount;
+      s.stats.totalEarned += action.amount;
+      s.stats.redPacketsReceived += 1;
+      s.stats.biggestPacket = Math.max(s.stats.biggestPacket, action.amount);
+      s.numbness = clamp(s.numbness + 3, 0, 100);
+      s.ledger.push({ day: s.day, amount: action.amount, note: `${def.name} 的转账（${reason.label}）`, kind: 'packet' });
+      log(s, 'packet', `你跟 ${def.name} 开了口（${reason.label}）：${sayText}——他转了 ${formatMoney(action.amount)}。`, note);
       return s;
     }
 

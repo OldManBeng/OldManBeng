@@ -47,6 +47,17 @@ export const LONELINESS_ASK_BONUS = 0.1;
 /** Wallet cooldown after a successful ask (he's a driver, not an ATM). */
 export const WALLET_COOLDOWN_DAYS = 3;
 
+/** ---- v4.1.2：主动要钱（direct_ask）——绕开剧情链的直接开口 ----
+ *  代价明码标价：没有剧情铺垫就开口，比链上开口更贵——成功概率在
+ *  askChance 的基础上打这个折扣（他还没"舍不得拒绝"你）；翻车的
+ *  警惕涨幅比链上开口重；金额越大越像"冲着钱来的"。这不是白给的
+ *  外快，是这门生意里最差的一种开口。 */
+export const DIRECT_ASK_CHANCE_MULT = 0.6;
+export const DIRECT_ASK_FAIL_WARINESS = 22;
+export const DIRECT_ASK_SUCCESS_WARINESS = 20;
+/** 金额换算警惕加重的分母（金额 / 100 → 警惕点数，上限 12）。 */
+export const DIRECT_ASK_AMOUNT_WARINESS_DIV = 100;
+
 /** Packet size ladder by relationship stage — 蚂蚁搬家 growing into 心意.
  *  Weighted averages: warming ~24元, trusted ~35元, harvest ~220元. */
 export interface PacketTier {

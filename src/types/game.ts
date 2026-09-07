@@ -180,6 +180,9 @@ export interface GameState {
   /** v4.1 节奏日：今天的 beat id（'' = 无）+ 是否已决策。决策卡与简报同屏。 */
   pendingBeat: string;
   beatResolved: boolean;
+  /** v4.1.2：「今天」名单置顶——把重要的老头钉在最顶（targetId 集合）。
+   *  顺序即展示顺序：后钉的排前面（最近操作的人最显眼）。 */
+  pinnedTargets: string[];
 }
 
 export type GameAction =
@@ -207,4 +210,8 @@ export type GameAction =
   /** v3.1 关闭"新的一天"简报弹框（纯 UI 确认，无结算）。 */
   | { type: 'dismiss_briefing' }
   /** v4.1 节奏日决策——今天的 beat 选了哪个选项（只能选一次）。 */
-  | { type: 'resolve_beat'; optionIndex: number };
+  | { type: 'resolve_beat'; optionIndex: number }
+  /** v4.1.2 名单置顶——targetId 进/出置顶集合（幂等切换）。 */
+  | { type: 'toggle_pin'; targetId: string }
+  /** v4.1.2 主动要钱——绕开剧情链直接开口（理由 + 金额自选，代价照付）。 */
+  | { type: 'direct_ask'; targetId: string; reasonId: string; amount: number };

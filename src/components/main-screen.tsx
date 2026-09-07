@@ -6,7 +6,8 @@ import { playMessage, playSend, playPacket, playFail, playBlocked, playMorning }
 import { useEffect, useRef, useState } from 'react';
 import { INDUSTRY_COURSE_COST, CHAT_SESSION_COST } from '../data/constants';
 import { DAILY_PLANS } from '../data/plans';
-import { SELFIE_META, MOMENT_PLAYER_COMMENTS } from '../data/moments';
+import { SELFIE_META, MOMENT_PLAYER_COMMENTS, playerCommentPool } from '../data/moments';
+import { DIRECT_ASK_AMOUNTS, DIRECT_ASK_REASONS, reasonForAmount } from '../data/direct-ask';
 import { SHOP_ITEMS } from '../data/items';
 import { WORLD_BEAT_BY_DAY, interpolateBeat } from '../data/life-events';
 import type { PlayerProfile } from '../types/game';
@@ -192,6 +193,12 @@ export function MainScreen() {
   const risk = riskLabel(state.riskLevel);
   const [tab, setTab] = useState<ModuleTab>('today');
   const [showLog, setShowLog] = useState(false);
+  // v4.1.2：切 tab 时内容区滚回顶——朋友圈最新在前，打开就先看到新动态。
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const switchTab = (next: ModuleTab) => {
+    setTab(next);
+    scrollRef.current?.scrollTo({ top: 0 });
+  };
   // 事件日志驱动的音效：只对"新增"条目响一次（重渲染/读档不重放）。
   const lastPlayedLog = useRef(state.log.length);
   useEffect(() => {
@@ -251,7 +258,7 @@ export function MainScreen() {
       {state.dayPhase !== 'chat' && (
         <>
           {/* v2.3 手机布局：只有这一块滚动，导航钉死在底部。 */}
-          <div className="app-scroll">
+          <div className="app-scroll" ref={scrollRef}>
             {activeTab === 'today' && <TodayPanel phaseLabel={phaseLabel} />}
             {activeTab === 'contacts' && <ContactsPanel />}
             {activeTab === 'moments' && <MomentsPanel />}
@@ -281,24 +288,24 @@ export function MainScreen() {
 
           {/* v3.0 底部六模块导航（SVG 图标 + 活动指示条） */}
           <nav className="module-nav">
-            <button className={activeTab === 'today' ? 'nav-btn on' : 'nav-btn'} onClick={() => setTab('today')}>
+            <button className={activeTab === 'today' ? 'nav-btn on' : 'nav-btn'} onClick={() => switchTab('today')}>
               <span className="nav-ico"><NavIcon name="today" /></span>今天
               {state.incoming.length > 0 && <span className="nav-badge">{state.incoming.length}</span>}
             </button>
-            <button className={activeTab === 'contacts' ? 'nav-btn on' : 'nav-btn'} onClick={() => setTab('contacts')}>
+            <button className={activeTab === 'contacts' ? 'nav-btn on' : 'nav-btn'} onClick={() => switchTab('contacts')}>
               <span className="nav-ico"><NavIcon name="contacts" /></span>通讯录
             </button>
-            <button className={activeTab === 'moments' ? 'nav-btn on' : 'nav-btn'} onClick={() => { setTab('moments'); store.dispatch({ type: 'view_moments' }); }}>
+            <button className={activeTab === 'moments' ? 'nav-btn on' : 'nav-btn'} onClick={() => { switchTab('moments'); store.dispatch({ type: 'view_moments' }); }}>
               <span className="nav-ico"><NavIcon name="moments" /></span>朋友圈
               {state.unseenMoments > 0 && <span className="nav-badge">{state.unseenMoments}</span>}
             </button>
-            <button className={activeTab === 'history' ? 'nav-btn on' : 'nav-btn'} onClick={() => setTab('history')}>
+            <button className={activeTab === 'history' ? 'nav-btn on' : 'nav-btn'} onClick={() => switchTab('history')}>
               <span className="nav-ico"><NavIcon name="history" /></span>聊天记录
             </button>
-            <button className={activeTab === 'wallet' ? 'nav-btn on' : 'nav-btn'} onClick={() => setTab('wallet')}>
+            <button className={activeTab === 'wallet' ? 'nav-btn on' : 'nav-btn'} onClick={() => switchTab('wallet')}>
               <span className="nav-ico"><NavIcon name="wallet" /></span>钱包
             </button>
-            <button className={activeTab === 'profile' ? 'nav-btn on' : 'nav-btn'} onClick={() => setTab('profile')}>
+            <button className={activeTab === 'profile' ? 'nav-btn on' : 'nav-btn'} onClick={() => switchTab('profile')}>
               <span className="nav-ico"><NavIcon name="profile" /></span>人设
             </button>
           </nav>
@@ -389,6 +396,7 @@ function TodayPanel({ phaseLabel }: { phaseLabel: string }) {
           </div>
           <IndustryInviteCard />
           <TargetList dayPhase="morning" />
+          <DirectAskSection />
           <button className="btn primary wide" onClick={() => store.dispatch({ type: 'enter_night' })}>
             天黑了
           </button>
@@ -400,6 +408,7 @@ function TodayPanel({ phaseLabel }: { phaseLabel: string }) {
         <div className="roster-panel">
           <p className="muted small">{phaseLabel} · 精力 {state.energy} 点，一场对话 {CHAT_SESSION_COST} 点。</p>
           <TargetList dayPhase="night" />
+          <DirectAskSection />
           <button className="btn wide" onClick={() => store.dispatch({ type: 'sleep' })}>
             睡了（进入明天）
           </button>
@@ -490,18 +499,21 @@ function MomentsPanel() {
   const { state } = store;
   const postedToday = state.moments.some((m) => m.author === 'player' && m.momentDay === state.day);
   const [openComment, setOpenComment] = useState<string | null>(null);
+  // v4.1.2：发圈器默认折叠成一行——打开朋友圈先看到最新的动态，
+  // 想发再展开（每天一条的动作还在，只是不占首屏）。
+  const [posterOpen, setPosterOpen] = useState(false);
   const nameFor = (id?: string) => (id === 'player' || !id ? '你' : ALL_TARGET_MAP[id]?.name ?? '他');
 
   return (
     <section className="moments-panel">
       <h3>朋友圈</h3>
 
-      <div className="moment-poster">
-        <h4>发一张自拍（每天一条）</h4>
+      <div className="moment-poster collapsed">
         {postedToday ? (
           <p className="muted small">今天发过了。刷得太勤，看的人多——穿帮的也多。</p>
-        ) : (
+        ) : posterOpen ? (
           <>
+            <h4>发一张自拍（每天一条）</h4>
             <div className="choice-grid moment-grid">
               {SELFIE_META.map((o) => (
                 <button key={o.id} className="choice-tile" title={o.note} onClick={() => store.dispatch({ type: 'post_moment', selfieId: o.id })}>
@@ -512,6 +524,8 @@ function MomentsPanel() {
             </div>
             <p className="muted small">新照片三天内，找你的人会变多。疑心重的，会去翻你的旧动态。</p>
           </>
+        ) : (
+          <button className="btn small poster-toggle" onClick={() => setPosterOpen(true)}>＋ 发一张自拍（今天还没发）</button>
         )}
       </div>
 
@@ -522,7 +536,7 @@ function MomentsPanel() {
           const tstate = m.targetId ? state.targets.find((x) => x.targetId === m.targetId) : undefined;
           const liked = m.likes.includes('player');
           const commented = m.comments.some((c) => c.by === 'player');
-          const need = def ? def.need : null;
+
           return (
             <div key={m.id} className={`moment-card ${m.author}`}>
               <div className="moment-head">
@@ -559,10 +573,11 @@ function MomentsPanel() {
                   </button>
                 </div>
               )}
-              {m.author === 'target' && openComment === m.id && !commented && need && (
+              {m.author === 'target' && openComment === m.id && !commented && def && (
                 <div className="moment-comment-options">
                   <p className="muted small">说点什么？（评论比点赞走心——被看见的人，记很久。）</p>
-                  {(MOMENT_PLAYER_COMMENTS[need] ?? []).map((text, i) => (
+                  {/* v4.1.2：库老头走通用池——只评这条动态，不提主五人专名的生活。 */}
+                  {(playerCommentPool(def) ?? MOMENT_PLAYER_COMMENTS[def.need] ?? []).map((text, i) => (
                     <button key={i} className="option" onClick={() => { store.dispatch({ type: 'react_moment', momentId: m.id, kind: 'comment', text }); setOpenComment(null); }}>
                       {text}
                     </button>
@@ -704,19 +719,26 @@ function TargetList({ dayPhase }: { dayPhase: 'morning' | 'night' }) {
   const store = useGame();
   const { state } = store;
   // v2.0：名单只显示已认识的（库目标要靠计划偶遇才能解锁进通讯录）。
+  // v4.1.2：置顶的排最前（置顶集合的顺序即展示顺序），其余按原顺序。
   const known = state.targets.filter((t) => t.discoveredDay > 0);
+  const ordered = [
+    ...known.filter((t) => state.pinnedTargets.includes(t.targetId)),
+    ...known.filter((t) => !state.pinnedTargets.includes(t.targetId)),
+  ];
   return (
     <div className="target-list">
-      {known.map((t) => {
+      {ordered.map((t) => {
         const def = ALL_TARGET_MAP[t.targetId];
         const awake = targetAwake(def, dayPhase);
         const chatted = t.lastChatDay === state.day;
+        const isPinned = state.pinnedTargets.includes(t.targetId);
         const canChat = !t.blocked && awake && !chatted && state.energy >= CHAT_SESSION_COST && state.dayPhase !== 'chat';
         return (
           <div key={t.targetId} className={`target-card ${t.blocked ? 'blocked' : ''} ${!awake ? 'asleep' : ''}`}>
             <OldManAvatar target={def} state={t} size={56} />
             <div className="target-info">
               <div className="target-name">
+                {isPinned && <span className="pin-mark" title="置顶">📌</span>}
                 {def.name} <span className="muted small">{def.age}岁 · {archetypeLabel(def.archetype)}</span>
                 {!t.blocked && awake && !chatted && <span className="online-dot" title="在线" />}
               </div>
@@ -726,6 +748,15 @@ function TargetList({ dayPhase }: { dayPhase: 'morning' | 'night' }) {
                 <div className="bar wariness"><span style={{ width: `${t.wariness}%` }} />警惕</div>
               </div>
               <div className="muted small">他给你的：{formatMoney(t.totalReceived)}（{t.timesPaid} 次）</div>
+            </div>
+            <div className="target-actions">
+              <button
+                className={`btn small pin-btn ${isPinned ? 'pinned' : 'muted-btn'}`}
+                title={isPinned ? '取消置顶' : '置顶——重要的老头放最上面'}
+                onClick={() => store.dispatch({ type: 'toggle_pin', targetId: t.targetId })}
+              >
+                {isPinned ? '已置顶' : '置顶'}
+              </button>
             </div>
             {t.blocked ? (
               <div className="blocked-note">他不回你了。</div>
@@ -743,6 +774,71 @@ function TargetList({ dayPhase }: { dayPhase: 'morning' | 'night' }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/** v4.1.2 主动要钱入口（老头列表下）：选人 → 选理由 → 选金额（10-1000）→ 发出去。
+ *  不用等剧情链走到那一步——但引擎里明码标价：没有铺垫的开口成功率打折、
+ *  翻车警惕涨得狠、金额越大越像冲钱来的。这里只做选择，结算在引擎。 */
+function DirectAskSection() {
+  const store = useGame();
+  const { state } = store;
+  const known = state.targets.filter((t) => t.discoveredDay > 0 && !t.blocked);
+  const [targetId, setTargetId] = useState<string>(known[0]?.targetId ?? '');
+  const [reasonId, setReasonId] = useState<string>(DIRECT_ASK_REASONS[0].id);
+  const [amount, setAmount] = useState<number>(30);
+  if (known.length === 0) return null;
+  const t = state.targets.find((x) => x.targetId === targetId) ?? known[0];
+  const def = ALL_TARGET_MAP[t.targetId];
+  const reason = DIRECT_ASK_REASONS.find((r) => r.id === reasonId) ?? DIRECT_ASK_REASONS[0];
+  const hint =
+    t.stage === 'stranger' ? '还不熟——直接开口只会吓跑他。'
+    : t.daysSincePaid < 3 ? '这个钱包刚开过，再张口就过了。'
+    : reasonForAmount(reason, amount);
+  return (
+    <div className="direct-ask-panel">
+      <h4>主动开口要钱（不用等剧情）</h4>
+      <p className="muted small">
+        直接发一条要钱的话。比剧情里开口更生硬——他没接的话警惕涨得狠；金额越大，越像冲着钱来的。
+      </p>
+      <div className="da-people">
+        {known.map((x) => (
+          <button key={x.targetId} className={`option small ${x.targetId === t.targetId ? 'on' : ''}`} onClick={() => setTargetId(x.targetId)}>
+            {ALL_TARGET_MAP[x.targetId].name}
+          </button>
+        ))}
+      </div>
+      <div className="da-reasons">
+        {DIRECT_ASK_REASONS.map((r) => (
+          <button key={r.id} className={`option small ${r.id === reasonId ? 'on' : ''}`} onClick={() => setReasonId(r.id)}>
+            {r.label}
+          </button>
+        ))}
+      </div>
+      <div className="da-amounts">
+        {DIRECT_ASK_AMOUNTS.map((n) => (
+          <button key={n} className={`option small ${n === amount ? 'on' : ''}`} onClick={() => setAmount(n)}>
+            {formatMoney(n)}
+          </button>
+        ))}
+      </div>
+      <p className="muted small da-preview">
+        发给 {def.name} 的话：{reason.say.replace('{n}', String(amount))}
+      </p>
+      <p className="muted small">{hint}</p>
+      <button
+        className="btn primary wide"
+        onClick={() => {
+          playSend();
+          store.dispatch({ type: 'direct_ask', targetId: t.targetId, reasonId, amount });
+        }}
+      >
+        发出去
+      </button>
+      <p className="muted small da-disclaimer">
+        {def.name} 收到的是一条突然的转账请求。他那边看到的，是一个他惦记的人开口跟他谈钱。
+      </p>
     </div>
   );
 }

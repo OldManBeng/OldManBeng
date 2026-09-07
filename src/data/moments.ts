@@ -52,10 +52,20 @@ export const MOMENT_TARGET_POSTS: { photoId: string; captions: string[] }[] = [
   { photoId: 'arch_chess', captions: ['棋摊赢了老张两把。他说明天找我算账。', '观棋的人比下棋的多，都挺急。'] },
   { photoId: 'arch_square', captions: ['音响是新换的，曲子是老掉牙的。', '今天队形走齐了三回。不容易。'] },
   { photoId: 'arch_roadside', captions: ['代驾到凌晨。最后一单的车主在车上睡着了。', '夜里的城市，方向盘是别人的，路是自己的。'] },
+  // v4.1.2：每个原型补第二张贴（库老头一个月会发好几条，两条素材撑不起一个"人"）。
+  // 仍严格贴着自己的世界写——代驾只写代驾的事，保安只写监控室的事。
+  { photoId: 'arch_guard_booth', captions: ['夜巡两圈。风把伞吹翻了，人没翻。', '监控里的小区安安静静。32 号楼的灯又亮了一夜。'] },
+  { photoId: 'arch_fishing', captions: ['今天线断了。鱼跑了，晚饭也没了。', '三尾小鲫鱼，全放生了。放的时候想：明天它家里会不会找它。'] },
+  { photoId: 'arch_chess', captions: ['连输三把。回家路上想明白了输在哪。', '棋友说下棋要"忘我"。我忘了的是吃降压药。'] },
+  { photoId: 'arch_square', captions: ['领舞今天没来，全场是我带下来的。累。', '新歌跟不上。年轻人管那叫什么来着。'] },
+  { photoId: 'arch_roadside', captions: ['今晚连着三单。电动车还在楼下充着电，人先回来了。', '平台今天抽成又涨了。抢满十单，两单是白跑。', '等单的间隙在路边吃了碗馄饨。老板问我怎么天天这个点来。'] },
 ];
 
-/** 老头发圈素材 → 按老头索引（主五人专属在前，库老头按原型 5 张兜底）。 */
-export function targetMomentPosts(targetId: string): { photoId: string; captions: string[] }[] {
+/** 老头发圈素材 → 按老头索引。
+ *  v4.1.2 修复：库老头以前拿到的是全部 5 原型的素材——代驾韩叔会发钓鱼、
+ *  下棋、广场舞的动态，一人的朋友圈五个人生，前言不搭后语。现在库老头
+ *  只拿自己原型的两张贴（主五人专属在前，不受影响）。 */
+export function targetMomentPosts(targetId: string, archetype: string): { photoId: string; captions: string[] }[] {
   const main: Record<string, { photoId: string; captions: string[] }[]> = {
     lao_li: [MOMENT_TARGET_POSTS[0], MOMENT_TARGET_POSTS[1]],
     zhou_teacher: [MOMENT_TARGET_POSTS[2], MOMENT_TARGET_POSTS[3]],
@@ -64,14 +74,14 @@ export function targetMomentPosts(targetId: string): { photoId: string; captions
     chen_gong: [MOMENT_TARGET_POSTS[8], MOMENT_TARGET_POSTS[9]],
   };
   if (main[targetId]) return main[targetId];
-  const arch: Record<string, { photoId: string; captions: string[] }> = {
-    night_guard: MOMENT_TARGET_POSTS[10],
-    fisherman: MOMENT_TARGET_POSTS[11],
-    chess_uncle: MOMENT_TARGET_POSTS[12],
-    square_dancer: MOMENT_TARGET_POSTS[13],
-    designated_driver: MOMENT_TARGET_POSTS[14],
+  const arch: Record<string, { photoId: string; captions: string[] }[]> = {
+    night_guard: [MOMENT_TARGET_POSTS[10], MOMENT_TARGET_POSTS[15]],
+    fisherman: [MOMENT_TARGET_POSTS[11], MOMENT_TARGET_POSTS[16]],
+    chess_uncle: [MOMENT_TARGET_POSTS[12], MOMENT_TARGET_POSTS[17]],
+    square_dancer: [MOMENT_TARGET_POSTS[13], MOMENT_TARGET_POSTS[18]],
+    designated_driver: [MOMENT_TARGET_POSTS[14], MOMENT_TARGET_POSTS[19]],
   };
-  return [arch.night_guard, arch.fisherman, arch.chess_uncle, arch.square_dancer, arch.designated_driver];
+  return arch[archetype] ?? [MOMENT_TARGET_POSTS[10]]; // 未知原型兜底：贴保安的，不跨原型串味
 }
 
 type Need = Target['need'];
@@ -227,7 +237,10 @@ export const MOMENT_EFFECT: Record<Need, { trust: number; wariness: number }> = 
 /** 怀疑线的代价：换用 MOMENT_SUSPICION 话术时套用。 */
 export const MOMENT_SUSPICION_EFFECT = { trust: -1, wariness: 4 };
 
-/** 玩家评论老头朋友圈的话术（按情感缺口分档，每种 4 条）——比点赞走心。 */
+/** 玩家评论老头朋友圈的话术（按情感缺口分档，每种 4 条）——比点赞走心。
+ *  v4.1.2：主五人的专名评论（王总的车库、陈工的台钳、老张的棋摊）只对
+ *  主五人展示；库老头走 LIBRARY_COMMENT_FALLBACK 的通用池——评论对的
+ *  是这条动态，不点名别人的生活。 */
 export const MOMENT_PLAYER_COMMENTS: Record<Need, string[]> = {
   daughter_figure: [
     '老师说得对，我们年轻人都该多学学。',
@@ -254,3 +267,39 @@ export const MOMENT_PLAYER_COMMENTS: Record<Need, string[]> = {
     '修东西这行讲究"还有救"——这句话我记下了。',
   ],
 };
+
+/** 库老头的通用评论池（按缺口分档）：只评"这条动态"本身，不提主五人
+ *  的专名生活——不然评论韩叔的圈却聊起王总的车库，前言不搭后语。 */
+export const LIBRARY_COMMENT_FALLBACK: Record<Need, string[]> = {
+  daughter_figure: [
+    '叔这个点才吃上饭？胃是自己的，慢慢吃。',
+    '又熬一个大夜。明天的觉，白天补回来。',
+    '看着都替您累。回头教教我，怎么熬得住。',
+    '这条我存下了。回头翻出来还能看着。'
+  ],
+  listened_to: [
+    '这个点还醒着的人，都是有心事的。',
+    '您说，我听着。评论框装不下的，私信慢慢说。',
+    '夜里的活儿最熬人。今晚就早点歇了吧。',
+    '日子是自己的，记录下来就值了。'
+  ],
+  desired: [
+    '这个点不睡的人，明天都是狠人。',
+    '哥这状态，比我们年轻人还能扛。',
+    '忙成这样还惦记发条圈——哥是真讲究人。',
+    '下次这种场面，带上我一个。'
+  ],
+  respected: [
+    '记录规范。这年头认真做台账的人不多了。',
+    '这个点的城市，是你们这样的人撑着的。',
+    '这行干到您这个岁数，是真功夫。',
+    '这份认真，我拿小本本记下了。'
+  ],
+};
+
+/** 玩家评论池解析：主五人用专属池，库老头用通用池（只评动态本身）。 */
+export function playerCommentPool(def: Target): string[] {
+  const mainFive = ['lao_li', 'zhou_teacher', 'boss_wang', 'hao_ge', 'chen_gong'];
+  if (mainFive.includes(def.id)) return MOMENT_PLAYER_COMMENTS[def.need];
+  return LIBRARY_COMMENT_FALLBACK[def.need];
+}

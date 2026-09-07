@@ -1409,3 +1409,31 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   .title-screen h1 { font-size: 29px; letter-spacing: 5px; text-indent: 5px; }
   :root { --fs-11: 29px; }
 }
+
+/* ---- v4.1.2：名单置顶 + 主动要钱 + 朋友圈首屏 ---- */
+.target-actions { display: flex; flex-direction: column; gap: 6px; justify-content: center; }
+.pin-btn.pinned { border-color: var(--accent); color: var(--accent); }
+.pin-mark { font-size: var(--fs-2); }
+
+/* 主动开口要钱（老头列表下的入口） */
+.direct-ask-panel {
+  background: var(--panel);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.direct-ask-panel h4 { font-size: var(--fs-7); letter-spacing: var(--ls-label); }
+.da-people, .da-reasons, .da-amounts { display: flex; flex-wrap: wrap; gap: 6px; }
+.direct-ask-panel .option.small { padding: 6px 10px; font-size: var(--fs-1); flex: 0 0 auto; }
+.direct-ask-panel .option.small.on { border-color: var(--accent); background: rgba(127, 179, 232, 0.12); }
+.da-preview { border-left: 2px solid var(--accent); padding-left: 8px; }
+.da-disclaimer { opacity: 0.75; }
+
+/* 朋友圈发圈器折叠态（打开朋友圈先看到最新动态） */
+.poster-toggle { align-self: flex-start; }
+
+/* 结局归档随「认识的人」扩容后的行密度微调 */
+.final-roster-row { grid-template-columns: 42px 1fr auto; }
