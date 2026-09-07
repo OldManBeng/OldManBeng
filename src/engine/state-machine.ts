@@ -54,7 +54,11 @@ import {
   CHAIN_INTERLUDE_CHANCE,
   DIRECT_ASK_CHANCE_MULT, DIRECT_ASK_FAIL_WARINESS, DIRECT_ASK_SUCCESS_WARINESS, DIRECT_ASK_AMOUNT_WARINESS_DIV,
 } from '../data/constants';
-import { DIRECT_ASK_AMOUNTS, DIRECT_ASK_REASONS, DIRECT_ASK_FAIL_LINES, DIRECT_ASK_SUCCESS_NOTE } from '../data/direct-ask';
+import {
+  DIRECT_ASK_AMOUNTS, DIRECT_ASK_REASONS,
+  DIRECT_ASK_OFFENDED, DIRECT_ASK_COOLDOWN, DIRECT_ASK_FAIL_CHAT, DIRECT_ASK_SUCCESS_CHAT,
+  DIRECT_ASK_FOLLOWUP_SUCCESS, DIRECT_ASK_FOLLOWUP_FAIL,
+} from '../data/direct-ask';
 
 export const TARGET_MAP: Record<string, Target> = Object.fromEntries(TARGETS.map((t) => [t.id, t]));
 /** v2.0：含老头库的全量映射。 */
@@ -1357,7 +1361,9 @@ export function dispatch(state: GameState, action: GameAction): GameState {
 
     case 'direct_ask': {
       // v4.1.2 主动要钱：绕开剧情链的直接开口——金额、理由都玩家自选。
-      // 代价照付且比链上开口贵：概率打折、警惕涨更狠、金额越大越像冲钱来的。
+      // 和「陪他说说话」同一套对话体验：真实聊天会话（耗一场精力、他先打招呼、
+      // 她把话发出去、他当面答复、她还有一轮追问的选择权）。判定规则不变
+      // 且比链上开口贵：概率打折、警惕涨更狠、金额越大越像冲钱来的。
       // 门槛与剧情链开口一致：认识的人、没拉黑、阶段 ≥ warming、钱包冷却完；
       // 门槛不达标照发也行——但和链上开口一样算一次开口、一样付冒犯的代价。
       const t = s.targets.find((x) => x.targetId === action.targetId);
@@ -1365,36 +1371,87 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       const reason = DIRECT_ASK_REASONS.find((r) => r.id === action.reasonId);
       if (!t || !def || t.blocked || !t.discoveredDay) return s;
       if (!reason || !DIRECT_ASK_AMOUNTS.includes(action.amount as (typeof DIRECT_ASK_AMOUNTS)[number])) return s;
-      if (s.dayPhase === 'chat') return s;
+      if (s.dayPhase === 'chat' || s.energy < chatCost(s) || t.lastChatDay === s.day) return s;
+      if (!targetAwake(def, s.dayPhase)) return s;
+
+      // —— 会话成本与「一场对话」的账目（与 start_chat 完全同账）——
+      t.lastChatDay = s.day;
+      s.energy -= chatCost(s);
+      s.dayPhase = 'chat';
+      s.stats.nightsWorked += 1;
+      applyAffinity(s, t, def);
       s.stats.asksMade += 1;
+
+      const transcript: ChatMsg[] = [];
+      const rng = makeRng(s.rngSeed);
+      s.rngSeed = (s.rngSeed * 1664525 + 1013904223) >>> 0;
+      const phaseLabel = def.activeHour >= 6 && def.activeHour <= 12 ? '上午' : '深夜';
+      transcript.push({ speaker: 'system' as const, text: `和 ${def.name} 的${phaseLabel}对话`, stamp: nightStamp(def.activeHour, 0) });
+      const lines = scriptFor(t.targetId).lines;
+      const recent = t.recentGreetings ?? (t.recentGreetings = []);
+      // 他先打招呼——完整复用 start_chat 的开场白分层（亲疏/警惕/断联），
+      // 让这场"要钱的对话"读起来就是一场普通对话的前两秒。
+      const greetPool =
+        t.trust < GREETING_FAR_TRUST && lines.greeting_far?.length ? lines.greeting_far
+        : t.wariness >= 50 && t.timesPaid > 0 && lines.wariness_high?.length ? lines.wariness_high
+        : t.daysSilent >= 3 && lines.silent_warning?.length ? lines.silent_warning
+        : t.trust >= GREETING_CLOSE_TRUST && lines.greeting_close?.length ? lines.greeting_close
+        : lines.greeting;
+      pushBubbles(transcript, 'target', fillProfileVars(pickFreshLine(rng, greetPool, '（他来了。）', recent), s), nightStamp(def.activeHour, 1));
+      maybePushPhoto(t, rng, transcript, def.activeHour);
+
+      // 她把要钱的话发出去（他收到的是一句人话，不是一条转账请求）。
+      const sayText = reason.say.replace('{n}', String(action.amount));
+      transcript.push({ speaker: 'player' as const, text: sayText, stamp: nightStamp(def.activeHour, 6) });
+
+      const amountWariness = Math.min(12, Math.round(action.amount / DIRECT_ASK_AMOUNT_WARINESS_DIV));
+      // 追问选项：成/败两套，ChainOption 形状 → pick_option 非链分支直接能跑。
+      // （{n} 已在构造时替换成实际金额。）
+      const followup = (fu: typeof DIRECT_ASK_FOLLOWUP_FAIL, pushyWariness: number): ChainOption[] => [
+        { text: fu.texts.mild, style: 'caring', trust: 2, replies: fu.mildReplies },
+        { text: fu.texts.pushy.replace('{n}', String(action.amount)), style: 'sweet', trust: -2, wariness: pushyWariness, numbness: 1, replies: fu.pushyReplies },
+      ];
+      const closeFailed = (note: string) => {
+        s.chat = { targetId: t.targetId, transcript, pendingOptions: [], pendingNodeId: '', awaiting: 'closed', closingNote: note };
+      };
+
+      // —— 门槛一：还没混熟就开口（吓着他）——
       if (stageOrder(t.stage) < stageOrder(ASK_MIN_STAGE)) {
         s.stats.asksFailed += 1;
         t.wariness = clamp(t.wariness + ASK_FAIL_WARINESS, 0, 100);
         t.trust = clamp(t.trust - 6, 0, 100);
+        pushBubbles(transcript, 'target', pickFreshLine(rng, DIRECT_ASK_OFFENDED, DIRECT_ASK_OFFENDED[0], recent), nightStamp(def.activeHour, 8));
+        pushBubbles(transcript, 'target', '（他那天没再说晚安。）', nightStamp(def.activeHour, 9));
+        closeFailed('太急了。这种叔叔，要的是脸。');
         log(s, 'ask_fail', `你跟还没混熟的 ${def.name} 直接开了口——他被这种话吓着了。他没接。`, '（这种叔叔，要的是脸。直接开口只会吓跑他。）');
         return s;
       }
+      // —— 门槛二：同一个钱包挖两次（他开始算了）——
       if (!walletReady(t)) {
         s.stats.asksFailed += 1;
         t.wariness = clamp(t.wariness + ASK_FAIL_WARINESS, 0, 100);
+        pushBubbles(transcript, 'target', pickFreshLine(rng, DIRECT_ASK_COOLDOWN, DIRECT_ASK_COOLDOWN[0], recent), nightStamp(def.activeHour, 8));
+        closeFailed('同一个钱包挖得太快了。');
         log(s, 'ask_fail', `${def.name} 这个钱包刚开过——再张口就是同一个钱包挖两次。他很久没回。`, '（挖得太快了。他会开始算。）');
         return s;
       }
-      const amountWariness = Math.min(12, Math.round(action.amount / DIRECT_ASK_AMOUNT_WARINESS_DIV));
-      const failLine = rng01(s).pick(DIRECT_ASK_FAIL_LINES);
-      // 成功率：askChance 打 direct 折扣，狠理由有小额加成（急用救命难拒绝）。
+      // —— 判定：成功率 = askChance 打 direct 折扣 × 狠理由加成 ——
       const chance = askChance(def, t) * DIRECT_ASK_CHANCE_MULT * (0.85 + reason.weight * 0.3);
-      const sayText = reason.say.replace('{n}', String(action.amount));
-      if (!rng01(s).chance(chance)) {
+      if (!rng.chance(chance)) {
         s.stats.asksFailed += 1;
         t.wariness = clamp(t.wariness + DIRECT_ASK_FAIL_WARINESS + amountWariness, 0, 100);
         t.trust = clamp(t.trust - 5, 0, 100);
         s.numbness = clamp(s.numbness + 2, 0, 100);
-        log(s, 'ask_fail', `你跟 ${def.name} 开了口（${reason.label}，要 ${formatMoney(action.amount)}）——他没接。${failLine}`, '（没有剧情铺到这里就开的口，最生硬。他记住了这个感觉。）');
+        pushBubbles(transcript, 'target', pickFreshLine(rng, DIRECT_ASK_FAIL_CHAT, DIRECT_ASK_FAIL_CHAT[0], recent), nightStamp(def.activeHour, 8));
+        s.chat = {
+          targetId: t.targetId, transcript,
+          pendingOptions: followup(DIRECT_ASK_FOLLOWUP_FAIL, DIRECT_ASK_FAIL_WARINESS),
+          pendingNodeId: '', awaiting: 'player', closingNote: null,
+        };
+        log(s, 'ask_fail', `你跟 ${def.name} 开了口（${reason.label}，要 ${formatMoney(action.amount)}）——他没接。`, '（没有剧情铺到这里就开的口，最生硬。他记住了这个感觉。）');
         return s;
       }
-      // 到账：与红包同账（totalReceived/timesPaid/ledger/stats），代价字幕跟上。
-      const note = rng01(s).pick(DIRECT_ASK_SUCCESS_NOTE);
+      // —— 到账：与红包同账（totalReceived/timesPaid/ledger/stats），代价字幕跟上 ——
       t.wariness = clamp(t.wariness + DIRECT_ASK_SUCCESS_WARINESS + amountWariness, 0, 100);
       t.totalReceived += action.amount;
       t.timesPaid += 1;
@@ -1405,7 +1462,25 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       s.stats.biggestPacket = Math.max(s.stats.biggestPacket, action.amount);
       s.numbness = clamp(s.numbness + 3, 0, 100);
       s.ledger.push({ day: s.day, amount: action.amount, note: `${def.name} 的转账（${reason.label}）`, kind: 'packet' });
-      log(s, 'packet', `你跟 ${def.name} 开了口（${reason.label}）：${sayText}——他转了 ${formatMoney(action.amount)}。`, note);
+      transcript.push({ speaker: 'system' as const, label: `转账 +${action.amount} 元`, text: `（${reason.label}）`, stamp: nightStamp(def.activeHour, 9) });
+      pushBubbles(transcript, 'target', pickFreshLine(rng, DIRECT_ASK_SUCCESS_CHAT, DIRECT_ASK_SUCCESS_CHAT[0], recent), nightStamp(def.activeHour, 10));
+      // v4.1 红包来源字幕：到账即字幕——这笔钱在他的世界里是什么钱。
+      {
+        const tier = packetTierOf(action.amount);
+        const pool = PACKET_SOURCE_SUBTITLE[def.id]?.[tier] ?? PACKET_SOURCE_GENERIC[tier];
+        transcript.push({ speaker: 'target' as const, text: pool[s.day % pool.length], stamp: nightStamp(def.activeHour, 11) });
+      }
+      // v4.0/4.1 代价呈现层：要到钱的那一刻，插进她心里的一帧。
+      if (s.day >= 8) {
+        const pool = ASK_COST_NARRATOR_V2[def.id] ?? ASK_COST_NARRATOR_GENERIC;
+        transcript.push({ speaker: 'target' as const, text: pool[(s.day - 8) % pool.length], stamp: nightStamp(def.activeHour, 12) });
+      }
+      s.chat = {
+        targetId: t.targetId, transcript,
+        pendingOptions: followup(DIRECT_ASK_FOLLOWUP_SUCCESS, DIRECT_ASK_SUCCESS_WARINESS),
+        pendingNodeId: '', awaiting: 'player', closingNote: null,
+      };
+      log(s, 'packet', `你跟 ${def.name} 开了口（${reason.label}）：${sayText}——他转了 ${formatMoney(action.amount)}。`);
       return s;
     }
 

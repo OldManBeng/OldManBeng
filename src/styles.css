@@ -1411,24 +1411,62 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 }
 
 /* ---- v4.1.2：名单置顶 + 主动要钱 + 朋友圈首屏 ---- */
-.target-actions { display: flex; flex-direction: column; gap: 6px; justify-content: center; }
-.pin-btn.pinned { border-color: var(--accent); color: var(--accent); }
-.pin-mark { font-size: var(--fs-2); }
+/* 卡片右列：陪他说说话（主）/开口要钱（次）并排 */
+.target-actions { display: flex; flex-direction: column; gap: 6px; justify-content: center; align-items: stretch; }
+.ask-btn { border-color: rgba(217, 119, 6, 0.45); color: rgb(217, 119, 6); }
 
-/* 主动开口要钱（老头列表下的入口） */
-.direct-ask-panel {
+/* 头像列：头像 + 置顶按钮（贴在头像正下方） */
+.avatar-col { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 0 0 auto; }
+.pin-under-avatar {
+  border: 1px solid var(--line-soft);
+  background: transparent;
+  color: var(--muted);
+  border-radius: var(--r-sm);
+  font-size: 10px;
+  padding: 2px 6px;
+  line-height: 1.3;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.pin-under-avatar:hover { border-color: var(--accent); color: var(--accent); }
+.pin-under-avatar.pinned { border-color: var(--accent); color: var(--accent); background: rgba(127, 179, 232, 0.12); }
+
+/* 开口要钱弹窗（老头卡片上弹出） */
+.ask-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  padding: 16px;
+}
+.ask-modal {
   background: var(--panel);
   border: 1px solid var(--line-soft);
   border-radius: var(--r-md);
-  padding: 14px;
+  padding: 16px;
+  max-width: 420px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  max-height: 86vh;
+  overflow-y: auto;
 }
-.direct-ask-panel h4 { font-size: var(--fs-7); letter-spacing: var(--ls-label); }
-.da-people, .da-reasons, .da-amounts { display: flex; flex-wrap: wrap; gap: 6px; }
-.direct-ask-panel .option.small { padding: 6px 10px; font-size: var(--fs-1); flex: 0 0 auto; }
-.direct-ask-panel .option.small.on { border-color: var(--accent); background: rgba(127, 179, 232, 0.12); }
+.ask-modal h4 { font-size: var(--fs-7); letter-spacing: var(--ls-label); }
+.ask-modal-label {
+  font-size: var(--fs-1);
+  color: var(--muted);
+  letter-spacing: var(--ls-label);
+  margin-top: 2px;
+}
+.da-reasons, .da-amounts { display: flex; flex-wrap: wrap; gap: 6px; }
+.ask-modal .option.small { padding: 6px 10px; font-size: var(--fs-1); flex: 0 0 auto; }
+.ask-modal .option.small.on { border-color: var(--accent); background: rgba(127, 179, 232, 0.12); }
+.ask-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
 .da-preview { border-left: 2px solid var(--accent); padding-left: 8px; }
 .da-disclaimer { opacity: 0.75; }
 

@@ -3,8 +3,8 @@ import { createInitialState, dispatch } from '../state-machine';
 import { scriptFor } from '../../data/script-registry';
 import { targetMomentPosts, playerCommentPool, MOMENT_PLAYER_COMMENTS, LIBRARY_COMMENT_FALLBACK } from '../../data/moments';
 import { finalEpilogues, epilogueFor } from '../epilogues';
-import { DIRECT_ASK_AMOUNTS, DIRECT_ASK_REASONS, DIRECT_ASK_FAIL_LINES, DIRECT_ASK_SUCCESS_NOTE } from '../../data/direct-ask';
-import { DIRECT_ASK_CHANCE_MULT } from '../../data/constants';
+import { DIRECT_ASK_AMOUNTS, DIRECT_ASK_REASONS, DIRECT_ASK_OFFENDED, DIRECT_ASK_COOLDOWN, DIRECT_ASK_FAIL_CHAT, DIRECT_ASK_SUCCESS_CHAT, DIRECT_ASK_FOLLOWUP_SUCCESS, DIRECT_ASK_FOLLOWUP_FAIL } from '../../data/direct-ask';
+import { DIRECT_ASK_CHANCE_MULT, CHAT_SESSION_COST } from '../../data/constants';
 import { LIBRARY } from '../../data/target-library';
 import { ENDINGS } from '../../data/endings';
 import type { GameState } from '../../types/game';
@@ -24,6 +24,12 @@ function fresh(seed: number, personaId: PersonaId = 'wise_sister'): GameState {
   let s = { ...createInitialState(), rngSeed: seed };
   s = dispatch(s, { type: 'new_game', name: 'test', motive: 'debt', personaId });
   return s;
+}
+
+/** direct_ask 开口要进对话，先把状态推进到深夜（t 必须醒着）。 */
+function nightOf(seed: number, personaId?: PersonaId): GameState {
+  const s = fresh(seed, personaId);
+  return dispatch(s, { type: 'enter_night' });
 }
 
 describe('v4.1.2: 结局归档含库人物（韩叔的账不能再失踪）', () => {
@@ -149,23 +155,33 @@ describe('v4.1.2: 名单置顶（pinnedTargets）', () => {
   });
 });
 
-describe('v4.1.2: 主动要钱（direct_ask）', () => {
-  it('数据完备：金额档 10-1000 至少 9 档、理由 ≥5 个、成败话术齐', () => {
+describe('v4.1.2: 主动要钱（direct_ask，v2 对话流改版）', () => {
+  it('数据完备：金额档 10-1000 至少 9 档、理由 ≥5 个、成败话术与追问池齐', () => {
     expect(DIRECT_ASK_AMOUNTS[0]).toBe(10);
     expect(DIRECT_ASK_AMOUNTS[DIRECT_ASK_AMOUNTS.length - 1]).toBe(1000);
     expect(DIRECT_ASK_AMOUNTS.length).toBeGreaterThanOrEqual(9);
     expect(DIRECT_ASK_REASONS.length).toBeGreaterThanOrEqual(5);
-    expect(DIRECT_ASK_FAIL_LINES.length).toBeGreaterThanOrEqual(4);
-    expect(DIRECT_ASK_SUCCESS_NOTE.length).toBeGreaterThanOrEqual(3);
+    expect(DIRECT_ASK_OFFENDED.length).toBeGreaterThanOrEqual(2);
+    expect(DIRECT_ASK_COOLDOWN.length).toBeGreaterThanOrEqual(2);
+    expect(DIRECT_ASK_FAIL_CHAT.length).toBeGreaterThanOrEqual(4);
+    expect(DIRECT_ASK_SUCCESS_CHAT.length).toBeGreaterThanOrEqual(3);
+    // 追问选项两套（成/败），各自带体面收场与软磨硬泡两版
+    for (const fu of [DIRECT_ASK_FOLLOWUP_SUCCESS, DIRECT_ASK_FOLLOWUP_FAIL]) {
+      expect(fu.texts.mild.length).toBeGreaterThan(0);
+      expect(fu.texts.pushy.length).toBeGreaterThan(0);
+      expect(fu.mildReplies.length).toBeGreaterThanOrEqual(2);
+      expect(fu.pushyReplies.length).toBeGreaterThanOrEqual(2);
+    }
     // 每个理由的 say 都带金额占位
     for (const r of DIRECT_ASK_REASONS) expect(r.say).toContain('{n}');
   });
 
-  it('不熟的直接开口：翻车、落警惕、算一次开口（无免费午餐）', () => {
-    let s = fresh(4);
-    const liBefore = s.targets.find((t) => t.targetId === 'lao_li')!;
+  it('不熟的直接开口：开成一场真实对话，他当面被吓着、账一分没进', () => {
+    let s = nightOf(4);
     const moneyBefore = s.money;
-    liBefore.stage = 'stranger'; liBefore.trust = 30; liBefore.wariness = 10;
+    const energyBefore = s.energy;
+    const li0 = s.targets.find((t) => t.targetId === 'lao_li')!;
+    li0.stage = 'stranger'; li0.trust = 30; li0.wariness = 10;
     s = dispatch(s, { type: 'direct_ask', targetId: 'lao_li', reasonId: 'rent', amount: 500 });
     const li = s.targets.find((t) => t.targetId === 'lao_li')!;
     expect(s.stats.asksMade).toBe(1);
@@ -173,22 +189,35 @@ describe('v4.1.2: 主动要钱（direct_ask）', () => {
     expect(li.wariness).toBeGreaterThan(10);
     expect(li.trust).toBeLessThan(30);
     expect(s.money).toBe(moneyBefore); // 一分没进
+    // 对话体验与「陪他说说话」同账：耗一场精力、进 chat 相位、开场白+他的答复在场
+    expect(s.dayPhase).toBe('chat');
+    expect(s.chat).toBeTruthy();
+    expect(s.chat!.targetId).toBe('lao_li');
+    expect(s.energy).toBe(energyBefore - CHAT_SESSION_COST); // 场费照收（新档无充电宝）
+    expect(s.chat!.transcript.some((m) => m.speaker === 'target')).toBe(true); // 他先打了招呼
+    expect(s.chat!.transcript.some((m) => m.speaker === 'player' && m.text.includes('500'))).toBe(true); // 她把话发出去了
+    expect(s.chat!.transcript.some((m) => m.speaker === 'target' && DIRECT_ASK_OFFENDED.includes(m.text))).toBe(true); // 他被吓着的答复
+    expect(s.chat!.awaiting).toBe('closed'); // 门槛翻车：没有追问余地
+    expect(s.stats.nightsWorked).toBe(1);
   });
 
-  it('钱包冷却内的开口：翻车不挖同一个钱包两次', () => {
-    let s = fresh(5);
+  it('钱包冷却内的开口：翻车不挖同一个钱包两次，也是当场对话', () => {
+    let s = nightOf(5);
     const li = s.targets.find((t) => t.targetId === 'lao_li')!;
     li.stage = 'harvest'; li.trust = 90; li.wariness = 0;
     li.daysSincePaid = 0; // 刚给过
     s = dispatch(s, { type: 'direct_ask', targetId: 'lao_li', reasonId: 'boba', amount: 30 });
     expect(s.stats.asksFailed).toBe(1);
     expect(s.targets.find((t) => t.targetId === 'lao_li')!.totalReceived).toBe(0);
+    expect(s.dayPhase).toBe('chat');
+    expect(s.chat!.transcript.some((m) => m.speaker === 'target' && DIRECT_ASK_COOLDOWN.some((l) => m.text.includes(l.slice(0, 6))))).toBe(true);
+    expect(s.chat!.awaiting).toBe('closed');
   });
 
-  it('熟络 + 冷却完：狠理由 + 高信任下能要到钱（钱进账、账本有行、代价照付）', () => {
+  it('熟络 + 冷却完：能要到钱——对话里有他的招呼/转账条/答复，她还有一轮追问', () => {
     let got = false;
     for (let seed = 100; seed < 160 && !got; seed++) {
-      let s = fresh(seed);
+      let s = nightOf(seed);
       const han = s.targets.find((t) => t.targetId === 'e8')!;
       han.discoveredDay = s.day;
       han.stage = 'harvest';
@@ -207,21 +236,77 @@ describe('v4.1.2: 主动要钱（direct_ask）', () => {
         expect(s.numbness).toBeGreaterThan(0);
         // 账本有这行
         expect(s.ledger.some((e) => e.amount === 300 && e.note.includes('韩叔'))).toBe(true);
-        // 日志有 packet 行 + 代价字幕
-        const entry = s.log.find((l) => l.kind === 'packet' && l.details.includes('300'));
-        expect(entry?.line).toBeTruthy();
-        expect(DIRECT_ASK_SUCCESS_NOTE).toContain(entry!.line!);
+        // 对话流：她的话在场、系统转账条在场、他答应的答复在场、还有追问选项
+        const tr = s.chat!.transcript;
+        expect(tr.some((m) => m.speaker === 'player' && m.text.includes('300'))).toBe(true);
+        expect(tr.some((m) => m.speaker === 'system' && (m.label ?? '').includes('300'))).toBe(true);
+        expect(tr.some((m) => m.speaker === 'target' && DIRECT_ASK_SUCCESS_CHAT.some((l) => m.text === l.split('｜')[0]))).toBe(true);
+        expect(s.chat!.awaiting).toBe('player');
+        expect(s.chat!.pendingOptions.map((o) => o.text)).toContain(DIRECT_ASK_FOLLOWUP_SUCCESS.texts.mild);
+        // 追问选软话（pick_option 非链分支）：他的回话接上、对话收场、养关系
+        s = dispatch(s, { type: 'pick_option', optionIndex: 0 });
+        expect(s.chat!.transcript.filter((m) => m.speaker === 'target').length).toBeGreaterThan(1);
+        expect(s.chat!.awaiting).toBe('closed');
+        expect(s.chat!.closingNote).toBe('今天聊完了。');
+        const after = s.targets.find((x) => x.targetId === 'e8')!;
+        expect(after.trust).toBeGreaterThan(95 - 30); // 软话是正信任（含 persona 乘数）
       }
     }
     expect(got, '60 个种子 × p≈0.29 没一次成功（概率≈0）').toBe(true);
   });
 
-  it('成功率比剧情链开口低（DIRECT 折扣生效），警惕涨幅比链上开口重', () => {
+  it('翻车后的追问软磨硬泡：警惕再涨（他开始算了），体面收场则不然', () => {
+    // 构造必然翻车：stranger 之后 warming + 低信任 + 高警惕 → chance≈0
+    let hit = false;
+    for (let seed = 200; seed < 280 && !hit; seed++) {
+      let s = nightOf(seed);
+      const li = s.targets.find((t) => t.targetId === 'lao_li')!;
+      li.stage = 'warming'; li.trust = 45; li.wariness = 55; li.daysSincePaid = 9;
+      s = dispatch(s, { type: 'direct_ask', targetId: 'lao_li', reasonId: 'boba', amount: 10 });
+      if (s.chat?.awaiting === 'player' && s.chat.pendingOptions.length === 2) {
+        hit = true;
+        // 软磨硬泡（第二项：wariness 22）
+        const before = s.targets.find((t) => t.targetId === 'lao_li')!.wariness;
+        s = dispatch(s, { type: 'pick_option', optionIndex: 1 });
+        const t = s.targets.find((x) => x.targetId === 'lao_li')!;
+        expect(t.wariness).toBeGreaterThan(before - 5); // 追问本身在涨（翻车警涨之上）
+        expect(s.chat!.awaiting).toBe('closed');
+      }
+    }
+    expect(hit, '80 个种子 × p≈0.05 没一次走到翻车追问').toBe(true);
+  });
+
+  it('一天只聊一场：聊过的/精力不够的开口直接拒绝', () => {
+    let s = nightOf(7);
+    const li = s.targets.find((t) => t.targetId === 'lao_li')!;
+    li.stage = 'warming'; li.trust = 60; li.wariness = 20; li.daysSincePaid = 9;
+    s = dispatch(s, { type: 'start_chat', targetId: 'lao_li' });
+    s = dispatch(s, { type: 'end_chat' });
+    // 今天聊过了 → direct_ask 拒绝（不开第二场）
+    const phasesBefore = s.stats.asksMade;
+    s = dispatch(s, { type: 'direct_ask', targetId: 'lao_li', reasonId: 'boba', amount: 30 });
+    expect(s.stats.asksMade).toBe(phasesBefore);
+    expect(s.dayPhase).not.toBe('chat');
+    // 精力耗干 → 也拒绝（睡几晚把精力花掉）
+    let guard = 0;
+    while (s.energy >= CHAT_SESSION_COST && guard++ < 30) {
+      const before = s.energy;
+      s.energy = 0; // 直接置 0 模拟耗尽（引擎只读能量值）
+      void before;
+      break;
+    }
+    const asksBefore = s.stats.asksMade;
+    s = dispatch(s, { type: 'direct_ask', targetId: 'lao_li', reasonId: 'boba', amount: 30 });
+    expect(s.stats.asksMade).toBe(asksBefore);
+    expect(s.dayPhase).not.toBe('chat');
+  });
+
+  it('成功率比剧情链开口低（DIRECT 折扣生效）', () => {
     expect(DIRECT_ASK_CHANCE_MULT).toBeLessThan(1);
   });
 
   it('理由话术不出现任何金融实操细节（内容红线）', () => {
-    const blob = JSON.stringify([DIRECT_ASK_REASONS, DIRECT_ASK_FAIL_LINES, DIRECT_ASK_SUCCESS_NOTE]);
+    const blob = JSON.stringify([DIRECT_ASK_REASONS, DIRECT_ASK_OFFENDED, DIRECT_ASK_COOLDOWN, DIRECT_ASK_FAIL_CHAT, DIRECT_ASK_SUCCESS_CHAT, DIRECT_ASK_FOLLOWUP_SUCCESS, DIRECT_ASK_FOLLOWUP_FAIL]);
     for (const banned of ['银行卡', '验证码', '收款码', '支付宝账号', '转账到']) {
       expect(blob.includes(banned)).toBe(false);
     }

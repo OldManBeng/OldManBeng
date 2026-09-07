@@ -396,7 +396,6 @@ function TodayPanel({ phaseLabel }: { phaseLabel: string }) {
           </div>
           <IndustryInviteCard />
           <TargetList dayPhase="morning" />
-          <DirectAskSection />
           <button className="btn primary wide" onClick={() => store.dispatch({ type: 'enter_night' })}>
             天黑了
           </button>
@@ -408,7 +407,6 @@ function TodayPanel({ phaseLabel }: { phaseLabel: string }) {
         <div className="roster-panel">
           <p className="muted small">{phaseLabel} · 精力 {state.energy} 点，一场对话 {CHAT_SESSION_COST} 点。</p>
           <TargetList dayPhase="night" />
-          <DirectAskSection />
           <button className="btn wide" onClick={() => store.dispatch({ type: 'sleep' })}>
             睡了（进入明天）
           </button>
@@ -725,6 +723,7 @@ function TargetList({ dayPhase }: { dayPhase: 'morning' | 'night' }) {
     ...known.filter((t) => state.pinnedTargets.includes(t.targetId)),
     ...known.filter((t) => !state.pinnedTargets.includes(t.targetId)),
   ];
+  const [askOpenId, setAskOpenId] = useState<string>('');
   return (
     <div className="target-list">
       {ordered.map((t) => {
@@ -735,10 +734,18 @@ function TargetList({ dayPhase }: { dayPhase: 'morning' | 'night' }) {
         const canChat = !t.blocked && awake && !chatted && state.energy >= CHAT_SESSION_COST && state.dayPhase !== 'chat';
         return (
           <div key={t.targetId} className={`target-card ${t.blocked ? 'blocked' : ''} ${!awake ? 'asleep' : ''}`}>
-            <OldManAvatar target={def} state={t} size={56} />
+            <div className="avatar-col">
+              <OldManAvatar target={def} state={t} size={56} />
+              <button
+                className={`pin-under-avatar ${isPinned ? 'pinned' : ''}`}
+                title={isPinned ? '取消置顶' : '置顶——重要的老头放最上面'}
+                onClick={() => store.dispatch({ type: 'toggle_pin', targetId: t.targetId })}
+              >
+                {isPinned ? '已置顶' : '置顶'}
+              </button>
+            </div>
             <div className="target-info">
               <div className="target-name">
-                {isPinned && <span className="pin-mark" title="置顶">📌</span>}
                 {def.name} <span className="muted small">{def.age}岁 · {archetypeLabel(def.archetype)}</span>
                 {!t.blocked && awake && !chatted && <span className="online-dot" title="在线" />}
               </div>
@@ -749,15 +756,6 @@ function TargetList({ dayPhase }: { dayPhase: 'morning' | 'night' }) {
               </div>
               <div className="muted small">他给你的：{formatMoney(t.totalReceived)}（{t.timesPaid} 次）</div>
             </div>
-            <div className="target-actions">
-              <button
-                className={`btn small pin-btn ${isPinned ? 'pinned' : 'muted-btn'}`}
-                title={isPinned ? '取消置顶' : '置顶——重要的老头放最上面'}
-                onClick={() => store.dispatch({ type: 'toggle_pin', targetId: t.targetId })}
-              >
-                {isPinned ? '已置顶' : '置顶'}
-              </button>
-            </div>
             {t.blocked ? (
               <div className="blocked-note">他不回你了。</div>
             ) : !awake ? (
@@ -765,11 +763,19 @@ function TargetList({ dayPhase }: { dayPhase: 'morning' | 'night' }) {
             ) : chatted ? (
               <div className="muted small">今天聊过了。</div>
             ) : canChat ? (
-              <button className="btn primary" onClick={() => { playMessage(); store.dispatch({ type: 'start_chat', targetId: t.targetId }); }}>
-                {dayPhase === 'morning' ? '陪他说说话' : '找他说话'}
-              </button>
+              <div className="target-actions">
+                <button className="btn primary" onClick={() => { playMessage(); store.dispatch({ type: 'start_chat', targetId: t.targetId }); }}>
+                  {dayPhase === 'morning' ? '陪他说说话' : '找他说话'}
+                </button>
+                <button className="btn small ask-btn" onClick={() => { playSend(); setAskOpenId(t.targetId); }}>
+                  开口要钱
+                </button>
+              </div>
             ) : (
               <div className="muted small">今晚没精力了。</div>
+            )}
+            {askOpenId === t.targetId && (
+              <DirectAskModal targetId={t.targetId} onClose={() => setAskOpenId('')} />
             )}
           </div>
         );
@@ -778,67 +784,59 @@ function TargetList({ dayPhase }: { dayPhase: 'morning' | 'night' }) {
   );
 }
 
-/** v4.1.2 主动要钱入口（老头列表下）：选人 → 选理由 → 选金额（10-1000）→ 发出去。
- *  不用等剧情链走到那一步——但引擎里明码标价：没有铺垫的开口成功率打折、
- *  翻车警惕涨得狠、金额越大越像冲钱来的。这里只做选择，结算在引擎。 */
-function DirectAskSection() {
+/** v4.1.2 开口要钱弹窗（老头卡片上）：选理由 → 选金额（10-1000）→ 发出去。
+ *  确认后引擎开一场真实对话——他先打招呼，她把话发出去，他当面答复。
+ *  这里只做选择，判定与代价在引擎。 */
+function DirectAskModal({ targetId, onClose }: { targetId: string; onClose: () => void }) {
   const store = useGame();
-  const { state } = store;
-  const known = state.targets.filter((t) => t.discoveredDay > 0 && !t.blocked);
-  const [targetId, setTargetId] = useState<string>(known[0]?.targetId ?? '');
+  const state = store.state;
+  const t = state.targets.find((x) => x.targetId === targetId)!;
+  const def = ALL_TARGET_MAP[targetId];
   const [reasonId, setReasonId] = useState<string>(DIRECT_ASK_REASONS[0].id);
   const [amount, setAmount] = useState<number>(30);
-  if (known.length === 0) return null;
-  const t = state.targets.find((x) => x.targetId === targetId) ?? known[0];
-  const def = ALL_TARGET_MAP[t.targetId];
   const reason = DIRECT_ASK_REASONS.find((r) => r.id === reasonId) ?? DIRECT_ASK_REASONS[0];
   const hint =
     t.stage === 'stranger' ? '还不熟——直接开口只会吓跑他。'
     : t.daysSincePaid < 3 ? '这个钱包刚开过，再张口就过了。'
     : reasonForAmount(reason, amount);
+  const send = () => {
+    playSend();
+    store.dispatch({ type: 'direct_ask', targetId, reasonId, amount });
+    onClose();
+  };
   return (
-    <div className="direct-ask-panel">
-      <h4>主动开口要钱（不用等剧情）</h4>
-      <p className="muted small">
-        直接发一条要钱的话。比剧情里开口更生硬——他没接的话警惕涨得狠；金额越大，越像冲着钱来的。
-      </p>
-      <div className="da-people">
-        {known.map((x) => (
-          <button key={x.targetId} className={`option small ${x.targetId === t.targetId ? 'on' : ''}`} onClick={() => setTargetId(x.targetId)}>
-            {ALL_TARGET_MAP[x.targetId].name}
-          </button>
-        ))}
+    <div className="ask-modal-overlay" onClick={onClose}>
+      <div className="ask-modal" onClick={(e) => e.stopPropagation()}>
+        <h4>跟 {def.name} 开口</h4>
+        <p className="muted small">
+          发一条要钱的话，他会当面答复你。比剧情里开口更生硬——他没接的话警惕涨得狠；金额越大，越像冲着钱来的。
+        </p>
+        <div className="ask-modal-label">要钱理由</div>
+        <div className="da-reasons">
+          {DIRECT_ASK_REASONS.map((r) => (
+            <button key={r.id} className={`option small ${r.id === reasonId ? 'on' : ''}`} onClick={() => setReasonId(r.id)}>
+              {r.label}
+            </button>
+          ))}
+        </div>
+        <div className="ask-modal-label">金额</div>
+        <div className="da-amounts">
+          {DIRECT_ASK_AMOUNTS.map((n) => (
+            <button key={n} className={`option small ${n === amount ? 'on' : ''}`} onClick={() => setAmount(n)}>
+              {formatMoney(n)}
+            </button>
+          ))}
+        </div>
+        <p className="muted small da-preview">发出去的话：{reason.say.replace('{n}', String(amount))}</p>
+        <p className="muted small">{hint}</p>
+        <div className="ask-modal-actions">
+          <button className="btn small muted-btn" onClick={onClose}>算了</button>
+          <button className="btn primary" onClick={send}>发出去</button>
+        </div>
+        <p className="muted small da-disclaimer">
+          这是一场真的对话——他要先打招呼，你才把话说出口。开口的那一刻，也就当着他的面。
+        </p>
       </div>
-      <div className="da-reasons">
-        {DIRECT_ASK_REASONS.map((r) => (
-          <button key={r.id} className={`option small ${r.id === reasonId ? 'on' : ''}`} onClick={() => setReasonId(r.id)}>
-            {r.label}
-          </button>
-        ))}
-      </div>
-      <div className="da-amounts">
-        {DIRECT_ASK_AMOUNTS.map((n) => (
-          <button key={n} className={`option small ${n === amount ? 'on' : ''}`} onClick={() => setAmount(n)}>
-            {formatMoney(n)}
-          </button>
-        ))}
-      </div>
-      <p className="muted small da-preview">
-        发给 {def.name} 的话：{reason.say.replace('{n}', String(amount))}
-      </p>
-      <p className="muted small">{hint}</p>
-      <button
-        className="btn primary wide"
-        onClick={() => {
-          playSend();
-          store.dispatch({ type: 'direct_ask', targetId: t.targetId, reasonId, amount });
-        }}
-      >
-        发出去
-      </button>
-      <p className="muted small da-disclaimer">
-        {def.name} 收到的是一条突然的转账请求。他那边看到的，是一个他惦记的人开口跟他谈钱。
-      </p>
     </div>
   );
 }
