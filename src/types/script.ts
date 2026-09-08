@@ -90,6 +90,19 @@ export interface IncomingLines {
   wallet_open: string[];
 }
 
+/**
+ * v4.4 他主动找你之后的应答组——一次「一问一答」的独立小会话。
+ * 主动开场白不再接常规话术（chain/pack/free），而是从对应场景的
+ * IncomingReplySet 里取回复选项：每条都针对他这次说的话，带正/负增益。
+ * 增益复用 ChainOption（trust/wariness/numbness/conscience 全套机制）。
+ */
+export interface IncomingReplySet {
+  /** 女主的回复选项（2-4 个，针对该场景的话头）。 */
+  options: ChainOption[];
+  /** 选完后的收束旁白（他的收尾动作），可不填。 */
+  closing?: string;
+}
+
 export interface DialogueContextMap {
   [context: string]: string[];
 }

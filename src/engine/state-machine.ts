@@ -32,6 +32,7 @@ import {
   WORLD_BEAT_BY_DAY, interpolateBeat,
 } from '../data/life-events';
 import { LIBRARY_OPENERS, LIBRARY_INCOMING } from '../data/library-openers';
+import { incomingReplyFor } from '../data/incoming-replies';
 import { PLAYER_BIOS, PLAYER_BIO_MAP, BIO_HOOK_BY_ARCHETYPE, bioPhase } from '../data/player-bios';
 import { PLAYER_BIO_IDS } from '../types/game';
 import {
@@ -68,6 +69,14 @@ import type { IncidentDef, IncidentOption } from '../data/incidents';
 export const TARGET_MAP: Record<string, Target> = Object.fromEntries(TARGETS.map((t) => [t.id, t]));
 /** v2.0：含老头库的全量映射。 */
 export const ALL_TARGET_MAP: Record<string, Target> = Object.fromEntries(ALL_TARGETS.map((t) => [t.id, t]));
+/** v4.4 主五人 incoming 应答组前缀（incoming-replies.ts 的 key 命名）。 */
+const MAIN_INCOMING_PREFIXES: Record<string, string> = {
+  lao_li: 'li',
+  zhou_teacher: 'zhou',
+  boss_wang: 'wang',
+  hao_ge: 'hao',
+  chen_gong: 'chen',
+};
 export const PERSONA_MAP = Object.fromEntries(PERSONAS.map((p) => [p.id, p]));
 
 function log(state: GameState, kind: EventLogEntry['kind'], details: string, line?: string) {
@@ -594,11 +603,13 @@ function runMorning(state: GameState) {
       const inc = script.incoming;
       let reason: 'selfie' | 'missed_you' | 'wallet_open' | 'his_life' = 'missed_you';
       let pool = inc?.missed_you ?? ['（他发来一条消息。）'];
+      let bioPoolUsed = false;
       if (selfieFresh && inc?.on_selfie?.length) { reason = 'selfie'; pool = inc.on_selfie; }
       else if (bioHook && BIO_HOOK_BY_ARCHETYPE[def.archetype]) {
         // 他顺着你的新签名找来——把话头第一句让给签名。
         reason = 'missed_you';
         pool = [BIO_HOOK_BY_ARCHETYPE[def.archetype]!];
+        bioPoolUsed = true;
       }
       else if (t.daysSincePaid >= 5 && inc?.wallet_open?.length) { reason = 'wallet_open'; pool = inc.wallet_open; }
       // v4.1 库人物个人 incoming：他第一次来找你时说的话是他的，不是原型的——
@@ -607,6 +618,17 @@ function runMorning(state: GameState) {
       const personalLine = LIBRARY_INCOMING[t.targetId];
       const usePersonal = !!personalLine && t.lastChatDay === 0 && !rec.includes(personalLine);
       if (usePersonal && personalLine) rec.push(personalLine);
+      // v4.4 应答场景键：topicId 必须跟实际选中的开场白走——
+      // bio 钩子分支（签名话头）→ bio_<archetype>；库首联 → 人物 id；
+      // 其余按 主五人前缀/原型前缀 × reason（selfie/miss/wallet）。
+      const reasonKey = reason === 'selfie' ? 'selfie' : reason === 'wallet_open' ? 'wallet' : 'miss';
+      const topicId = usePersonal && personalLine
+        ? t.targetId
+        : bioPoolUsed
+          ? `bio_${def.archetype}`
+          : t.targetId in MAIN_INCOMING_PREFIXES
+            ? MAIN_INCOMING_PREFIXES[t.targetId] + '_' + reasonKey
+            : `arch_${def.archetype}_${reasonKey}`;
       state.incoming.push({
         targetId: t.targetId,
         day: state.day,
@@ -616,6 +638,7 @@ function runMorning(state: GameState) {
           ? personalLine
           : pickFreshLine(rng, pool, '（他发来一条消息。）', rec), state),
         stamp: nightStamp(def.activeHour, rng.int(0, 25)),
+        topicId,
       });
       t.pingedToday = true;
       madeToday += 1;
@@ -698,6 +721,8 @@ function runMorning(state: GameState) {
           reason: 'his_life',
           opener: fillProfileVars(beat.incoming.opener, state),
           stamp: nightStamp(def?.activeHour ?? 20, 5),
+          // v4.4：人生线 beat 的应答组键（incoming-replies.ts 的 life_<beatId>）。
+          topicId: `life_${beat.id}`,
         });
         t.pingedToday = true;
         while (state.incoming.length > INCOMING_DAILY_CAP) state.incoming.shift();
@@ -1083,41 +1108,28 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       s.dayPhase = 'chat';
       s.stats.nightsWorked += 1;
       applyAffinity(s, t, def);
-      const lines = scriptFor(t.targetId).lines;
-      // v3.0：话术优先级 = 剧情节点 > 闲聊组（60套，去重轮换）> 空闲节点 > 两句话。
-      // 老头库目标没有剧情链，直接走话术组。
-      // v4.1.2：他来找你的链夜同样随机穿插——剧情节奏两路一致。
-      const chainNode = t.discoveredDay === 1 ? pickChainNode(s, def, t) : null;
-      const interlude = chainInterludeTonight(s, t, chainNode);
-      const activeChain = chainNode && !interlude ? chainNode : null;
-      const pack = activeChain ? null : pickPack(s, t, def);
-      const freeNode = activeChain || pack ? null : pickFreeNode(s, def, t);
-      const node = activeChain ?? pack ?? freeNode;
+      // v4.4 解耦：他主动找你的会话是「一问一答」的独立小场——他的开场白
+      // 落地后，女主从应答库（incoming-replies.ts）按 topicId 取上下文相关
+      // 的回复选项。不再接剧情链/闲聊组/空闲节点——两个话题硬拼在一起，
+      // 上下文就断了（他要的是「你接住我这句话」，不是「换个话题重新开聊」）。
+      // 剧情链的推进权留给玩家自己 start_chat 的那一晚。
+      const replySet = incomingReplyFor(msg.topicId);
       const transcript: ChatMsg[] = [];
       const phaseLabel = def.activeHour >= 6 && def.activeHour <= 12 ? '上午' : '深夜';
       transcript.push({ speaker: 'system' as const, text: `和 ${def.name} 的${phaseLabel}对话（他先找的你）`, stamp: msg.stamp });
       pushBubbles(transcript, 'target', fillProfileVars(msg.opener, s), msg.stamp);
-      if (t.wariness >= 50 && t.timesPaid > 0) {
-        pushBubbles(transcript, 'target', pickVaryLine(rng01(s), lines.wariness_high, '（他回得越来越慢。）', { val: -1 }), nightStamp(def.activeHour, 5));
-      }
-      if (node) {
-        for (const opener of node.openers) {
-          transcript.push({ speaker: 'target' as const, text: fillProfileVars(opener, s), stamp: nightStamp(def.activeHour, 6 + transcript.length) });
-        }
-        maybePushPhoto(t, rng01(s), transcript, def.activeHour);
-        s.chat = {
-          targetId: t.targetId,
-          transcript,
-          pendingOptions: node.options,
-          pendingNodeId: activeChain ? activeChain.id : '',
-          awaiting: 'player',
-          closingNote: null,
-        };
-        if (activeChain) t.pendingChain = activeChain.next;
-      } else {
-        transcript.push({ speaker: 'target' as const, text: '（他今天就想说这么多。）', stamp: nightStamp(def.activeHour, 9) });
-        s.chat = { targetId: t.targetId, transcript, pendingOptions: [], pendingNodeId: '', awaiting: 'closed', closingNote: null };
-      }
+      s.chat = {
+        targetId: t.targetId,
+        transcript,
+        // 应答选项即本场的全部选项——选完他的回应播完即收场（pick_option
+        // 对 pendingNodeId=='' 的非链会话本来就会 closing）。
+        pendingOptions: replySet.options,
+        pendingNodeId: '',
+        awaiting: 'player',
+        closingNote: null,
+        fromIncoming: true,
+        topicIdOf: msg.topicId,
+      };
       t.daysSilent = 0;
       return s;
     }
@@ -1350,7 +1362,17 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       }
       if (!isChain) {
         s.chat.awaiting = 'closed';
-        s.chat.closingNote = '今天聊完了。';
+        // v4.4 他先找你的应答会话：收束旁白跟应答组走（他放下手机那一下），
+        // 提示写明这场是「他为那句话来的」——今晚的话题圆了，就到这里。
+        if (s.chat.fromIncoming) {
+          const closingSet = incomingReplyFor(s.chat.topicIdOf);
+          if (closingSet.closing) {
+            s.chat.transcript.push({ speaker: 'target' as const, text: closingSet.closing, stamp: nightStamp(def.activeHour, 30 + s.chat.transcript.length) });
+          }
+          s.chat.closingNote = '他今晚就为那句话来的——说完了，他就去睡了。';
+        } else {
+          s.chat.closingNote = '今天聊完了。';
+        }
       } else if (node) {
         // One story node per session — real people don't burn a whole
         // relationship arc in one sitting. Park the next node for tomorrow.

@@ -130,6 +130,8 @@ export interface IncomingChat {
   reason: 'selfie' | 'missed_you' | 'wallet_open' | 'his_life';
   opener: string;
   stamp: string;
+  /** v4.4 应答场景键（incoming-replies.ts 的 key）——回他时取哪组上下文应答。 */
+  topicId?: string;
 }
 
 /** Live chat session state (transcript is the source of truth for the chat UI). */
@@ -144,6 +146,10 @@ export interface ActiveChat {
   awaiting: 'target' | 'player' | 'closed';
   /** Set when the session auto-ends (ask resolved / blocked / energy out). */
   closingNote: string | null;
+  /** v4.4 本场是「他先找的你」的一问一答应答会话（收束旁白跟应答组走）。 */
+  fromIncoming?: boolean;
+  /** v4.4 应答场景键（incoming 的 topicId 快照）——收束旁白跟应答组取。 */
+  topicIdOf?: string;
 }
 
 export interface GameState {
