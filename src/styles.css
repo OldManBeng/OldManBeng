@@ -1035,6 +1035,44 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 }
 
 /* ---------- 每日计划 ---------- */
+/* v4.3.3 通知栏式计划条：平时收拢成胶囊一行，点按展开（0fr↔1fr 过渡） */
+.plan-panel.bar { gap: 0; }
+.plan-bar-toggle {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  min-height: var(--touch-sm);
+  padding: 8px 14px;
+  background: var(--card, color-mix(in srgb, var(--ink) 6%, transparent));
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color var(--speed, 180ms) var(--ease-out), background var(--speed, 180ms) var(--ease-out);
+}
+.plan-bar-toggle:hover { border-color: var(--accent); }
+.plan-bar-toggle:active { background: color-mix(in srgb, var(--ink) 10%, transparent); }
+.plan-bar-ico { font-size: 18px; line-height: 1; }
+.plan-bar-label { flex: 1; min-width: 0; text-align: left; font-size: var(--fs-2); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.plan-panel:not(.chosen) .plan-bar-label::after {
+  content: ''; display: inline-block; width: 7px; height: 7px; margin-left: 7px;
+  border-radius: 50%; background: var(--danger, #e5484d); vertical-align: 2px;
+}
+.plan-bar-caret { color: var(--faint); font-size: 12px; }
+.plan-bar-body {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows var(--speed-in, 300ms) var(--ease-out);
+}
+.plan-panel.open .plan-bar-body { grid-template-rows: 1fr; }
+.plan-bar-body > * { overflow: hidden; min-height: 0; }
+.plan-panel.open .plan-grid, .plan-panel.open .plan-bar-body > p { padding-top: 10px; }
+.plan-bar-body .plan-grid { margin-top: 10px; }
+.plan-bar-body .plan-grid > * { min-height: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .plan-bar-body { transition: none; }
+  .plan-bar-toggle { transition: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .plan-panel.open .plan-bar-toggle { border-bottom-left-radius: var(--r-md, 10px); border-bottom-right-radius: var(--r-md, 10px); }
+}
+
 .plan-panel { display: flex; flex-direction: column; gap: 10px; }
 .plan-panel.chosen .plan-chosen {
   font-size: var(--fs-8);

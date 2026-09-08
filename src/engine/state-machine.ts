@@ -1277,11 +1277,11 @@ export function dispatch(state: GameState, action: GameAction): GameState {
           s.stats.asksFailed += 1;
           t.wariness = clamp(t.wariness + ASK_FAIL_WARINESS, 0, 100);
           // v4.3.3 修：没给过钱的人说不出"已经给过了"——那 3 天不是钱包冷却，是还不到开口的日子。
-          s.chat.transcript.push({
-            speaker: 'target' as const,
-            text: t.timesPaid > 0 ? '（他这个月已经给过了。这次他很久没回。）' : '（他没接这个话。｜顿了很久，他说：还没到这个份上吧，丫头。）',
-            stamp: nightStamp(def.activeHour, 12),
-          });
+          pushBubbles(
+            s.chat.transcript, 'target',
+            t.timesPaid > 0 ? '（他这个月已经给过了。这次他很久没回。）' : '（他没接这个话。｜顿了很久，他说：还没到这个份上吧，丫头。）',
+            nightStamp(def.activeHour, 12),
+          );
           s.chat.awaiting = 'closed';
           s.chat.closingNote = t.timesPaid > 0 ? '同一个钱包挖得太快了。' : '还没到开口的日子。';
           return s;

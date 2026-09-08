@@ -174,7 +174,10 @@ function DayBriefingModal() {
               <span className="briefing-ico">{r.ico}</span>
               <div className="briefing-row-body">
                 <div className="briefing-label">{r.label}</div>
-                <div className="briefing-text">{r.text}</div>
+                {/* v4.3.3 修：弹框行里的 ｜ 是连发分隔——按段换行渲染，不再露出分隔符。 */}
+                {r.text.split('｜').map((seg, si) => seg.trim() && (
+                  <div key={si} className="briefing-text">{seg.trim()}</div>
+                ))}
               </div>
             </div>
           );
@@ -395,7 +398,10 @@ function TodayPanel({ phaseLabel }: { phaseLabel: string }) {
                 <OldManAvatar target={def} state={t} size={40} />
                 <div className="incoming-body">
                   <div className="incoming-head">{def.handle ?? def.name} · {m.reason === 'selfie' ? '因为你的新照片' : m.reason === 'wallet_open' ? '他发工资了' : m.reason === 'his_life' ? '他今天有事想跟你说' : '就是想你了'}</div>
-                  <div className="incoming-msg">{m.opener}</div>
+                  {/* v4.3.3 修：opener 里的 ｜ 是连发分隔——按段拆行，不再露出分隔符。 */}
+                  {m.opener.split('｜').map((seg, si) => seg.trim() && (
+                    <div key={si} className="incoming-msg">{seg.trim()}</div>
+                  ))}
                 </div>
                 <div className="incoming-actions">
                   <button className="btn primary small" onClick={() => store.dispatch({ type: 'accept_incoming', targetId: m.targetId })}>回他</button>
@@ -494,33 +500,49 @@ function TodayPanel({ phaseLabel }: { phaseLabel: string }) {
 function PlanPanel() {
   const store = useGame();
   const { state } = store;
-  if (state.todayPlan) {
-    const plan = DAILY_PLANS.find((p) => p.id === state.todayPlan);
-    return (
-      <div className="plan-panel chosen">
-        <h3>今天的计划</h3>
-        <div className="plan-chosen">{plan?.name ?? '宅家'}<span className="muted small"> · 已定（明天可换）</span></div>
-        <p className="muted small">{plan?.description}</p>
-      </div>
-    );
-  }
+  // v4.3.3 通知栏式计划条：平时收拢成顶部胶囊一行（像手机通知栏），
+  // 点按展开九宫格/计划详情——展开收拢走 grid-rows 过渡（0fr↔1fr）。
+  const [open, setOpen] = useState(false);
+  const chosen = DAILY_PLANS.find((p) => p.id === state.todayPlan);
   return (
-    <div className="plan-panel">
-      <h3>今天去哪？（选一个计划）</h3>
-      <div className="plan-grid">
-        {DAILY_PLANS.map((p) => (
-          <button key={p.id} className="plan-card" onClick={() => store.dispatch({ type: 'choose_plan', planId: p.id })}>
-            <div className="plan-name"><span className="plan-ico">{PLAN_ICONS[p.id] ?? '📍'}</span>{p.name}</div>
-            <div className="plan-desc">{p.description}</div>
-            <div className="plan-meta muted small">
-              精力 -{p.energyCost}
-              {p.money ? ` · 钱 ${p.money > 0 ? '+' : ''}${p.money}` : ''}
-              {p.meetArchetypes.length ? ' · 可能遇到人' : ''}
+    <div className={`plan-panel bar ${open ? 'open' : ''} ${state.todayPlan ? 'chosen' : ''}`}>
+      <button
+        className="plan-bar-toggle"
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+      >
+        <span className="plan-bar-ico">{PLAN_ICONS[state.todayPlan] ?? '📍'}</span>
+        <span className="plan-bar-label">
+          {chosen
+            ? <>今天的计划 · <strong>{chosen.name}</strong>（已定，明天可换）</>
+            : <>今天的计划还没定 <span className="muted">——点开挑一个，今晚在哪看这个</span></>}
+        </span>
+        <span className="plan-bar-caret" aria-hidden>{open ? '▴' : '▾'}</span>
+      </button>
+      <div className="plan-bar-body">
+        {chosen ? (
+          <div className="plan-chosen-detail">
+            <p className="muted small">{chosen.description}</p>
+          </div>
+        ) : (
+          <>
+            <div className="plan-grid">
+              {DAILY_PLANS.map((p) => (
+                <button key={p.id} className="plan-card" onClick={() => { store.dispatch({ type: 'choose_plan', planId: p.id }); setOpen(false); }}>
+                  <div className="plan-name"><span className="plan-ico">{PLAN_ICONS[p.id] ?? '📍'}</span>{p.name}</div>
+                  <div className="plan-desc">{p.description}</div>
+                  <div className="plan-meta muted small">
+                    精力 -{p.energyCost}
+                    {p.money ? ` · 钱 ${p.money > 0 ? '+' : ''}${p.money}` : ''}
+                    {p.meetArchetypes.length ? ' · 可能遇到人' : ''}
+                  </div>
+                </button>
+              ))}
             </div>
-          </button>
-        ))}
+            <p className="muted small">计划花的是白天的精力；晚上聊天每场 {CHAT_SESSION_COST} 点。</p>
+          </>
+        )}
       </div>
-      <p className="muted small">计划花的是白天的精力；晚上聊天每场 {CHAT_SESSION_COST} 点。</p>
     </div>
   );
 }

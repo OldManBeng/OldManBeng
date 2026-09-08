@@ -534,3 +534,72 @@ tsc 零错 / vitest 181 全过 / vite build 通过。红线全保：无银行卡
 - Google Fonts 外链：游戏字体栈以系统中文字体优先（PingFang/
   HarmonyOS/雅黑），外链字体在离线/国内环境反劣化，不走。
 - 亮色模式：游戏主题是凌晨三点，只做暗色。
+
+## v4.3.3 收尾批（教学红包 E2E 兜底 / 编号清洗收尾 / 「｜」泄漏修复 / 计划胶囊）
+
+### 教学红包 5.2 —— 浏览器打字机节奏难控，改确定性引擎验收
+
+- 新增 src/engine/__tests__/v433-features.test.ts（11 例）：
+  - D1 老李 pick_option 后 transcript 出现「红包 +5.2 元」system 条 +
+    「买块糖」台词；end_chat 入账（totalReceived/timesPaid/ledger/
+    stats.totalEarned）；第二晚不重发；换人（陈工）无教学红包。
+  - bio：10 款话术数据完备；换签生效；负相位原型换签日警惕不降
+    （+1 代价，跨晨被衰减部分抵消）；bioPhase 方向正确。
+  - 免打扰：拉黑者 start_chat/direct_ask 双拒；解除恢复；wave
+    reactors 不含他。
+  - 头像 1-10 全档可选（99 钳到 10）。
+  - 讨债话术语义：timesPaid=0 翻车不说「上次那笔」；冷却线说
+    「还没到这个份上」而非「已经给过了」。
+  - packs-chen 正文无 2-3 位草稿编号残留；用户举报句原样在场。
+- 全量：14 文件 192 测试绿 / tsc / build。
+
+### 话术草稿编号清洗（packs-chen.ts，532 处）
+
+- 全库 751 处编号审计（scripts/_numbering_audit.txt）后定性：
+  chen-script/main-packs/packs-addendum/moments/voice-cards/epilogues
+  的编号是陈工「编号体」人设装置（voice-cards 明文「打字风格： 编号体
+  1. 2. 3.；偶尔 0. 表示编号外」），保留；仅 packs-chen 的 33-124
+  全局草稿行号 + 10.1-50.5 段号泄漏进正文（用户举报「36. 今天有人
+  敲门」「88. 公差」）。
+- 清洗规则：`\d{2,3}\.\d `（段号）与 `\d{1,3}\. `（行号）定点剥除，
+  单前缀小数（0.5 圈 / 2.2 分钟 / 0.02 误差）与真实统计数字
+  （47 个哈哈 / 156 条 / 第 58 条）全数保留——清洗前后逐类断言。
+- 悬空引用改写：「86 的原话」→「那句原话」；「50 个编号里」→
+  「我说过的所有编号里」（角色内自指成立）。
+
+### 「｜」分隔符泄漏（3 处 UI 通道）
+
+- 「｜」是聊天连发分隔符（pushBubbles 拆气泡），非聊天通道直渲染
+  会原样露出。修复：
+  1. D1 简报行（姐的微信三条忠告）——briefing-row 按段分行渲染；
+  2. incoming 卡（life-events 的 opener 带｜）——incoming-msg
+     按段分行；
+  3. pick_option 链上冷却话术直推点——改走 pushBubbles。
+- 复核其余通道：log() 无｜；endings/incidents/gathas/moments 0 处；
+  cost-narratives 0 处。残留｜仅在聊天气泡通道（本就该拆）。
+
+### 今日计划 → 通知栏胶囊（PlanPanel 重写）
+
+- 平时收拢：顶部胶囊一行（图标 + 计划名/「还没定」红点 + ▾），
+  aria-expanded 语义完整。
+- 点按展开：grid-template-rows 0fr↔1fr 过渡（--speed-in 300ms
+  ease-out）；已选态展开显示计划详情（当天锁死，明天可换），
+  未选态展开九宫格。
+- prefers-reduced-motion 全降级为瞬开。
+
+### 修复（用户举报）
+
+- 「开始这个月」点击无响应：bio 引擎代码引用了未导入的
+  PLAYER_BIO_MAP 等（new_game→runMorning 即抛 ReferenceError）→
+  补 import。
+- 头像 7-10 选不了：update_profile 旧钳制 1-6 → 1-10。
+- 朋友圈点赞/评论作者显示旧名：nameFor 走 handle（微信昵称）。
+
+### E2E（浏览器实走）
+
+- 简报：姐的微信三段分行、无「｜」泄漏。
+- 今天页：bio 行（默认哭穷款）✓；换签「落子无悔」即时上墙 ✓。
+- 人设页：个性签名选区 10 款 ✓；头像 10 枚 × 5 列网格 ✓。
+- 计划胶囊：展开 8 卡（宅家/代驾/…）→ 选中后胶囊显示已定 ✓。
+- 免打扰：陈工拉黑 → 卡片静音态 + 日志；解除恢复 ✓。
+- 老李夜聊：开场白 → 三选项渲染（教学红包由上述引擎测试确定性覆盖）。
