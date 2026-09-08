@@ -147,6 +147,10 @@ export function EndingScreen() {
       <p className="muted small center">
         现实里，这件事有个名字，叫诈骗。老人手里那点钱，是他们最后的体面。
       </p>
+      {/* v4.3.1（审查 P1-5）：社会价值落点——反诈热线。非交互信息，不打断结局。 */}
+      <p className="muted small center ending-hotline">
+        如果你身边有人正在经历这个游戏里的事——或你自己就是——国家反诈中心热线 96110。
+      </p>
     </div>
   );
 }

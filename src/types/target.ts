@@ -69,6 +69,12 @@ export type TargetTraitId = (typeof TargetTrait)[keyof typeof TargetTrait];
 export interface Target {
   id: string;
   name: string;
+  /** v4.3.2 微信昵称——手机界面（名单/通讯录/聊天顶栏/朋友圈）显示这个；
+   *  叙事面（结局/日志/台词）仍用 name。缺省回落 name。 */
+  handle?: string;
+  /** v4.3.2 微信个性签名——小老板的广告位、退休人的通知、手艺人的接活卡。
+   *  只在手机界面显示，缺省不显示。 */
+  signature?: string;
   archetype: TargetArchetype;
   age: number;
   bio: string;

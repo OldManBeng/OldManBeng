@@ -47,7 +47,25 @@ export interface RunStats {
 export type SelfieId = 'bestie' | 'gym' | 'pool' | 'cat' | 'grind' | 'travel' | 'boba' | 'sick';
 export const SELFIE_IDS: SelfieId[] = ['bestie', 'gym', 'pool', 'cat', 'grind', 'travel', 'boba', 'sick'];
 
-/** 女主可编辑的自设资料——头像/年龄/性格，全部影响他的话术。 */
+/** v4.3.3 个性签名话术 id——挂在她微信资料页的一句话，老头看得见。 */
+export type PlayerBioId =
+  | 'hardup_plaintext'   // 直白哭穷
+  | 'moon_side'          // 两份工的夜行
+  | 'business_face'      // 生意人门面
+  | 'daughter_smile'     // 缺个爹的
+  | 'chess_and_tea'      // 棋茶中年
+  | 'gamer_allnight'     // 网吧通宵
+  | 'fish_and_wait'      // 钓鱼佬
+  | 'workout_self'       // 晨练自律
+  | 'cigarettes_alcohol' // 痞气直给
+  | 'cold_read';         // 三不原则
+
+export const PLAYER_BIO_IDS: PlayerBioId[] = [
+  'hardup_plaintext', 'moon_side', 'business_face', 'daughter_smile', 'chess_and_tea',
+  'gamer_allnight', 'fish_and_wait', 'workout_self', 'cigarettes_alcohol', 'cold_read',
+];
+
+/** 女主可编辑的自设资料——头像/年龄/性格/签名，全部影响他的话术。 */
 export interface PlayerProfile {
   /** 头像预设 1-6（程序化 SVG 发型×发色组合）。 */
   avatarId: number;
@@ -59,6 +77,8 @@ export interface PlayerProfile {
   selfieId: SelfieId;
   /** 那张照片发布于第几天（新发布才会引来"他来找你"）。 */
   selfieDay: number;
+  /** v4.3.3 个性签名话术——挂在资料页，影响老头主动找你的概率与警惕。 */
+  bioId: PlayerBioId;
 }
 
 /** 朋友圈的一条评论——他能评你，你也能评他。 */
@@ -202,7 +222,7 @@ export type GameAction =
   | { type: 'choose_plan'; planId: string }
   | { type: 'accept_incoming'; targetId: string }
   | { type: 'ignore_incoming'; targetId: string }
-  | { type: 'update_profile'; avatarId?: number; ageClaim?: PlayerProfile['ageClaim']; traitId?: PlayerProfile['traitId'] }
+  | { type: 'update_profile'; avatarId?: number; ageClaim?: PlayerProfile['ageClaim']; traitId?: PlayerProfile['traitId']; bioId?: PlayerBioId }
   /** v2.3 发一条朋友圈自拍（每天最多一条；替代原 update_profile 的 selfieId 通道）。 */
   | { type: 'post_moment'; selfieId: SelfieId }
   /** v2.3 对朋友圈动态点赞/评论（他的圈：+信任；看你自己的圈不算）。 */

@@ -2469,7 +2469,8 @@ const PERSONA_STYLE: Record<PersonaId, GirlSpec> = {
   artistic_soul: { bg: '#16141c', hair: '#262428', hairStyle: 'bob', accent: '#8e44ad', lip: '#b05a68', eye: 'calm', extra: 'beret' },
 };
 
-/** 6 款可选头像（发型×发色×瞳型×唇色组合）。 */
+/** 10 款可选头像（发型×发色×瞳型×唇色×配饰组合）——v4.3.3 从 6 扩到 10，
+ *  人设页 5×2 两行网格展示，不再横向溢出。 */
 export const AVATAR_PRESETS: (GirlSpec & { id: number })[] = [
   { id: 1, bg: '#1c1016', hair: '#181418', hairStyle: 'long', accent: '#c0392b', lip: '#c22a44', eye: 'up', extra: 'earring' },
   { id: 2, bg: '#14202a', hair: '#4a3020', hairStyle: 'twin', accent: '#e67e22', lip: '#e07856', eye: 'round', extra: 'flower' },
@@ -2477,6 +2478,10 @@ export const AVATAR_PRESETS: (GirlSpec & { id: number })[] = [
   { id: 4, bg: '#16141c', hair: '#262428', hairStyle: 'bob', accent: '#8e44ad', lip: '#b05a68', eye: 'calm', extra: 'beret' },
   { id: 5, bg: '#1c1618', hair: '#6b3a2a', hairStyle: 'long', accent: '#d4a017', lip: '#c75850', eye: 'soft', extra: 'earring' },
   { id: 6, bg: '#10161c', hair: '#38506b', hairStyle: 'bob', accent: '#2e86ab', lip: '#d4705e', eye: 'round', extra: 'none' },
+  { id: 7, bg: '#1a1420', hair: '#52425e', hairStyle: 'twin', accent: '#a569bd', lip: '#b86a78', eye: 'up', extra: 'none' },
+  { id: 8, bg: '#201416', hair: '#7a4a3a', hairStyle: 'bun', accent: '#cb7623', lip: '#cc6f62', eye: 'calm', extra: 'flower' },
+  { id: 9, bg: '#141c16', hair: '#3a5240', hairStyle: 'long', accent: '#52b788', lip: '#c2705f', eye: 'round', extra: 'beret' },
+  { id: 10, bg: '#1c1a14', hair: '#5e5236', hairStyle: 'bob', accent: '#b5a642', lip: '#bf5f58', eye: 'soft', extra: 'earring' },
 ];
 
 /** 可选头像渲染（AvatarId 1-6）。 */

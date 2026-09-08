@@ -440,6 +440,8 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 .day-chip { color: var(--warm); font-weight: 600; font-size: var(--fs-5); letter-spacing: var(--ls-label); }
 .money { font-weight: 600; font-size: var(--fs-6); }
 .goal { color: var(--danger); font-size: var(--fs-3); }
+/* v4.3.1 两本账副标签：余额（活命钱）/ 还差（债）——审查 P0-1 口径修复 */
+.hud-sub { font-style: normal; font-size: var(--fs-1); color: var(--faint); margin-left: 2px; }
 
 .morning-panel { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
 .persona-row { display: flex; gap: 10px; align-items: center; }
@@ -1188,7 +1190,10 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 
 /* ---------- 人设档案 ---------- */
 .choice-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.choice-grid.avatars { grid-template-columns: repeat(6, 1fr); }
+.choice-grid.avatars { grid-template-columns: repeat(5, 1fr); }
+/* v4.3.3 头像 10 款 5×2：tile 只装头像不装字，收成正方形 */
+.choice-grid.avatars .choice-tile { min-height: 0; padding: 6px 4px; aspect-ratio: 1; }
+.choice-grid.avatars .choice-tile svg { display: block; margin: 0 auto; }
 .choice-grid .choice-tile.wide { grid-column: span 2; }
 .choice-tile {
   display: flex;
@@ -1543,3 +1548,30 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   /* 氛围呼吸（窗灯/月/在线点）整体停住——安静下来，而不是闪一下 */
   .title-win, .title-moon, .online-dot::after { animation: none !important; }
 }
+
+/* v4.3.1 结局屏反诈热线：页脚小字，暖金不刺眼——这是留给现实的一行 */
+.ending-hotline { color: var(--warm); opacity: 0.85; margin-top: 4px; }
+
+/* ---------- v4.3.2 微信真实感：昵称/签名/年龄身份两行制 ---------- */
+/* 名单卡：昵称一行（长昵称省略号），年龄·身份独立一行，签名一行（1 行截断） */
+.target-name { min-width: 0; }
+.target-sub { font-size: var(--fs-2); color: var(--muted); margin-top: 1px; }
+.target-sig, .contact-sig, .chat-sig {
+  font-size: var(--fs-2);
+  color: var(--faint);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 2px;
+}
+/* 通讯录：昵称独占一行（原有 ellipsis 保留），年龄·认识天数与真名另起一行 */
+.contact-sub { margin-top: 1px; }
+.contact-sub::after { content: ''; }
+/* 聊天顶栏：昵称过长截断，不顶掉时间戳 */
+.chat-header > div { min-width: 0; flex: 1; }
+.chat-header .target-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-sig { -webkit-line-clamp: 1; }
+/* 私信卡：长昵称不撑破卡片 */
+.incoming-head { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

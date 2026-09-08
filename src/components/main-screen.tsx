@@ -109,6 +109,25 @@ function DayBriefingModal() {
     else verse = gatha.details;
   }
   const rows: { ico: string; label: string; text: string }[] = [];
+  // v4.3.1（审查 P1-4）："带你的姐"的忠告——只在第一天，教学藏在世界观里。
+  // 三条规则各自对应引擎机制：开口阶段门槛 / 钱包 3 天冷却 / 已读不回的代价。
+  // 她的结局（inc_sister_caught）在 v4.2 已埋——第一天这里说"教不了了"。
+  if (day === 1) {
+    rows.push({
+      ico: '💬',
+      label: '姐的微信',
+      text: '第一天，记三条。｜一，别急着开口。他们这种人，要的是脸，你一急就成生意了。｜二，一个钱包三天一挖，挖秃了就再没有了。三个哥哥轮着来。｜三，别划掉不回。孤独的人记仇，记得比谁都清。｜剩下的，你自己长。我教不了了。',
+    });
+  }
+  // v4.3.1（审查 P0-1）：两本账定调，只在第一天说破——红包是还债钱，打工是活命钱。
+  // 后面 29 天 HUD 的（活命钱）（债）副标签都挂着这一行。
+  if (day === 1) {
+    rows.push({
+      ico: '💵',
+      label: '这个月的账',
+      text: '本月最低还款 1,500。打工的钱是活命钱——房租、话费、吃饭，全从那里出。能填上这个坑的，只有他们给的钱。',
+    });
+  }
   if (bill) rows.push({ ico: '🧾', label: '今日开销', text: bill.details });
   // "无事发生"不值得占一行——安静的早晨也是一种信息。
   if (event && event.details !== '无事发生的一天。') rows.push({ ico: '🎲', label: '今天的事', text: event.details });
@@ -264,8 +283,8 @@ export function MainScreen() {
           <span className="muted">{phaseLabel}</span>
         </div>
         <div className="hud-right">
-          <span className="money">余额 {formatMoney(state.money)}</span>
-          <span className="goal">还差 {formatMoney(Math.max(0, state.goal - state.stats.totalEarned))}</span>
+          <span className="money">余额 {formatMoney(state.money)}<i className="hud-sub">（活命钱）</i></span>
+          <span className="goal">还差 {formatMoney(Math.max(0, state.goal - state.stats.totalEarned))}<i className="hud-sub">（债）</i></span>
         </div>
       </header>
       <div className={`risk-strip ${risk.cls}`} title="多线经营的风险——活跃的「哥哥」越多，他们越容易在你的评论区看见彼此。">
@@ -373,7 +392,7 @@ function TodayPanel({ phaseLabel }: { phaseLabel: string }) {
               <div key={m.targetId} className="incoming-card">
                 <OldManAvatar target={def} state={t} size={40} />
                 <div className="incoming-body">
-                  <div className="incoming-head">{def.name} · {m.reason === 'selfie' ? '因为你的新照片' : m.reason === 'wallet_open' ? '他发工资了' : m.reason === 'his_life' ? '他今天有事想跟你说' : '就是想你了'}</div>
+                  <div className="incoming-head">{def.handle ?? def.name} · {m.reason === 'selfie' ? '因为你的新照片' : m.reason === 'wallet_open' ? '他发工资了' : m.reason === 'his_life' ? '他今天有事想跟你说' : '就是想你了'}</div>
                   <div className="incoming-msg">{m.opener}</div>
                 </div>
                 <div className="incoming-actions">
@@ -520,7 +539,9 @@ function ContactsPanel() {
             <div key={t.targetId} className={`contact-row ${t.blocked ? 'blocked' : ''}`}>
               <OldManAvatar target={def} state={t} size={44} />
               <div className="contact-body">
-                <div className="contact-name">{def.name} <span className="muted small">{def.age}岁 · 第 {t.discoveredDay} 天认识</span></div>
+                <div className="contact-name">{def.handle ?? def.name}</div>
+                <div className="contact-sub muted small">{def.age}岁 · 第 {t.discoveredDay} 天认识 · {def.name}</div>
+                {def.signature && <div className="contact-sig muted small">{def.signature}</div>}
                 <div className="contact-bio">{def.bio}</div>
                 <div className="muted small contact-personality">{def.personality}</div>
                 <div className="muted small">信任 {Math.round(t.trust)} · 警惕 {Math.round(t.wariness)} · 给过 {formatMoney(t.totalReceived)}</div>
@@ -588,7 +609,7 @@ function MomentsPanel() {
                   ? <ProfileAvatar avatarId={state.profile.avatarId} size={36} />
                   : def ? <OldManAvatar target={def} state={tstate} size={36} /> : null}
                 <div>
-                  <div className="moment-name">{m.author === 'player' ? state.playerName || '你' : def?.name ?? '他'}</div>
+                  <div className="moment-name">{m.author === 'player' ? state.playerName || '你' : def?.handle ?? def?.name ?? '他'}</div>
                   <div className="muted small">第 {m.momentDay} 天</div>
                 </div>
               </div>
@@ -674,7 +695,7 @@ function WalletPanel() {
           );
         })}
       </div>
-      <p className="muted small">买口红的钱，是两个 warming 红包；买那套声卡补光灯，是这个月的目标。花出去的每一块，都记在流水里。</p>
+      <p className="muted small">买口红的钱，是两个刚熟络时的小红包；买那套声卡补光灯，是这个月的目标。花出去的每一块，都记在流水里。</p>
 
       <h4>流水</h4>
       <div className="ledger-list">
@@ -707,7 +728,7 @@ function HistoryPanel() {
             <div key={realIdx} className="history-item">
               <button className="history-head" onClick={() => setOpenIdx(openIdx === realIdx ? null : realIdx)}>
                 <span className="history-day">第 {a.day} 天</span>
-                <span className="history-name">{def?.name ?? a.targetId}</span>
+                <span className="history-name">{def?.handle ?? def?.name ?? a.targetId}</span>
                 <span className="muted small">{a.transcript.length} 条 · {openIdx === realIdx ? '收起' : '展开'}</span>
               </button>
               {openIdx === realIdx && (
@@ -791,10 +812,13 @@ function TargetList({ dayPhase }: { dayPhase: 'morning' | 'night' }) {
               </button>
             </div>
             <div className="target-info">
+              {/* v4.3.2 手机界面显示微信昵称（AAA建材王总/李师傅（夜班）…），叙事面仍用 name。 */}
               <div className="target-name">
-                {def.name} <span className="muted small">{def.age}岁 · {archetypeLabel(def.archetype)}</span>
+                {def.handle ?? def.name}
                 {!t.blocked && awake && !chatted && <span className="online-dot" title="在线" />}
               </div>
+              <div className="target-sub muted small">{def.age}岁 · {archetypeLabel(def.archetype)}</div>
+              {def.signature && <div className="target-sig muted small">{def.signature}</div>}
               <div className={`stage-chip stage-${t.stage}`}>{STAGE_LABEL[t.stage]}</div>
               <div className="bars">
                 <div className="bar trust"><span style={{ width: `${t.trust}%` }} />信任</div>
@@ -853,7 +877,7 @@ function DirectAskModal({ targetId, onClose }: { targetId: string; onClose: () =
   return (
     <div className="ask-modal-overlay" onClick={onClose}>
       <div className="ask-modal" onClick={(e) => e.stopPropagation()}>
-        <h4>跟 {def.name} 开口</h4>
+        <h4>跟 {def.handle ?? def.name} 开口</h4>
         <p className="muted small">
           发一条要钱的话，他会当面答复你。比剧情里开口更生硬——他没接的话警惕涨得狠；金额越大，越像冲着钱来的。
         </p>
@@ -971,8 +995,9 @@ function ChatView() {
       <header className="chat-header">
         <OldManAvatar target={def} state={t} size={36} />
         <div>
-          <div className="target-name">{def.name}</div>
+          <div className="target-name">{def.handle ?? def.name}</div>
           <div className="muted small">{STAGE_LABEL[t.stage]} · 警惕 {t.wariness}%</div>
+          {def.signature && <div className="chat-sig muted small">{def.signature}</div>}
         </div>
         <span className="stamp-chip">{chat.transcript[0]?.stamp}</span>
       </header>

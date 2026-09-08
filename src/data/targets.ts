@@ -8,6 +8,8 @@ export const TARGETS: Target[] = [
   {
     id: 'lao_li',
     name: '老李',
+    handle: '李师傅（夜班）',
+    signature: '夜班出租 · 一对一接送 · 139****6207',
     archetype: 'divorced_driver',
     age: 47,
     bio: '跑了二十年夜班出租车，两年前离的婚。女儿判给了前妻，一年见两回。晚上收车回家，一个人对着电视吃外卖，电视开着不是为了看，是为了屋里有个声。',
@@ -38,6 +40,8 @@ export const TARGETS: Target[] = [
   {
     id: 'zhou_teacher',
     name: '周老师',
+    handle: '周树人他老师',
+    signature: '社区书法班每周三上午 · 带纸笔，管茶水',
     archetype: 'widowed_teacher',
     age: 63,
     bio: '中学语文教师，退休三年，丧偶四年。儿子在深圳，一年回来一次。早上五点半醒，给阳台的花浇水，然后一整天，家里只剩下一口走得比谁都响的挂钟。在社区书法班带课，学生都是比他年纪大的人；老年大学还请他讲一节诗词赏析，教室里有讲台，也有粉笔。',
@@ -68,6 +72,8 @@ export const TARGETS: Target[] = [
   {
     id: 'boss_wang',
     name: '王总',
+    handle: 'AAA建材王总',
+    signature: '经销防水瓷砖胶 · 城南建材市场3区21栋208 · 量大从优',
     archetype: 'married_boss',
     age: 52,
     bio: '建材店个体老板，五十平的门脸，三十年。老婆管账，他管进货和应酬。白天赔笑，深夜在车库的车里抽烟刷手机——那是他一天里唯一属于自己的四十分钟。朋友圈全是自己喝多了写的励志语录。',
@@ -98,6 +104,8 @@ export const TARGETS: Target[] = [
   {
     id: 'hao_ge',
     name: '阿豪',
+    handle: '豪杰网咖·阿豪',
+    signature: '通宵38包早面 · 长江西路118号 · 猫比人多',
     archetype: 'cafe_owner_ninety',
     age: 35,
     bio: '90年生的网吧老板——"老头"这个称呼里最年轻的讽刺。开了十年网吧，从满座到只剩外卖小哥蹭网。守着四十一台机器和一只叫"键盘"的橘猫。朋友们结婚的结婚、跑路的跑路，他还在柜台后面煮泡面加蛋。',
@@ -128,6 +136,8 @@ export const TARGETS: Target[] = [
   {
     id: 'chen_gong',
     name: '陈工',
+    handle: '陈工（机械·已退休）',
+    signature: '干了三十六年图纸 · 现在只修自己家的钟',
     archetype: 'lonely_engineer',
     age: 58,
     bio: '退休机械工程师，独居，儿子在德国。一辈子跟图纸和机床打交道，老伴走后家里安静得像下了班的厂房。阳台上有一台1992年的台钳，每周擦，擦得锃亮。他给手机支架画图纸，公差要求和给机床的一样。',

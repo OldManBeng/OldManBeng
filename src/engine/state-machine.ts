@@ -117,9 +117,9 @@ function freshTargetState(targetId: string): TargetState {
   };
 }
 
-/** v2.0：女主默认自设资料。 */
+/** v2.0：女主默认自设资料。v4.3.3 默认签名=直白哭穷（新手最容易理解的一条）。 */
 export function defaultProfile(): GameState['profile'] {
-  return { avatarId: 1, ageClaim: 24, traitId: 'sweet_mouth', selfieId: 'bestie', selfieDay: 0 };
+  return { avatarId: 1, ageClaim: 24, traitId: 'sweet_mouth', selfieId: 'bestie', selfieDay: 0, bioId: 'hardup_plaintext' };
 }
 
 /** v2.0：钱包流水工具——每一笔钱都记账。 */
@@ -581,12 +581,23 @@ function runMorning(state: GameState) {
     if (t.trust >= 50) p += 0.1;
     if (t.daysSilent >= 3) p += 0.2; // 断联的人憋不住了
     if (t.daysSincePaid >= 5 && t.trust >= 40) p += 0.15; // 发工资的日子
+    // v4.3.3 个性签名相位：顺眼的门面让他更想来找你，犯嘀咕的绕着走
+    //（负相位=减概率；概率虽减，开场白还在——嘀咕本身也是一种来找你的方式）。
+    const bioPhaseNow = bioPhase(state.profile.bioId, def.archetype);
+    const bioHookLine = BIO_HOOK_BY_ARCHETYPE[def.archetype];
+    const bioHook = bioPhaseNow !== 0 && !!bioHookLine && !t.recentIncoming?.includes(bioHookLine);
+    p = Math.max(0, p + bioPhaseNow);
     if (rng.chance(p)) {
       const script = scriptFor(t.targetId);
       const inc = script.incoming;
       let reason: 'selfie' | 'missed_you' | 'wallet_open' | 'his_life' = 'missed_you';
       let pool = inc?.missed_you ?? ['（他发来一条消息。）'];
       if (selfieFresh && inc?.on_selfie?.length) { reason = 'selfie'; pool = inc.on_selfie; }
+      else if (bioHook && BIO_HOOK_BY_ARCHETYPE[def.archetype]) {
+        // 他顺着你的新签名找来——把话头第一句让给签名。
+        reason = 'missed_you';
+        pool = [BIO_HOOK_BY_ARCHETYPE[def.archetype]!];
+      }
       else if (t.daysSincePaid >= 5 && inc?.wallet_open?.length) { reason = 'wallet_open'; pool = inc.wallet_open; }
       // v4.1 库人物个人 incoming：他第一次来找你时说的话是他的，不是原型的——
       // 从 bio 长出来（雷子的四十块屏幕/老翟的北门收音机），五个人不再共用一句话。
@@ -921,6 +932,22 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       if (action.avatarId !== undefined) s.profile.avatarId = clamp(action.avatarId, 1, 6);
       if (action.ageClaim) s.profile.ageClaim = action.ageClaim;
       if (action.traitId) s.profile.traitId = action.traitId;
+      // v4.3.3 个性签名——换签名当天就有感觉：顺眼的人更容易来找你，
+      // 犯嘀咕的人警惕微涨（门面改了，看进去的人反应各不相同）。
+      if (action.bioId && PLAYER_BIO_IDS.includes(action.bioId)) {
+        const oldBio = PLAYER_BIO_MAP[s.profile.bioId];
+        s.profile.bioId = action.bioId;
+        if (oldBio && oldBio.id !== action.bioId) {
+          for (const t of s.targets) {
+            if (t.blocked || !t.discoveredDay) continue;
+            const def = ALL_TARGET_MAP[t.targetId];
+            if (!def) continue;
+            if (PLAYER_BIO_MAP[action.bioId].penalties[def.archetype]) {
+              t.wariness = clamp(t.wariness + 1, 0, 100);
+            }
+          }
+        }
+      }
       return s;
     }
 
@@ -1246,9 +1273,14 @@ export function dispatch(state: GameState, action: GameAction): GameState {
         if (!walletReady(t)) {
           s.stats.asksFailed += 1;
           t.wariness = clamp(t.wariness + ASK_FAIL_WARINESS, 0, 100);
-          s.chat.transcript.push({ speaker: 'target' as const, text: '（他这个月已经给过了。这次他很久没回。）', stamp: nightStamp(def.activeHour, 12) });
+          // v4.3.3 修：没给过钱的人说不出"已经给过了"——那 3 天不是钱包冷却，是还不到开口的日子。
+          s.chat.transcript.push({
+            speaker: 'target' as const,
+            text: t.timesPaid > 0 ? '（他这个月已经给过了。这次他很久没回。）' : '（他没接这个话。｜顿了很久，他说：还没到这个份上吧，丫头。）',
+            stamp: nightStamp(def.activeHour, 12),
+          });
           s.chat.awaiting = 'closed';
-          s.chat.closingNote = '同一个钱包挖得太快了。';
+          s.chat.closingNote = t.timesPaid > 0 ? '同一个钱包挖得太快了。' : '还没到开口的日子。';
           return s;
         }
         const result = resolveAsk(s, def, t, option.askAmount);
@@ -1323,6 +1355,16 @@ export function dispatch(state: GameState, action: GameAction): GameState {
         s.chat.awaiting = 'closed';
         s.chat.closingNote = '他说"明天再聊"。';
       }
+      // v4.3.1（审查 P1-3）教学红包的可见时刻：第一晚与老李的对话收尾，
+      // 他收完车"顺了一单"——5.2 到账（数字写在横幅上，钱在 end_chat 落账）。
+      // 放最后一条：他发完这句就去睡了，今晚到此为止。
+      if (s.day === 1 && s.chat.targetId === 'lao_li' && !s.flags.tutorial_gift_seen) {
+        s.flags.tutorial_gift_seen = true;
+        const st = nightStamp(def.activeHour, 55);
+        s.chat.transcript.push({ speaker: 'system' as const, label: '红包 +5.2 元', text: '（奶茶钱）', stamp: st });
+        pushBubbles(s.chat.transcript, 'target', '夜班顺了一单。拿着，买块糖。｜别多想，叔叔钱多烧的。', st);
+        s.chat.transcript.push({ speaker: 'target' as const, text: PACKET_SOURCE_SUBTITLE.lao_li?.small[0] ?? '（这笔钱，是他今晚多跑的单。）', stamp: nightStamp(def.activeHour, 56) });
+      }
       return s;
     }
 
@@ -1343,6 +1385,23 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       // Return to the phase we came from: a morning chat (退休老师/上午在线)
       // stays in morning; a night chat returns to the night roster.
       s.dayPhase = def && isMorningTarget(def) ? 'morning' : 'night';
+      // v4.3.1（审查 P1-3）第一天收车后的教学红包：老李主动 5.2——让玩家在
+      // 第一晚就见到"红包 +N 元"横幅、来源字幕和账本入账（爽感系统第一周
+      // 开张）。他主动的，不算她开口：不落 wariness/trust 变动，只吃
+      // daysSincePaid 重置（教学"钱包被挖过一次"这件事本身）。红线：带
+      // 后果——来源字幕与 GIFT_NARRATOR 都在，只是这一天不吓她。
+      if (s.day === 1 && from.targetId === 'lao_li' && t && !s.flags.tutorial_gift_done) {
+        s.flags.tutorial_gift_done = true;
+        t.totalReceived += 5.2;
+        t.timesPaid += 1;
+        t.daysSincePaid = 0;
+        s.money += 5.2;
+        s.stats.totalEarned += 5.2;
+        s.stats.redPacketsReceived += 1;
+        s.stats.biggestPacket = Math.max(s.stats.biggestPacket, 5.2);
+        s.ledger.push({ day: s.day, amount: 5.2, note: '老李 的红包（奶茶钱）', kind: 'packet' });
+        log(s, 'packet', '老李 的红包：5.2 元（他主动的，没人开口要过）', GIFT_NARRATOR.lao_li[0]);
+      }
       return s;
     }
 
@@ -1493,9 +1552,16 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       if (!walletReady(t)) {
         s.stats.asksFailed += 1;
         t.wariness = clamp(t.wariness + ASK_FAIL_WARINESS, 0, 100);
-        pushBubbles(transcript, 'target', pickFreshLine(rng, DIRECT_ASK_COOLDOWN, DIRECT_ASK_COOLDOWN[0], recent), nightStamp(def.activeHour, 8));
-        closeFailed('同一个钱包挖得太快了。');
-        log(s, 'ask_fail', `${def.name} 这个钱包刚开过——再张口就是同一个钱包挖两次。他很久没回。`, '（挖得太快了。他会开始算。）');
+        // v4.3.3 修：没给过钱的人说不出"已经给过了"——那 3 天不是钱包冷却，是还不到开口的日子。
+        if (t.timesPaid > 0) {
+          pushBubbles(transcript, 'target', pickFreshLine(rng, DIRECT_ASK_COOLDOWN, DIRECT_ASK_COOLDOWN[0], recent), nightStamp(def.activeHour, 8));
+          closeFailed('同一个钱包挖得太快了。');
+          log(s, 'ask_fail', `${def.name} 这个钱包刚开过——再张口就是同一个钱包挖两次。他很久没回。`, '（挖得太快了。他会开始算。）');
+        } else {
+          pushBubbles(transcript, 'target', '（他没接这个话。｜顿了很久，他说：还没到这个份上吧，丫头。）', nightStamp(def.activeHour, 8));
+          closeFailed('还没到开口的日子。');
+          log(s, 'ask_fail', `你跟 ${def.name} 开口要 ${formatMoney(action.amount)}——他没接。你们还没到聊这个的份上。`, '（话太重了。这种开口，隔三天才不吓人。）');
+        }
         return s;
       }
       // —— 判定：成功率 = askChance 打 direct 折扣 × 狠理由加成 ——
@@ -1505,7 +1571,10 @@ export function dispatch(state: GameState, action: GameAction): GameState {
         t.wariness = clamp(t.wariness + DIRECT_ASK_FAIL_WARINESS + amountWariness, 0, 100);
         t.trust = clamp(t.trust - 5, 0, 100);
         s.numbness = clamp(s.numbness + 2, 0, 100);
-        pushBubbles(transcript, 'target', pickFreshLine(rng, DIRECT_ASK_FAIL_CHAT, DIRECT_ASK_FAIL_CHAT[0], recent), nightStamp(def.activeHour, 8));
+        // v4.3.3 修：翻车话术池里有一句"上次那笔你还没还"——他一分钱没给过的人
+        // 说不出这句（讨不存在的债=穿帮）。没给过钱的人换用其余的翻车话术。
+        const failPool = t.timesPaid > 0 ? DIRECT_ASK_FAIL_CHAT : DIRECT_ASK_FAIL_CHAT.filter((l) => !l.includes('上次那笔'));
+        pushBubbles(transcript, 'target', pickFreshLine(rng, failPool, DIRECT_ASK_FAIL_CHAT[0], recent), nightStamp(def.activeHour, 8));
         s.chat = {
           targetId: t.targetId, transcript,
           pendingOptions: followup(DIRECT_ASK_FOLLOWUP_FAIL, DIRECT_ASK_FAIL_WARINESS),

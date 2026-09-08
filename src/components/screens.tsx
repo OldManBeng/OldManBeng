@@ -66,7 +66,17 @@ function TitleBackdrop() {
 export function TitleScreen() {
   const store = useGame();
   const [muted, setM] = useState(isMuted());
-  useEffect(() => { loadMutePref(); setM(isMuted()); }, []);
+  const [ageOk, setAgeOk] = useState(false);
+  useEffect(() => {
+    loadMutePref();
+    setM(isMuted());
+    // v4.3.1 年龄门槛（审查 P0-2）：18+ 确认记在 localStorage，二周目免打断。
+    try { if (localStorage.getItem('beng:age_ok') === '1') setAgeOk(true); } catch { /* 隐私模式忽略 */ }
+  }, []);
+  const confirmAge = () => {
+    setAgeOk(true);
+    try { localStorage.setItem('beng:age_ok', '1'); } catch { /* 隐私模式忽略 */ }
+  };
   const hasSave = store.hasSave();
 
   return (
@@ -77,7 +87,12 @@ export function TitleScreen() {
         <p className="subtitle">原名《凌晨三点，哥哥》 · 一个关于「崩老头」的游戏</p>
       </div>
       <div className="title-buttons">
-        {hasSave && (
+        {!ageOk && (
+          <button className="btn primary" onClick={confirmAge}>
+            我已满 18 岁，我知道这是虚构作品
+          </button>
+        )}
+        {ageOk && hasSave && (
           <button
             className="btn primary"
             onClick={() => {
@@ -89,6 +104,7 @@ export function TitleScreen() {
         )}
         <button
           className="btn"
+          disabled={!ageOk}
           onClick={() => {
             // Go to newGame screen via a lightweight local state in App.
             window.dispatchEvent(new CustomEvent('beng:newgame'));
