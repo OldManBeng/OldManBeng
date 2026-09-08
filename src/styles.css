@@ -1067,7 +1067,23 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   text-shadow: 0 0 12px var(--glow-warm);
 }
 .plan-bar-label > * { min-width: 0; }
-.plan-bar-label strong { font-weight: 600; }
+/* 选中态：计划名是主角——灯笼金 + 辉光；前后缀压成 faint 陪衬。 */
+.plan-bar-label strong {
+  font-weight: 700;
+  color: var(--warm);
+  text-shadow: 0 0 12px var(--glow-warm);
+}
+.plan-bar-label .plan-note {
+  /* 小状态徽章：胶囊里的小胶囊——金字细描边，靠边不抢戏 */
+  display: inline-flex; align-items: center;
+  margin-left: 8px; padding: 1px 7px;
+  font-size: var(--fs-1); line-height: 16px; height: 16px; vertical-align: baseline;
+  color: var(--warm);
+  border: 1px solid color-mix(in srgb, var(--warm) 45%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--warm) 10%, transparent);
+  box-shadow: 0 0 10px var(--glow-warm);
+}
 .plan-panel:not(.chosen) .plan-bar-label::after {
   content: ''; display: inline-block; width: 7px; height: 7px; margin-left: 8px;
   border-radius: 50%; background: var(--danger, #e5484d); vertical-align: 1px;

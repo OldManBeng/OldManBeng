@@ -516,7 +516,7 @@ function PlanPanel() {
         <span className="plan-bar-ico">{PLAN_ICONS[state.todayPlan] ?? '📍'}</span>
         <span className="plan-bar-label">
           {chosen
-            ? <>今天的计划 · <strong>{chosen.name}</strong>（已定，明天可换）</>
+            ? <>今天的计划 · <strong>{chosen.name}</strong> <span className="plan-note">已定，明天可换</span></>
             : <>今天的计划还没定 <span className="muted">· 点开挑一个，今晚在哪看这个</span></>}
         </span>
         <span className="plan-bar-caret" aria-hidden>{open ? '▴' : '▾'}</span>
