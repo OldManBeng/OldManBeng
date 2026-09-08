@@ -156,10 +156,12 @@ describe('v2.0: 他来找你（incoming）', () => {
     let s = fresh(17);
     s.incoming.push({ targetId: 'lao_li', day: s.day, reason: 'missed_you', opener: '在吗', stamp: '23:00' });
     // 睡两觉（第二天还能看到，第三天清掉）。
+    // v4.3.3：早晨可能新造 incoming（bio 增益让某些种子多来一人）——
+    // 断言改为"这条特定的消息"过期与否，不再看列表总长。
     s = dispatch(s, { type: 'sleep' });
-    expect(s.incoming.length).toBe(1); // day+1：还在
+    expect(s.incoming.some((m) => m.targetId === 'lao_li' && m.opener === '在吗')).toBe(true); // day+1：还在
     s = dispatch(s, { type: 'sleep' });
-    expect(s.incoming.length).toBe(0); // day+2：过期
+    expect(s.incoming.some((m) => m.targetId === 'lao_li' && m.opener === '在吗')).toBe(false); // day+2：过期
   });
 
   it('一天最多攒 INCOMING_DAILY_CAP 条', () => {

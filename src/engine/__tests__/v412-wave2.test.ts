@@ -205,7 +205,7 @@ describe('v4.1.2: 主动要钱（direct_ask，v2 对话流改版）', () => {
     let s = nightOf(5);
     const li = s.targets.find((t) => t.targetId === 'lao_li')!;
     li.stage = 'harvest'; li.trust = 90; li.wariness = 0;
-    li.daysSincePaid = 0; // 刚给过
+    li.daysSincePaid = 0; li.timesPaid = 1; // 刚给过（timesPaid=1：他给过的钱包再挖，才说"已经给过了"）
     s = dispatch(s, { type: 'direct_ask', targetId: 'lao_li', reasonId: 'boba', amount: 30 });
     expect(s.stats.asksFailed).toBe(1);
     expect(s.targets.find((t) => t.targetId === 'lao_li')!.totalReceived).toBe(0);
