@@ -504,8 +504,10 @@ function PlanPanel() {
   // 点按展开九宫格/计划详情——展开收拢走 grid-rows 过渡（0fr↔1fr）。
   const [open, setOpen] = useState(false);
   const chosen = DAILY_PLANS.find((p) => p.id === state.todayPlan);
+  // 根节点不能带 bar 类——全局 .bar 是信任/警惕进度条规则
+  // （padding 2.5px 7px + .bar span 绝对定位），会把胶囊钉坏。
   return (
-    <div className={`plan-panel bar ${open ? 'open' : ''} ${state.todayPlan ? 'chosen' : ''}`}>
+    <div className={`plan-panel ${open ? 'open' : ''} ${state.todayPlan ? 'chosen' : ''}`}>
       <button
         className="plan-bar-toggle"
         aria-expanded={open}
@@ -515,33 +517,37 @@ function PlanPanel() {
         <span className="plan-bar-label">
           {chosen
             ? <>今天的计划 · <strong>{chosen.name}</strong>（已定，明天可换）</>
-            : <>今天的计划还没定 <span className="muted">——点开挑一个，今晚在哪看这个</span></>}
+            : <>今天的计划还没定 <span className="muted">· 点开挑一个，今晚在哪看这个</span></>}
         </span>
         <span className="plan-bar-caret" aria-hidden>{open ? '▴' : '▾'}</span>
       </button>
       <div className="plan-bar-body">
-        {chosen ? (
-          <div className="plan-chosen-detail">
-            <p className="muted small">{chosen.description}</p>
-          </div>
-        ) : (
-          <>
-            <div className="plan-grid">
-              {DAILY_PLANS.map((p) => (
-                <button key={p.id} className="plan-card" onClick={() => { store.dispatch({ type: 'choose_plan', planId: p.id }); setOpen(false); }}>
-                  <div className="plan-name"><span className="plan-ico">{PLAN_ICONS[p.id] ?? '📍'}</span>{p.name}</div>
-                  <div className="plan-desc">{p.description}</div>
-                  <div className="plan-meta muted small">
-                    精力 -{p.energyCost}
-                    {p.money ? ` · 钱 ${p.money > 0 ? '+' : ''}${p.money}` : ''}
-                    {p.meetArchetypes.length ? ' · 可能遇到人' : ''}
-                  </div>
-                </button>
-              ))}
+        {/* v4.3.3 单子包装：0fr↔1fr 折叠动画要求 grid 容器只有一个子项
+            （多子项=多轨道，1fr 会各自独立拉伸，展开高度翻倍）。 */}
+        <div className="plan-bar-inner">
+          {chosen ? (
+            <div className="plan-chosen-detail">
+              <p className="muted small">{chosen.description}</p>
             </div>
-            <p className="muted small">计划花的是白天的精力；晚上聊天每场 {CHAT_SESSION_COST} 点。</p>
-          </>
-        )}
+          ) : (
+            <>
+              <div className="plan-grid">
+                {DAILY_PLANS.map((p) => (
+                  <button key={p.id} className="plan-card" onClick={() => { store.dispatch({ type: 'choose_plan', planId: p.id }); setOpen(false); }}>
+                    <div className="plan-name"><span className="plan-ico">{PLAN_ICONS[p.id] ?? '📍'}</span>{p.name}</div>
+                    <div className="plan-desc">{p.description}</div>
+                    <div className="plan-meta muted small">
+                      精力 -{p.energyCost}
+                      {p.money ? ` · 钱 ${p.money > 0 ? '+' : ''}${p.money}` : ''}
+                      {p.meetArchetypes.length ? ' · 可能遇到人' : ''}
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <p className="muted small">计划花的是白天的精力；晚上聊天每场 {CHAT_SESSION_COST} 点。</p>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

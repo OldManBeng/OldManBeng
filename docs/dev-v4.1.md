@@ -603,3 +603,43 @@ tsc 零错 / vitest 181 全过 / vite build 通过。红线全保：无银行卡
 - 计划胶囊：展开 8 卡（宅家/代驾/…）→ 选中后胶囊显示已定 ✓。
 - 免打扰：陈工拉黑 → 卡片静音态 + 日志；解除恢复 ✓。
 - 老李夜聊：开场白 → 三选项渲染（教学红包由上述引擎测试确定性覆盖）。
+
+## v4.3.3 补丁：胶囊样式撞车修复（.bar 类名冲突）
+
+### 根因
+
+胶囊化时给 `.plan-panel` 根节点加了 `bar` 类——与全局 `.bar`
+（信任/警惕进度条）规则相撞：
+
+- `.bar` 自带 `padding: 2.5px 7px` + 边框 + 灰字 → 胶囊嵌在另一层
+  小框里，内陷错位（一度误诊为"面板卡 padding"）；
+- 更致命：`.bar span { position: absolute; left:0; top:0; bottom:0 }`
+  特异度 0,1,1 压过 `.plan-bar-ico` 的 0,1,0，把胶囊里的
+  图标/文字/箭头三个 span 全部钉到面板左上角互相重叠。
+
+### 修复（main-screen.tsx + styles.css）
+
+- TSX：根类名去掉 `bar`，只剩 `plan-panel/open/chosen`。
+- CSS：删 `section .plan-panel.bar` 特例；`.plan-panel` gap 归 0
+  （胶囊即面板本体，通知栏观感）；删死规则
+  `.plan-panel.chosen .plan-chosen`（旧 DOM），选中态改
+  `.plan-chosen-detail { padding-top: 10px }`。
+- 保留并验明的前置修复：单子包装 `.plan-bar-inner`（0fr↔1fr 单轨）、
+  子项锁高 20/20/14px（Windows emoji 行框 71px 病）、
+  label 内 `.muted` 行框归一。
+
+### 提示语两处微调（用户反馈）
+
+- 「——点开挑一个…」的破折号在窄胶囊里像一串残线 → 改「· 」分隔。
+- 提示语醒目化：`.muted` 在 label 内不再灰——灯笼金
+  （oklch(80% 0.122 79)）+ 温和辉光，红点管"必须处理"、
+  这行金字管"为什么要点开"。
+
+### E2E 终验（数值级）
+
+- 收拢：panel padding/border 0（双重框消失），面板高=胶囊高 38px，
+  body 0px；三 span 依次 [427-442][452-828][838-848] 不重叠；
+- 展开：508px、8 卡全可见、胶囊底角变方；
+- 选中：收拢 0px，标签「今天的计划 · 宅家刷手机（已定，明天可换）」。
+
+门禁：vitest 192/192 · tsc 0 错 · vite build 过。

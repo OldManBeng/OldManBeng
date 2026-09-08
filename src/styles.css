@@ -1035,12 +1035,13 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 }
 
 /* ---------- 每日计划 ---------- */
-/* v4.3.3 通知栏式计划条：平时收拢成胶囊一行，点按展开（0fr↔1fr 过渡） */
-.plan-panel.bar { gap: 0; }
+/* v4.3.3 通知栏式计划条：平时收拢成胶囊一行，点按展开（0fr↔1fr 过渡）。
+   根节点只有 plan-panel/open/chosen——不碰全局 .bar（进度条）规则。 */
+.plan-panel { display: flex; flex-direction: column; gap: 0; }
 .plan-bar-toggle {
   display: flex; align-items: center; gap: 10px; width: 100%;
-  min-height: var(--touch-sm);
-  padding: 8px 14px;
+  min-height: var(--touch-sm); height: var(--touch-sm);
+  padding: 8px 14px; box-sizing: border-box;
   background: var(--card, color-mix(in srgb, var(--ink) 6%, transparent));
   border: 1px solid var(--line-soft);
   border-radius: 999px;
@@ -1049,22 +1050,41 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 }
 .plan-bar-toggle:hover { border-color: var(--accent); }
 .plan-bar-toggle:active { background: color-mix(in srgb, var(--ink) 10%, transparent); }
-.plan-bar-ico { font-size: 18px; line-height: 1; }
-.plan-bar-label { flex: 1; min-width: 0; text-align: left; font-size: var(--fs-2); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.plan-panel:not(.chosen) .plan-bar-label::after {
-  content: ''; display: inline-block; width: 7px; height: 7px; margin-left: 7px;
-  border-radius: 50%; background: var(--danger, #e5484d); vertical-align: 2px;
+.plan-bar-ico { font-size: 18px; line-height: 1; flex: none;
+  /* Windows 上 emoji 回退字体（Segoe UI Emoji）的行框能把内容撑到 71px——
+     显式锁高度，框住 emoji 的失控行高。 */
+  height: 20px; overflow: hidden; }
+.plan-bar-label {
+  flex: 1; min-width: 0; text-align: left;
+  font-size: var(--fs-2); line-height: 20px; height: 20px;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
 }
-.plan-bar-caret { color: var(--faint); font-size: 12px; }
+/* 未定计划的提示语：灯笼金——比 muted 灰醒目，语义上正是"他在等你开口"的钱色。
+   红点管"必须处理"，这行管"为什么要点开"。 */
+.plan-bar-label .muted {
+  font-size: inherit; line-height: inherit; vertical-align: baseline;
+  color: var(--warm);
+  text-shadow: 0 0 12px var(--glow-warm);
+}
+.plan-bar-label > * { min-width: 0; }
+.plan-bar-label strong { font-weight: 600; }
+.plan-panel:not(.chosen) .plan-bar-label::after {
+  content: ''; display: inline-block; width: 7px; height: 7px; margin-left: 8px;
+  border-radius: 50%; background: var(--danger, #e5484d); vertical-align: 1px;
+}
+.plan-bar-caret { color: var(--faint); font-size: 12px; line-height: 1; flex: none; height: 14px; overflow: hidden; }
 .plan-bar-body {
-  display: grid; grid-template-rows: 0fr;
+  display: grid;
+  /* 两个子节点（grid + p）各占一条折叠轨：收拢 0fr 双轨、展开 1fr 双轨。
+     grid-template-rows 的轨道数必须与子项数一致——单轨时第二个子项掉到
+     隐式 auto 轨，收拢态就会露出 18px 的残高。 */
+  grid-template-rows: 0fr;
   transition: grid-template-rows var(--speed-in, 300ms) var(--ease-out);
 }
 .plan-panel.open .plan-bar-body { grid-template-rows: 1fr; }
-.plan-bar-body > * { overflow: hidden; min-height: 0; }
-.plan-panel.open .plan-grid, .plan-panel.open .plan-bar-body > p { padding-top: 10px; }
-.plan-bar-body .plan-grid { margin-top: 10px; }
-.plan-bar-body .plan-grid > * { min-height: 0; }
+.plan-bar-body > .plan-bar-inner { overflow: hidden; min-height: 0; }
+.plan-bar-inner .plan-grid { padding-top: 10px; }
+.plan-bar-inner .plan-grid > * { min-height: 0; }
 @media (prefers-reduced-motion: reduce) {
   .plan-bar-body { transition: none; }
   .plan-bar-toggle { transition: none; }
@@ -1073,14 +1093,8 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   .plan-panel.open .plan-bar-toggle { border-bottom-left-radius: var(--r-md, 10px); border-bottom-right-radius: var(--r-md, 10px); }
 }
 
-.plan-panel { display: flex; flex-direction: column; gap: 10px; }
-.plan-panel.chosen .plan-chosen {
-  font-size: var(--fs-8);
-  font-weight: 600;
-  color: var(--warm);
-  letter-spacing: var(--ls-label);
-  text-shadow: 0 0 14px var(--glow-warm);
-}
+/* v4.3.3 选中态：胶囊下方展开计划详情行。 */
+.plan-panel.chosen .plan-chosen-detail { padding-top: 10px; }
 .plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .plan-card {
   display: flex;
