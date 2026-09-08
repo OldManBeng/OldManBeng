@@ -11,6 +11,7 @@ import { DIRECT_ASK_AMOUNTS, DIRECT_ASK_REASONS, reasonForAmount } from '../data
 import { INCIDENTS } from '../data/incidents';
 import { SHOP_ITEMS } from '../data/items';
 import { WORLD_BEAT_BY_DAY, interpolateBeat } from '../data/life-events';
+import { PLAYER_BIOS } from '../data/player-bios';
 import type { PlayerProfile } from '../types/game';
 
 /** 打字机入场：每个气泡先露一个字，再逐字打完（收到新气泡时也走这个）。 */
@@ -372,6 +373,7 @@ function TodayPanel({ phaseLabel }: { phaseLabel: string }) {
         <PersonaAvatar personaId={state.personaId} size={44} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="persona-line">{state.playerName} · 人设「{persona.name}」</div>
+          <div className="persona-bio muted small">“{bioTextOf(state.profile.bioId)}”</div>
           <div className="bars" style={{ margin: '5px 0 3px' }}>
             <div className="bar energy"><span style={{ width: `${(state.energy / state.energyMax) * 100}%` }} />精力 {state.energy}/{state.energyMax}（一场 {CHAT_SESSION_COST} 点）</div>
             <div className="bar numb"><span style={{ width: `${state.numbness}%` }} />麻木 {state.numbness}% · 良心 {state.conscience}</div>
@@ -567,7 +569,8 @@ function MomentsPanel() {
   // v4.1.2：发圈器默认折叠成一行——打开朋友圈先看到最新的动态，
   // 想发再展开（每天一条的动作还在，只是不占首屏）。
   const [posterOpen, setPosterOpen] = useState(false);
-  const nameFor = (id?: string) => (id === 'player' || !id ? '你' : ALL_TARGET_MAP[id]?.name ?? '他');
+  // v4.3.2 手机界面统一昵称口径：朋友圈点赞/评论区也显示微信昵称（缺省回落叙事名）。
+  const nameFor = (id?: string) => (id === 'player' || !id ? '你' : ALL_TARGET_MAP[id]?.handle ?? ALL_TARGET_MAP[id]?.name ?? '他');
 
   return (
     <section className="moments-panel">
@@ -596,7 +599,12 @@ function MomentsPanel() {
 
       <div className="moment-feed">
         {state.moments.length === 0 && <p className="muted small">还没有动态。发一张自拍，或者等他们发。</p>}
-        {[...state.moments].reverse().map((m) => {
+        {[...state.moments].reverse().filter((m) => {
+          // v4.3.3 免打扰的人：他的朋友圈也从你的墙上消失（微信没有"被拉黑还看得见"）。
+          if (m.author !== 'target') return true;
+          const mt = m.targetId ? state.targets.find((x) => x.targetId === m.targetId) : undefined;
+          return !mt?.mutedByPlayer;
+        }).map((m) => {
           const def = m.targetId ? ALL_TARGET_MAP[m.targetId] : null;
           const tstate = m.targetId ? state.targets.find((x) => x.targetId === m.targetId) : undefined;
           const liked = m.likes.includes('player');
@@ -798,9 +806,10 @@ function TargetList({ dayPhase }: { dayPhase: 'morning' | 'night' }) {
         const awake = targetAwake(def, dayPhase);
         const chatted = t.lastChatDay === state.day;
         const isPinned = state.pinnedTargets.includes(t.targetId);
-        const canChat = !t.blocked && awake && !chatted && state.energy >= CHAT_SESSION_COST && state.dayPhase !== 'chat';
+        const isMuted = !!t.mutedByPlayer && !t.blocked;
+        const canChat = !t.blocked && !isMuted && awake && !chatted && state.energy >= CHAT_SESSION_COST && state.dayPhase !== 'chat';
         return (
-          <div key={t.targetId} className={`target-card ${t.blocked ? 'blocked' : ''} ${!awake ? 'asleep' : ''}`}>
+          <div key={t.targetId} className={`target-card ${t.blocked ? 'blocked' : ''} ${isMuted ? 'muted-card' : ''} ${!awake ? 'asleep' : ''}`}>
             <div className="avatar-col">
               <OldManAvatar target={def} state={t} size={56} />
               <button
@@ -809,6 +818,13 @@ function TargetList({ dayPhase }: { dayPhase: 'morning' | 'night' }) {
                 onClick={() => store.dispatch({ type: 'toggle_pin', targetId: t.targetId })}
               >
                 {isPinned ? '已置顶' : '置顶'}
+              </button>
+              <button
+                className={`pin-under-avatar mute-btn ${isMuted ? 'muted' : ''}`}
+                title={isMuted ? '解除免打扰' : '消息免打扰——他不再被推来，他的圈你也看不到了'}
+                onClick={() => { playBlocked(); store.dispatch({ type: 'toggle_mute', targetId: t.targetId }); }}
+              >
+                {isMuted ? '已免打扰' : '免打扰'}
               </button>
             </div>
             <div className="target-info">
@@ -828,6 +844,8 @@ function TargetList({ dayPhase }: { dayPhase: 'morning' | 'night' }) {
             </div>
             {t.blocked ? (
               <div className="blocked-note">他不回你了。</div>
+            ) : isMuted ? (
+              <div className="muted small mute-note">消息免打扰中。他的消息不推来，他的朋友圈也看不见。</div>
             ) : !awake ? (
               <div className="muted small asleep-note">{dayPhase === 'night' ? '睡下了' : '还没醒'}</div>
             ) : chatted ? (
@@ -1083,6 +1101,14 @@ const AGE_OPTIONS: { value: PlayerProfile['ageClaim']; label: string; note: stri
   { value: 32, label: '32岁', note: '接近同龄网友——"女儿感"全无，仰视感拉满。' },
 ];
 
+/** v4.3.3 个性签名选卡说明——把原型相位翻译成玩家能懂的一句人话。 */
+function bioNoteOf(id: PlayerProfile['bioId']): string {
+  return PLAYER_BIOS.find((b) => b.id === id)?.note ?? '';
+}
+function bioTextOf(id: PlayerProfile['bioId']): string {
+  return PLAYER_BIOS.find((b) => b.id === id)?.text ?? '';
+}
+
 const TRAIT_OPTIONS: { value: PlayerProfile['traitId']; label: string; note: string }[] = [
   { value: 'sweet_mouth', label: '嘴甜', note: '哄得住孤独的，但生意人觉得你廉价。' },
   { value: 'cold_queen', label: '清冷', note: '疑心重的反而放心（不像图钱的），情感依赖型却被推远。' },
@@ -1141,6 +1167,18 @@ function ProfilePanel() {
           </button>
         ))}
       </div>
+      <h4>个性签名</h4>
+      <div className="choice-grid">
+        {PLAYER_BIOS.map((b) => (
+          <button key={b.id} className={`choice-tile wide ${p.bioId === b.id ? 'on' : ''}`} onClick={() => setProfile({ bioId: b.id })}>
+            <div className="tile-label">{b.text}</div>
+            <div className="muted small">{b.note}</div>
+          </button>
+        ))}
+      </div>
+      <p className="muted small">
+        签名挂在资料页——认识过的人换头像进聊天时都看得见。顺眼的，会顺着这句话来找你；犯嘀咕的，绕着走。
+      </p>
       <p className="muted small">
         朋友圈现在挂着{SELFIE_LABEL[p.selfieId]}（第 {p.selfieDay || '—'} 天发布）——发新照片去朋友圈模块。
       </p>

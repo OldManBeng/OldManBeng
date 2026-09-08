@@ -1483,6 +1483,13 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 .pin-under-avatar:hover { border-color: var(--accent); color: var(--accent); }
 .pin-under-avatar.pinned { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
 
+/* v4.3.3 消息免打扰：名单卡第二颗小按钮 + 卡片静音态 */
+.pin-under-avatar.mute-btn { margin-top: 2px; }
+.pin-under-avatar.mute-btn.muted { border-color: var(--danger); color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, transparent); }
+.target-card.muted-card { opacity: 0.66; }
+.target-card.muted-card .target-name { color: var(--muted); }
+.mute-note { max-width: 140px; }
+
 /* 开口要钱弹窗（老头卡片上弹出） */
 .ask-modal-overlay {
   position: fixed;

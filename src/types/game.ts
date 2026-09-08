@@ -237,6 +237,8 @@ export type GameAction =
   | { type: 'resolve_beat'; optionIndex: number }
   /** v4.1.2 名单置顶——targetId 进/出置顶集合（幂等切换）。 */
   | { type: 'toggle_pin'; targetId: string }
+  /** v4.3.3 玩家拉黑老头——一键屏蔽（再点解除）：他不再来扰，你看不见他的圈。 */
+  | { type: 'toggle_mute'; targetId: string }
   /** v4.1.2 主动要钱——绕开剧情链直接开口（理由 + 金额自选，代价照付）。 */
   | { type: 'direct_ask'; targetId: string; reasonId: string; amount: number }
   /** v4.2 突发事件决策——今天的事件选了哪个选项（只能选一次，过夜落锤）。 */

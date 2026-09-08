@@ -164,6 +164,8 @@ export interface TargetState {
   /** v2.2：上一场他发过的照片下标——连发两张不重复（-1 = 无记录）。 */
   recentPhotoIdx: number;
   blocked: boolean;
+  /** v4.3.3 玩家拉黑——她把他设成"消息免打扰"：可逆，与引擎结局性的 blocked 区分。 */
+  mutedByPlayer?: boolean;
   /** Set when he stops being reachable forever. */
   ended: TargetEndingId | null;
 }

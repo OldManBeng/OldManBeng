@@ -32,6 +32,8 @@ import {
   WORLD_BEAT_BY_DAY, interpolateBeat,
 } from '../data/life-events';
 import { LIBRARY_OPENERS, LIBRARY_INCOMING } from '../data/library-openers';
+import { PLAYER_BIOS, PLAYER_BIO_MAP, BIO_HOOK_BY_ARCHETYPE, bioPhase } from '../data/player-bios';
+import { PLAYER_BIO_IDS } from '../types/game';
 import {
   packetTierOf, PACKET_SOURCE_SUBTITLE, PACKET_SOURCE_GENERIC,
   ASK_COST_NARRATOR_V2, GIFT_NARRATOR, GIFT_NARRATOR_GENERIC,
@@ -571,7 +573,7 @@ function runMorning(state: GameState) {
   const selfieFresh = state.day - state.profile.selfieDay <= SELFIE_LINGER_DAYS && state.profile.selfieDay > 0;
   for (const t of state.targets) {
     t.pingedToday = false;
-    if (t.blocked || t.ended || !t.discoveredDay) continue;
+    if (t.blocked || t.ended || !t.discoveredDay || t.mutedByPlayer) continue;
     const def = ALL_TARGET_MAP[t.targetId];
     if (!def) continue;
     if (state.incoming.length >= INCOMING_DAILY_CAP) break;
@@ -631,7 +633,7 @@ function runMorning(state: GameState) {
     if (state.day - post.momentDay > SELFIE_LINGER_DAYS) continue;
     if (post.lastWaveDay === state.day) continue;
     post.lastWaveDay = state.day;
-    const reactors = state.targets.filter((t) => !t.blocked && !t.ended && t.discoveredDay > 0);
+    const reactors = state.targets.filter((t) => !t.blocked && !t.ended && t.discoveredDay > 0 && !t.mutedByPlayer);
     for (const t of reactors) {
       const def = ALL_TARGET_MAP[t.targetId];
       if (!def || hasReacted(post, t.targetId)) continue;
@@ -929,7 +931,8 @@ export function dispatch(state: GameState, action: GameAction): GameState {
 
     case 'update_profile': {
       // v2.0：改资料（v2.3：发自拍迁去朋友圈模块的 post_moment）。
-      if (action.avatarId !== undefined) s.profile.avatarId = clamp(action.avatarId, 1, 6);
+      // v4.3.3：头像库扩到 10 款（AVATAR_PRESETS），钳制上限跟着走。
+      if (action.avatarId !== undefined) s.profile.avatarId = clamp(action.avatarId, 1, 10);
       if (action.ageClaim) s.profile.ageClaim = action.ageClaim;
       if (action.traitId) s.profile.traitId = action.traitId;
       // v4.3.3 个性签名——换签名当天就有感觉：顺眼的人更容易来找你，
@@ -978,7 +981,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       let instant = 0;
       for (const t of s.targets) {
         if (instant >= 2) break;
-        if (t.blocked || t.ended || !t.discoveredDay) continue;
+        if (t.blocked || t.ended || !t.discoveredDay || t.mutedByPlayer) continue;
         const def = ALL_TARGET_MAP[t.targetId];
         if (!def || hasReacted(post, t.targetId)) continue;
         if (!rng.chance(0.3)) continue;
@@ -1067,7 +1070,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       if (idx < 0 || s.dayPhase === 'chat') return s;
       const t = s.targets.find((x) => x.targetId === action.targetId);
       const def = ALL_TARGET_MAP[action.targetId];
-      if (!t || !def || t.blocked || s.energy < chatCost(s)) return s;
+      if (!t || !def || t.blocked || t.mutedByPlayer || s.energy < chatCost(s)) return s;
       if (t.lastChatDay === s.day) {
         // 今天聊过了：把这条 incoming 消掉但不开会话。
         s.incoming.splice(idx, 1);
@@ -1138,7 +1141,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       const t = s.targets.find((x) => x.targetId === action.targetId);
       // v2.0：全量映射——库里偶遇的老头也能开聊。
       const def = ALL_TARGET_MAP[action.targetId];
-      if (!t || !def || t.blocked || s.energy < chatCost(s)) return s;
+      if (!t || !def || t.blocked || t.mutedByPlayer || s.energy < chatCost(s)) return s;
       if (!targetAwake(def, s.dayPhase)) return s;
       // 一个人一天只聊一场：重复刷同一个老头没有额外收益——
       // 多线经营是这门生意的本质，也是风险的来源。
@@ -1481,6 +1484,22 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       return s;
     }
 
+    case 'toggle_mute': {
+      // v4.3.3 玩家拉黑：她把他设成"消息免打扰"——可逆，与结局性的 blocked 不同。
+      // 拉黑不是删人（他不掉信任、不吃断联惩罚），只是她的世界单方面安静下来：
+      // 他不再被主动推来，她的朋友圈他不再刷到，他的朋友圈她也看不到了。
+      // 解除即恢复——代价是这期间的断联照常累积（他没等的话，也在过着）。
+      const known = s.targets.find((t) => t.targetId === action.targetId && t.discoveredDay > 0);
+      if (!known) return s;
+      known.mutedByPlayer = !known.mutedByPlayer;
+      if (known.mutedByPlayer) s.incoming = s.incoming.filter((m) => m.targetId !== action.targetId);
+      const def = ALL_TARGET_MAP[action.targetId];
+      log(s, 'flag', known.mutedByPlayer
+        ? `你把 ${def?.handle ?? def?.name ?? '他'} 设成了消息免打扰。他的世界照旧，只是不再推到你眼前。`
+        : `你解除了对 ${def?.handle ?? def?.name ?? '他'} 的免打扰。断联的日子照算——他没等的话，也在过着。`);
+      return s;
+    }
+
     case 'direct_ask': {
       // v4.1.2 主动要钱：绕开剧情链的直接开口——金额、理由都玩家自选。
       // 和「陪他说说话」同一套对话体验：真实聊天会话（耗一场精力、他先打招呼、
@@ -1491,7 +1510,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       const t = s.targets.find((x) => x.targetId === action.targetId);
       const def = ALL_TARGET_MAP[action.targetId];
       const reason = DIRECT_ASK_REASONS.find((r) => r.id === action.reasonId);
-      if (!t || !def || t.blocked || !t.discoveredDay) return s;
+      if (!t || !def || t.blocked || t.mutedByPlayer || !t.discoveredDay) return s;
       if (!reason || !DIRECT_ASK_AMOUNTS.includes(action.amount as (typeof DIRECT_ASK_AMOUNTS)[number])) return s;
       if (s.dayPhase === 'chat' || s.energy < chatCost(s) || t.lastChatDay === s.day) return s;
       if (!targetAwake(def, s.dayPhase)) return s;
