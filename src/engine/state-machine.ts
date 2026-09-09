@@ -51,6 +51,7 @@ import {
   INDUSTRY_NUMBNESS_PER_DAY, VERDICT_ASK_THRESHOLD,
   TRAIT_ARCHETYPE_AFFINITY, AGE_NEED_AFFINITY, INCOMING_BASE_CHANCE,
   INCOMING_DAILY_CAP, SELFIE_LINGER_DAYS, ARCHIVE_CAP, NUMBNESS_DAILY_CAP, NUMBNESS_REST_RECOVERY,
+  SELFIE_AUDIENCE_MAX, BIO_AUDIENCE_MAX, BIO_HOOK_WINDOW_DAYS,
   PERSONA_NEED_MATCH, PERSONA_SESSION_TRUST, PERSONA_SESSION_WARINESS,
   RECALL_CHANCE, GREETING_CLOSE_TRUST, GREETING_FAR_TRUST, PERSONA_GREET_TRUST,
   ENERGY_EARLY_DAYS, ENERGY_EARLY_FACTOR,
@@ -201,6 +202,52 @@ function pushBubbles(transcript: ChatMsg[], speaker: ChatMsg['speaker'], raw: st
     n += 1;
   }
   return n;
+}
+
+/** v4.5 派生 RNG：观众圈抽样用的独立随机流——不消耗主种子流
+ *  （种子确定性测试对 runMorning 的逐掷断言很敏感，门面抽样不能插队）。 */
+function derivedRng(seed: number): ReturnType<typeof makeRng> {
+  // 混一天的日子数进种子：同一天里换两次门面，抽的人不一样。
+  return makeRng((Math.imul(seed ^ 0x85ebca6b, 0x27d4eb2d) ^ (seed >>> 15)) >>> 0);
+}
+
+/** v4.5 观众圈：发圈/换签名时抽"会注意到的人"。不是全员点名——
+ *  回一条要花精力，每次换门面只惊动一部分人（回应玩家的精力诉求）。
+ *  加权不缺席：需求对口（照片是给他的缺口发的/签名是他的原型顺眼的）
+ *  权重高，但谁都有机会被抽中——抽中的是"缘分"，不是"名单"。 */
+function sampleAudience(s: GameState, size: number, kind: 'selfie' | 'bio'): string[] {
+  const eligible = s.targets.filter(
+    (t) => !t.blocked && !t.ended && !t.mutedByPlayer && !!t.discoveredDay,
+  );
+  if (!eligible.length) return [];
+  const rng = derivedRng(s.rngSeed + s.day * 7919 + (kind === 'selfie' ? 13 : 57));
+  // 权重：需求对口 ×3（照片/签名击中他的情感缺口）；信任打底 ×（1+trust/100）；
+  //  断联的人更会来翻你的门面（憋不住了）×（1+daysSilent/6）。
+  const weightFor = (t: TargetState): number => {
+    const def = ALL_TARGET_MAP[t.targetId];
+    if (!def) return 0;
+    let w = 1 + t.trust / 100;
+    if (kind === 'selfie' && (def.need === 'daughter_figure' || def.need === 'desired')) w *= 3;
+    if (kind === 'bio' && bioPhase(s.profile.bioId, def.archetype) > 0) w *= 3;
+    if (kind === 'bio' && bioPhase(s.profile.bioId, def.archetype) < 0) w *= 0.4; // 犯嘀咕的人少来翻
+    w *= 1 + Math.min(t.daysSilent, 6) / 6;
+    return Math.max(0.05, w);
+  };
+  const pool = eligible.slice();
+  const picked: string[] = [];
+  while (picked.length < size && pool.length) {
+    const weights = pool.map((t) => weightFor(t));
+    const total = weights.reduce((a, b) => a + b, 0);
+    let roll = rng.next() * total;
+    let hit = pool.length - 1;
+    for (let i = 0; i < pool.length; i++) {
+      roll -= weights[i];
+      if (roll <= 0) { hit = i; break; }
+    }
+    picked.push(pool[hit].targetId);
+    pool.splice(hit, 1);
+  }
+  return picked;
 }
 
 /** v2.1：选话术组——去重窗口随库扩容：池子越大，近期不再重复的套数越多。
@@ -398,6 +445,9 @@ export function createInitialState(): GameState {
     pinnedTargets: [],
     pendingIncident: '',
     incidentResolved: false,
+    selfieAudience: [],
+    bioAudience: [],
+    bioAudienceDay: 0,
   };
 }
 
@@ -576,6 +626,10 @@ function runMorning(state: GameState) {
   // v2.0：他主动找你——新自拍 3 天内最猛，信任高的、断联的都会来。
   // incoming：两晚没回应，他就不再等你了。过期清理。满了还硬挤进来的人，把最早那条顶掉——
   // 等待列表总长 ≤ INCOMING_DAILY_CAP（别攒成轰炸队列）。
+  // v4.5 观众圈：自拍/签名加成只作用于被抽中的"注意到的人"（sampleAudience，
+  //  在 post_moment/update_profile 时抽好）。没被抽中的：门面是发给别人看的。
+  //  且一照一签各只来一次（t.selfiePingedOn/t.bioPingedOn 记的是当时门面的日子，
+  //  换新照片/新签名重抽重置——新门面值得再来一句）。
   state.incoming = state.incoming.filter((m) => state.day - m.day <= 1);
   while (state.incoming.length > INCOMING_DAILY_CAP) state.incoming.shift();
   let madeToday = 0;
@@ -587,16 +641,26 @@ function runMorning(state: GameState) {
     if (!def) continue;
     if (state.incoming.length >= INCOMING_DAILY_CAP) break;
     let p = 0.08; // 想你了的基础
-    if (selfieFresh) p += INCOMING_BASE_CHANCE * (def.need === 'daughter_figure' || def.need === 'desired' ? 1 : 0.5);
+    // v4.5：自拍加成只给观众圈里的人——且一人一照只来一次：
+    // 他说过这张照片之后，加成跟着熄火（照片进过心里了，不用天天挂着）。
+    // 拉黑/结局的人不在此列（他们进不了观众圈，进了也走不到这一行）。
+    const inSelfieAudience = selfieFresh && state.selfieAudience.includes(t.targetId);
+    const selfieDue = inSelfieAudience && t.selfiePingedOn !== state.profile.selfieDay;
+    if (selfieDue) p += INCOMING_BASE_CHANCE * (def.need === 'daughter_figure' || def.need === 'desired' ? 1 : 0.5);
     if ((state.inventory.retouch ?? 0) > 0) p += 0.1; // v2.3：修图会员——照片更"真"
     if (t.trust >= 50) p += 0.1;
     if (t.daysSilent >= 3) p += 0.2; // 断联的人憋不住了
     if (t.daysSincePaid >= 5 && t.trust >= 40) p += 0.15; // 发工资的日子
     // v4.3.3 个性签名相位：顺眼的门面让他更想来找你，犯嘀咕的绕着走
     //（负相位=减概率；概率虽减，开场白还在——嘀咕本身也是一种来找你的方式）。
+    // v4.5：签名钩子（bio_ 话头的开场白）同样只给 bioAudience 观众圈，
+    //  一人一签只来一次；相位概率加成保留全员（门面长期挂在那，翻不翻是缘分）。
     const bioPhaseNow = bioPhase(state.profile.bioId, def.archetype);
-    const bioHookLine = BIO_HOOK_BY_ARCHETYPE[def.archetype];
-    const bioHook = bioPhaseNow !== 0 && !!bioHookLine && !t.recentIncoming?.includes(bioHookLine);
+    const bioHookPool = BIO_HOOK_BY_ARCHETYPE[def.archetype];
+    const inBioAudience = state.bioAudience.includes(t.targetId)
+      && state.day - state.bioAudienceDay <= BIO_HOOK_WINDOW_DAYS;
+    const bioHook = bioPhaseNow !== 0 && !!bioHookPool && inBioAudience && t.bioPingedOn !== state.profile.bioId
+      && !t.recentIncoming?.some((l) => bioHookPool.includes(l));
     p = Math.max(0, p + bioPhaseNow);
     if (rng.chance(p)) {
       const script = scriptFor(t.targetId);
@@ -604,12 +668,13 @@ function runMorning(state: GameState) {
       let reason: 'selfie' | 'missed_you' | 'wallet_open' | 'his_life' = 'missed_you';
       let pool = inc?.missed_you ?? ['（他发来一条消息。）'];
       let bioPoolUsed = false;
-      if (selfieFresh && inc?.on_selfie?.length) { reason = 'selfie'; pool = inc.on_selfie; }
-      else if (bioHook && BIO_HOOK_BY_ARCHETYPE[def.archetype]) {
-        // 他顺着你的新签名找来——把话头第一句让给签名。
+      if (selfieDue && inc?.on_selfie?.length) { reason = 'selfie'; pool = inc.on_selfie; t.selfiePingedOn = state.profile.selfieDay; }
+      else if (bioHook && bioHookPool) {
+        // 他顺着你的新签名找来——把话头第一句让给签名（3 句池随机取一）。
         reason = 'missed_you';
-        pool = [BIO_HOOK_BY_ARCHETYPE[def.archetype]!];
+        pool = bioHookPool;
         bioPoolUsed = true;
+        t.bioPingedOn = state.profile.bioId;
       }
       else if (t.daysSincePaid >= 5 && inc?.wallet_open?.length) { reason = 'wallet_open'; pool = inc.wallet_open; }
       // v4.1 库人物个人 incoming：他第一次来找你时说的话是他的，不是原型的——
@@ -868,12 +933,19 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       s.moments = [];
       s.unseenMoments = 0;
       s.inventory = {};
+      s.selfieAudience = [];
+      s.bioAudience = [];
+      s.bioAudienceDay = 0;
       s.energyMax = ENERGY_MAX;
       s.money = START_MONEY;
       s.riskLevel = 0;
       s.numbness = 0;
       s.conscience = 50;
       s.stats = { totalEarned: 0, redPacketsReceived: 0, asksMade: 0, asksFailed: 0, nightsWorked: 0, biggestPacket: 0 };
+      // v4.5：开局签名（默认直白哭穷）就有观众圈——第 1 天早晨主五人里
+      // 也有机会有人顺着签名来搭话（此前签名钩子只在换签后触发，开局死区）。
+      s.bioAudience = sampleAudience(s, BIO_AUDIENCE_MAX, 'bio');
+      s.bioAudienceDay = s.day;
       runMorning(s);
       log(s, 'day', `第 1 天。你还差 ${s.goal} 元。通讯录里躺着五个"哥哥"：一个深夜的司机，一个上午的老师，一个凌晨的老板，一个网吧的阿豪，一个画图纸的陈工。你一个都还没回。`);
       // v3.1：开局也弹"新的一天"简报（第 1 天的账单/事件/晨钟）。
@@ -962,6 +1034,8 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       if (action.traitId) s.profile.traitId = action.traitId;
       // v4.3.3 个性签名——换签名当天就有感觉：顺眼的人更容易来找你，
       // 犯嘀咕的人警惕微涨（门面改了，看进去的人反应各不相同）。
+      // v4.5 观众圈：换签名只惊动一部分人（重抽 bioAudience，≤BIO_AUDIENCE_MAX），
+      //  窗口内只有他们会顺着签名找来——换一次门面不再变成全员点名。
       if (action.bioId && PLAYER_BIO_IDS.includes(action.bioId)) {
         const oldBio = PLAYER_BIO_MAP[s.profile.bioId];
         s.profile.bioId = action.bioId;
@@ -974,6 +1048,14 @@ export function dispatch(state: GameState, action: GameAction): GameState {
               t.wariness = clamp(t.wariness + 1, 0, 100);
             }
           }
+          s.bioAudience = sampleAudience(s, BIO_AUDIENCE_MAX, 'bio');
+          s.bioAudienceDay = s.day;
+          if (s.bioAudience.length) {
+            const names = s.bioAudience.map((id) => ALL_TARGET_MAP[id]?.name).filter(Boolean);
+            log(s, 'flag', `换了签名。${names.length}个人会翻到这行字——谁先来，看谁心里搁着事。`);
+          } else {
+            log(s, 'flag', '换了签名。通讯录里暂时没人会注意到这行字。');
+          }
         }
       }
       return s;
@@ -981,6 +1063,9 @@ export function dispatch(state: GameState, action: GameAction): GameState {
 
     case 'post_moment': {
       // v2.3：发一条朋友圈自拍——一天一条（新照片三天内他会更主动来找你）。
+      // v4.5 观众圈：发一张只惊动一部分人（重抽 selfieAudience，
+      //  ≤SELFIE_AUDIENCE_MAX）——三天内只有他们会因照片来找你，
+      //  每人这张照片只来一次。回消息要花精力，不该一发圈全员围上来。
       if (s.dayPhase === 'chat') return s;
       const postedToday = s.moments.some((m) => m.author === 'player' && m.momentDay === s.day);
       if (postedToday) return s;
@@ -1000,7 +1085,8 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       if (s.moments.length > MOMENTS_CAP) s.moments.splice(0, s.moments.length - MOMENTS_CAP);
       s.profile.selfieId = action.selfieId;
       s.profile.selfieDay = s.day;
-      log(s, 'flag', `你发了条朋友圈：${SELFIE_LABEL[action.selfieId] ?? '一张自拍'}。明早他们会来看的。`);
+      s.selfieAudience = sampleAudience(s, SELFIE_AUDIENCE_MAX, 'selfie');
+      log(s, 'flag', `你发了条朋友圈：${SELFIE_LABEL[action.selfieId] ?? '一张自拍'}。${s.selfieAudience.length ? '明早刷到的人里，有人会来找你。' : '明早他们会来看的。'}`);
       // v3.1：刚发的圈，此刻在线的人会立刻刷到——最多两个反应，朋友圈是活的。
       // 起疑线同样生效（疑心重的人当场就会来翻）；hasReacted 保证不与早晨浪潮重复。
       let instant = 0;

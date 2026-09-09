@@ -213,6 +213,15 @@ export interface GameState {
   /** v4.2 突发事件：今天悬而未决的事件 id（'' = 无）。带选择卡，睡觉落锤。 */
   pendingIncident: string;
   incidentResolved: boolean;
+  /** v4.5 观众圈：最近一次发圈被抽中"会刷到"的老头（SELFIE_LINGER_DAYS 窗口内
+   *  只有他们会因照片来找你；一人一照只来一次）。换新照片重抽。 */
+  selfieAudience: string[];
+  /** v4.5 观众圈：最近一次换签名被抽中"会翻资料页"的老头（窗口内只有
+   *  他们会顺签名找来；一人一签只来一次）。换新签名重抽。 */
+  bioAudience: string[];
+  /** v4.5：观众圈是哪天抽的（换签 4 天内有效——过了窗口还没来，
+   *  就是没注意到，不再拿"刚换的吧"这句旧话说事）。 */
+  bioAudienceDay: number;
 }
 
 export type GameAction =

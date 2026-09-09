@@ -72,6 +72,8 @@ describe('v4.4 主动聊天解耦 + 应答话术', () => {
     // cafe_owner_ninety/lonely_engineer）
     for (const arch of Object.keys(BIO_HOOK_BY_ARCHETYPE)) {
       expect(INCOMING_REPLIES[`bio_${arch}`], `bio_${arch} 应答组缺失`).toBeDefined();
+      // v4.5：钩子开场白是 3 句池（每原型随机取一）
+      expect(BIO_HOOK_BY_ARCHETYPE[arch as keyof typeof BIO_HOOK_BY_ARCHETYPE]!.length, `bio_${arch} 钩子池不足 3 句`).toBeGreaterThanOrEqual(3);
     }
     // 人生线两条 incoming beat
     expect(INCOMING_REPLIES['life_zhou_scroll']).toBeDefined();
@@ -212,7 +214,7 @@ describe('v4.4 主动聊天解耦 + 应答话术', () => {
     // 这里验证会话接线正确。
     let s = fresh(61);
     const arch = LIBRARY.find((t) => t.id === 'g1')!.archetype;
-    s = pushIncoming(s, 'g1', BIO_HOOK_BY_ARCHETYPE[arch]!, `bio_${arch}`);
+    s = pushIncoming(s, 'g1', BIO_HOOK_BY_ARCHETYPE[arch]![0], `bio_${arch}`);
     s = dispatch(s, { type: 'accept_incoming', targetId: 'g1' });
     expect(s.chat!.pendingOptions).toBe(INCOMING_REPLIES[`bio_${arch}`].options);
   });

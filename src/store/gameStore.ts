@@ -61,6 +61,10 @@ function migrate(saved: GameState): GameState {
     // v4.2：突发事件决策状态（旧档没有 → 无待决事件）。
     pendingIncident: saved.pendingIncident ?? '',
     incidentResolved: saved.incidentResolved ?? false,
+    // v4.5：观众圈（旧档没有 → 空圈；旧档的自拍加成随窗口过期自然失效）。
+    selfieAudience: saved.selfieAudience ?? [],
+    bioAudience: saved.bioAudience ?? [],
+    bioAudienceDay: saved.bioAudienceDay ?? 0,
   };
 }
 

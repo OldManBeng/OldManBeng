@@ -235,6 +235,16 @@ export const SELFIE_LINGER_DAYS = 3;
 export const INCOMING_BASE_CHANCE = 0.45;
 /** 一天最多攒几条"他来找你"（多了等于全员轰炸）。 */
 export const INCOMING_DAILY_CAP = 2;
+/** ---- v4.5：门面动作只惊动一部分人 ----
+ *  发圈/换签名不再全员加权——先抽一圈"注意到的人"（观众圈），
+ *  窗口内只有他们会因照片/签名来找你。回一场要花精力（CHAT_SESSION_COST），
+ *  每次换门面不该变成全员点名。 */
+/** 一次发圈的观众圈上限（3 天窗口内因照片来找你的人头数）。 */
+export const SELFIE_AUDIENCE_MAX = 3;
+/** 一次换签名的观众圈上限（顺签名找来的人头数）。 */
+export const BIO_AUDIENCE_MAX = 2;
+/** 换签后他"顺着签名找来"的窗口天数——过窗没来就是没注意到，不再补。 */
+export const BIO_HOOK_WINDOW_DAYS = 4;
 /** 归档容量上限（防止存档无限膨胀）。 */
 export const ARCHIVE_CAP = 40;
 /** 麻木日上限：一天演四场也不会一晚变机器人——麻痹是月的事，不是天的事。 */

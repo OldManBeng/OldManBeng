@@ -159,6 +159,12 @@ export interface TargetState {
   recentGreetings?: string[];
   /** v3.2：最近收到的"他来找你"原文（跨场去重，同一句想念不连发）。 */
   recentIncoming?: string[];
+  /** v4.5：这张照片已经来找过的日子（= profile.selfieDay；换新照重置）——
+   *  一人一照只来一次。0/undefined = 这张还没来。 */
+  selfiePingedOn?: number;
+  /** v4.5：这句签名已经来找过的记录（= profile.bioId 字符串本身做键）——
+   *  一人一签只来一次；换新签重置。undefined = 这句还没来。 */
+  bioPingedOn?: string;
   /** v3.0：上一场闲聊的话题标签——下一晚可能"接昨天的话"（语境连续性）。 */
   lastTopic?: string;
   /** v2.2：上一场他发过的照片下标——连发两张不重复（-1 = 无记录）。 */

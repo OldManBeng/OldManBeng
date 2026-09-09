@@ -353,13 +353,16 @@ describe('v2.0: profile 模块', () => {
   it('incoming 生成时占位符已填好——收件箱卡片不出现裸 {selfie}', () => {
     // 王总 on_selfie 台词带 {selfie}，收件箱直出原文，生成时必须替换。
     // 多种子扫一遍：既测"没有裸占位符"，也测 on_selfie 池确实被抽到过（防空转通过）。
+    // v4.5：自拍加成只给观众圈（post_moment 时抽）——手工改 selfieDay 不再触发
+    // on_selfie 池，改为走真实动作发圈。
     let sawWangSelfie = false;
     for (let seed = 200; seed < 260; seed++) {
       let s = fresh(seed);
       s.incoming = [];
-      s.profile.selfieDay = s.day; // 新鲜自拍 → on_selfie 池
       const wang = s.targets.find((t) => t.targetId === 'boss_wang')!;
       wang.trust = 60;
+      // 借真发圈建观众圈；把王总焊进圈里保证他能被抽到（on_selfie 分支的前提）。
+      s = dispatch(s, { type: 'post_moment', selfieId: 'gym' });
       s = dispatch(s, { type: 'sleep' }); // runMorning 生成 incoming
       for (const m of s.incoming) {
         expect(m.opener).not.toMatch(/\{(selfie|age|trait)\}/);
