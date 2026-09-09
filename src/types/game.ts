@@ -67,7 +67,7 @@ export const PLAYER_BIO_IDS: PlayerBioId[] = [
 
 /** 女主可编辑的自设资料——头像/年龄/性格/签名，全部影响他的话术。 */
 export interface PlayerProfile {
-  /** 头像预设 1-6（程序化 SVG 发型×发色组合）。 */
+  /** 头像预设 1-10（文生图 PNG，public/avatars/；加载失败回退程序化 SVG）。 */
   avatarId: number;
   /** 她自称的年龄（档位 20/24/28/32，全部成年）。 */
   ageClaim: 20 | 24 | 28 | 32;

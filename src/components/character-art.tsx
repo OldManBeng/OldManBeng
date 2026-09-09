@@ -1,5 +1,7 @@
 /**
- * Programmatic SVG portraits (GL2 character-art pattern, zero image assets).
+ * Programmatic SVG portraits (GL2 character-art pattern).
+ * v4.8: 女主角头像改用文生图 PNG（public/avatars/，pytools/generate_avatars.py 管线），
+ *   PersonaFace SVG 保留为加载失败兜底；老头头像仍是程序化 SVG。
  * v2.2: 三层渲染——背景场景 + 人脸表情 + 配饰图标。
  * v2.4 美化重绘：三层全部升级——
  *   背景：渐变天空/地面 + 场景光影 + 圆形头像裁切遮罩（构图收紧成证件照感）；
@@ -10,6 +12,7 @@
  * 表情由信任/警惕驱动——警惕高时眯眼审视。下线老头头像置灰。
  * 主角头像按人设卡变化。
  */
+import { useState } from 'react';
 import type { Target, TargetState, BgScene, Accessory } from '../types/target';
 import type { PersonaId } from '../types/persona';
 import type { ReactElement } from 'react';
@@ -2809,14 +2812,44 @@ export const AVATAR_PRESETS: (GirlSpec & { id: number; label: string })[] = [
   { id: 10, label: '复古波波', bg: '#1c1a14', hair: '#5e5236', hairStyle: 'bob', accent: '#b5a642', lip: '#bf5f58', eye: 'soft', extra: 'earring', outfit: 'collar' },
 ];
 
-/** 可选头像渲染（AvatarId 1-6）。 */
+/**
+ * v4.8 女主角头像：文生图 PNG（public/avatars/avatar-{id}.png，256×256）。
+ * 加载失败时 onError 回退到 PersonaFace SVG——生成脚本见 pytools/generate_avatars.py。
+ */
+const PNG_AVATAR = (id: number) => `/avatars/avatar-${id}.png`;
+/** 四个人设与头像库 1-4 同款（PERSONA_STYLE === AVATAR_PRESETS[0..3]）。 */
+const PERSONA_TO_PRESET: Record<PersonaId, number> = {
+  femme_fatale: 1, sweet_daughter: 2, wise_sister: 3, artistic_soul: 4,
+};
+
+function FemaleAvatar({ presetId, st, size }: { presetId: number; st: GirlSpec; size: number }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <PersonaFace st={st} size={size} />;
+  return (
+    <img
+      src={PNG_AVATAR(presetId)}
+      alt="你"
+      width={size}
+      height={size}
+      style={{
+        borderRadius: '50%',
+        display: 'block',
+        // 对应当前 SVG 的外圈暗描边环（视觉延续）
+        boxShadow: '0 0 0 1px rgba(0,0,0,0.33)',
+      }}
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
+/** 可选头像渲染（AvatarId 1-10）。 */
 export function ProfileAvatar({ avatarId, size = 44 }: { avatarId: number; size?: number }) {
   const st = AVATAR_PRESETS[(avatarId - 1) % AVATAR_PRESETS.length];
-  return <PersonaFace st={st} size={size} />;
+  return <FemaleAvatar presetId={st.id} st={st} size={size} />;
 }
 
 export function PersonaAvatar({ personaId, size = 44 }: { personaId: PersonaId; size?: number }) {
-  return <PersonaFace st={PERSONA_STYLE[personaId]} size={size} />;
+  return <FemaleAvatar presetId={PERSONA_TO_PRESET[personaId]} st={PERSONA_STYLE[personaId]} size={size} />;
 }
 
 function PersonaFace({ st, size }: { st: GirlSpec; size: number }) {

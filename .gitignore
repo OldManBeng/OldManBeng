@@ -21,3 +21,8 @@ Thumbs.db
 
 # test coverage
 coverage/
+
+# python (pytools)
+__pycache__/
+# 文生图中间产物（1024 原图，入库前已缩到 public/avatars/）
+pytools/avatar_raw/

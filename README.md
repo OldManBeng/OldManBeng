@@ -17,6 +17,14 @@ npm test        # balance / simulation / v2-systems / safeguards 四类测试（
 npm run build   # 产物在 dist/
 ```
 
+## v4.8 女主角头像：文生图 PNG 管线
+
+- **头像源换为文生图**：女主 10 款头像不再由 SVG 程序化渲染，改用内网 ComfyUI（z_image_turbo GGUF 工作流）生成的 PNG——`public/avatars/avatar-1..10.png`（256×256，圆形裁切由 CSS `border-radius:50%` 完成）。
+- **SVG 保留为兜底**：`PersonaFace` 渲染器未删除；`<img>` 加载失败时 onError 自动回退 SVG，运行时不依赖网络之外的资产可用性。
+- **生成管线**：`pytools/generate_avatars.py`——10 段提示词（逐款对应 AVATAR_PRESETS 的发色×发型×瞳型×唇色×配饰×衣领）+ 固定种子表（可复现）；patch 工作流节点 385（主体提示）/ 307（种子）/ 244（1024×1024 1:1）/ 9（输出命名），LANCZOS 缩到 256 入库。用法：`python generate_avatars.py [--only N] [--force] [--dry-run]`。
+- **单人构图约束**：原工作流的 "surprising compositions / candid moments" 风格前缀会诱发拼贴式多脸构图，生成头像时替换为单人纯净版前缀（节点 125），提示词内再加「无第二张脸」硬约束。
+- 组件签名零改动（`ProfileAvatar`/`PersonaAvatar`），调用点与测试不受影响；`avatarId` 数据语义不变（1-10）。
+
 ## v3.0 改版：人设驱动剧情 + 语境化话术 + 全面重绘
 
 - **人设不再只是皮肤**：四个人设各有一条/两条**专属剧情节点**（`onlyPersona` 门控）——知心姐姐能走进老李"只对姐说"的那间屋，文青能接到周老师不敢念的下阕，御姐能听到王总说漏嘴，学妹能拿到 13 号机。选错人设，这些房间你一辈子进不去。
