@@ -36,7 +36,7 @@ export const DAY_EVENTS: DayEvent[] = [
     id: 'ev_mirror',
     name: '评论区的那位阿姨',
     description:
-      '「姑娘，你长得像我家闺女。她爸去年在网上被一个\'小姑娘\'崩走了三万八——就是天天叫他哥哥那种。」你盯着这条评论看了很久。',
+      '「姑娘，你长得像我家闺女。她爸去年在网上被一个\'小姑娘\'卷走了三万八——就是天天叫他哥哥那种。」你盯着这条评论看了很久。',
     diceRange: { min: 7, max: 7 },
     effects: [{ kind: 'flag', flag: 'saw_mirror' }],
     oneTime: true,
