@@ -1,5 +1,8 @@
 /**
  * Programmatic SVG portraits (GL2 character-art pattern).
+ * v4.9: 老头头像改用文生图 PNG（public/oldmen/，pytools/generate_oldmen.py 管线）——
+ *   11 款去重造型覆盖 50 人（6 真脸 + 5 照片型场景），OldManSvg 保留为加载失败兜底，
+ *   wary/smiling 表情反应仅存于兜底路径（PNG 为中性表情）。
  * v4.8: 女主角头像改用文生图 PNG（public/avatars/，pytools/generate_avatars.py 管线），
  *   PersonaFace SVG 保留为加载失败兜底；老头头像仍是程序化 SVG。
  * v2.2: 三层渲染——背景场景 + 人脸表情 + 配饰图标。
@@ -901,7 +904,8 @@ function ShotScene({ kind }: { kind: NonNullable<Target['portraitSpec']['shotTyp
   }
 }
 
-export function OldManAvatar({ target, state, size = 44 }: { target: Target; state?: TargetState; size?: number }) {
+/** v4.9 前的 SVG 老头渲染器（wary/smiling 表情 + 全部场景），保留为 PNG 加载失败兜底。 */
+function OldManSvg({ target, state, size = 44 }: { target: Target; state?: TargetState; size?: number }) {
   const spec = target.portraitSpec;
   const wary = (state?.wariness ?? 10) >= 45;
   const smiling = (state?.trust ?? 0) >= 60;
@@ -1285,6 +1289,59 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
       <circle cx="27" cy="27" r="26" fill="none" stroke="#ffffff" strokeWidth="0.5" opacity="0.08" />
     </svg>
   );
+}
+
+/**
+ * v4.9 老头头像：文生图 PNG（public/oldmen/，pytools/generate_oldmen.py 管线）。
+ * 50 个目标按 (archetype, shotType) 归并为 11 款去重造型——组合在全库唯一，直接查表。
+ * 加载失败时 onError 回退 OldManSvg（保留 wary/smiling/blocked 全部逻辑）；
+ * 下线态（blocked）在 img 上用同一 CSS 滤镜复刻 SVG 的灰度+透明。
+ */
+function oldManSlug(target: Target): string {
+  const spec = target.portraitSpec;
+  const shot = spec.shotType && spec.shotType !== 'face' ? spec.shotType : 'face';
+  const MAP: Record<string, string> = {
+    'divorced_driver:wheel': 'lao_li',
+    'designated_driver:wheel': 'driver',
+    'night_guard:cap': 'guard',
+    'fisherman:fishing': 'fish',
+    'square_dancer:brunch': 'dance2',
+    'square_dancer:face': 'dance',
+    'chess_uncle:face': 'chess',
+    'widowed_teacher:face': 'zhou',
+    'married_boss:face': 'wang',
+    'cafe_owner_ninety:face': 'hao',
+    'lonely_engineer:face': 'chen',
+  };
+  return MAP[`${target.archetype}:${shot}`] ?? '';
+}
+
+function OldManImg({ slug, target, state, size }: { slug: string; target: Target; state?: TargetState; size: number }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <OldManSvg target={target} state={state} size={size} />;
+  const filter = state?.blocked ? 'grayscale(1) opacity(0.4)' : undefined;
+  return (
+    <img
+      src={`/oldmen/${slug}.png`}
+      alt={target.name}
+      width={size}
+      height={size}
+      style={{
+        borderRadius: '50%',
+        display: 'block',
+        // 对应 SVG 的外圈暗描边环（视觉延续）
+        boxShadow: '0 0 0 1px rgba(0,0,0,0.33)',
+        filter,
+      }}
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
+export function OldManAvatar({ target, state, size = 44 }: { target: Target; state?: TargetState; size?: number }) {
+  const slug = oldManSlug(target);
+  if (!slug) return <OldManSvg target={target} state={state} size={size} />; // 未覆盖的造型走 SVG
+  return <OldManImg slug={slug} target={target} state={state} size={size} />;
 }
 
 // ---------------------------------------------------------------------------

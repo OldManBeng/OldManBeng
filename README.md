@@ -17,6 +17,13 @@ npm test        # balance / simulation / v2-systems / safeguards 四类测试（
 npm run build   # 产物在 dist/
 ```
 
+## v4.9 老头头像：文生图 PNG 管线
+
+- **老头头像同款换图**：`OldManAvatar` 改为渲染 `public/oldmen/{slug}.png`（256×256，CSS 圆形裁切），50 个目标按 (archetype, shotType) 归并为 **11 款去重造型**（6 真脸：zhou/wang/hao/chen/chess/dance；5 照片型场景：lao_li 方向盘/driver 代驾路边/guard 保安帽照/fish 钓鱼/dance2 精致摆拍）。库内按预设共享（9 代驾一张图等）。
+- **生成管线**：`pytools/generate_oldmen.py`——通用底座换成「直男手机摄影」（前置硬闪光/T 区油光/皮肤不讲究），与女主美颜自拍成对照；11 段提示词 + 固定种子表可复现。用法同 generate_avatars.py（`--only <slug> --force --dry-run`）。
+- **SVG 保留为兜底**：原渲染器改名 `OldManSvg`，img onError 回退（wary/smiling 表情反应与 ShotScene 场景仅存于兜底路径）；下线态 blocked 在 img 上用 CSS `grayscale(1) opacity(0.4)` 复刻。
+- 细节：棋摊提示词明确**中国象棋**（圆子刻汉字、楚河汉界、开局规整排布——第一版生成了国际象棋，已修）；摆拍照保留叙事锚点（盘边折起来的老花镜）。
+
 ## v4.8 女主角头像：文生图 PNG 管线
 
 - **头像源换为文生图**：女主 10 款头像不再由 SVG 程序化渲染，改用内网 ComfyUI（z_image_turbo GGUF 工作流）生成的 PNG——`public/avatars/avatar-1..10.png`（256×256，圆形裁切由 CSS `border-radius:50%` 完成）。
