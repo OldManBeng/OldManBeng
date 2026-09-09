@@ -17,6 +17,15 @@ npm test        # balance / simulation / v2-systems / safeguards 四类测试（
 npm run build   # 产物在 dist/
 ```
 
+## v4.10 场景照片：文生图 PNG 管线（老头发来的照片 + 女主朋友圈自拍）
+
+- **剩余内容型 SVG 全部换图**：`PhotoRender`（17 张老头发来的照片，`public/photos/*.png`）与 `MomentPhoto`（8 张女主朋友圈自拍，`public/selfies/*.png`）改为渲染文生图 PNG（768×576，4:3 横构图，CSS 响应式填容器）。数据模型零改动（photoId/selfieId 语义不变），调用点（朋友圈 feed/存档/聊天气泡）零改动。
+- **SVG 保留为兜底**：`PHOTO_SCENES`/`SELFIE_SCENES` 场景渲染器原样保留，`<img>` onError 自动回退（含原 PhotoFx 颗粒/暗角后期层）；PNG 路径不再叠 PhotoFx（照片本身就是照片）。
+- **生成管线**：`pytools/generate_scenes.py`——17 张照片 + 8 张自拍的场景描述 + 固定种子表（20260922 起，可复现）；latent 节点 244 覆盖为 1024×768（4:3），LANCZOS 缩到 768×576 入库。用法同 generate_oldmen.py（`--only <id> --force --dry-run`）。
+- **写实/插画双轨**：默认底座是手机随拍质感；带人的写实派（`wang_overtime` 深夜办公室自拍、`arch_guard_booth`/`arch_roadside` 夜拍场景）单独强调「真实手机夜拍质感、非插画：噪点可见、灯光眩光、高对比」。
+- 细节：老李两张车内照用 PIL `ImageOps.mirror` 左右翻转（国产左舵车，初版生成了右舵）；`wang_store_front` 门头大字「老王建材城」；`gym`/`sick` 只出女性手臂（手环 23:47 / 输液胶布）；`grind` 无人只拍屏幕；`travel` 强调无后视镜无邻车的干净车窗视角；`boba` 液面在杯口下两指、素色无字杯套；`chen_blueprint_desk` 画齿轮减速箱装配蓝图（曾误生成服装设计图，已修）。
+- **种子例外**：`wang_overtime` 最终采用 20260953（多种子试跑选钟面指向 01:30 的那张）；`arch_chess` 沿用主批 20260937 的成图——两张均为候选手动入库，`--force` 重跑会得到别的图（raw 候选留在 `pytools/avatar_raw/`）。
+
 ## v4.9 老头头像：文生图 PNG 管线
 
 - **老头头像同款换图**：`OldManAvatar` 改为渲染 `public/oldmen/{slug}.png`（256×256，CSS 圆形裁切），50 个目标按 (archetype, shotType) 归并为 **11 款去重造型**（6 真脸：zhou/wang/hao/chen/chess/dance；5 照片型场景：lao_li 方向盘/driver 代驾路边/guard 保安帽照/fish 钓鱼/dance2 精致摆拍）。库内按预设共享（9 代驾一张图等）。

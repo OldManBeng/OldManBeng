@@ -1,5 +1,8 @@
 /**
  * Programmatic SVG portraits (GL2 character-art pattern).
+ * v4.10: 朋友圈照片（PhotoRender, public/photos/）与女主自拍（MomentPhoto,
+ *   public/selfies/）改用文生图 PNG，4:3 横构图；原 SVG 场景保留为加载失败兜底。
+ *   pytools/generate_scenes.py 管线，25 张（17 照片 + 8 自拍）。
  * v4.9: 老头头像改用文生图 PNG（public/oldmen/，pytools/generate_oldmen.py 管线）——
  *   11 款去重造型覆盖 50 人（6 真脸 + 5 照片型场景），OldManSvg 保留为加载失败兜底，
  *   wary/smiling 表情反应仅存于兜底路径（PNG 为中性表情）。
@@ -1351,52 +1354,67 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
 // ---------------------------------------------------------------------------
 export function PhotoRender({ photoId }: { photoId: string }) {
   const scenes = PHOTO_SCENES[photoId];
+  const [failed, setFailed] = useState(false);
   if (!scenes) return null;
-  // v3.0 摄影后期：光渗方向按 photoId 稳定哈希——每张照片有自己的光，但同图不变。
-  let h = 0;
-  for (let i = 0; i < photoId.length; i++) h = (h * 31 + photoId.charCodeAt(i)) >>> 0;
-  const warmLeak = h % 2 === 0;
-  const lx = warmLeak ? 12 : 188;
-  const ly = h % 3 === 0 ? 14 : 136;
+  // v4.10 文生图 PNG（public/photos/）；加载失败回退下方 SVG 渲染（含 v3.0 摄影后期层）。
+  if (failed) {
+    // v3.0 摄影后期：光渗方向按 photoId 稳定哈希——每张照片有自己的光，但同图不变。
+    let h = 0;
+    for (let i = 0; i < photoId.length; i++) h = (h * 31 + photoId.charCodeAt(i)) >>> 0;
+    const warmLeak = h % 2 === 0;
+    const lx = warmLeak ? 12 : 188;
+    const ly = h % 3 === 0 ? 14 : 136;
+    return (
+      <svg width="200" height="150" viewBox="0 0 200 150" role="img" aria-label="照片">
+        <defs>
+          <radialGradient id="phVig" cx="50%" cy="44%" r="75%">
+            <stop offset="0%" stopColor="#000" stopOpacity="0" />
+            <stop offset="78%" stopColor="#000" stopOpacity="0" />
+            <stop offset="100%" stopColor="#000" stopOpacity="0.38" />
+          </radialGradient>
+          <radialGradient id="phLeak" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={warmLeak ? '#f4b06a' : '#7aa8cc'} stopOpacity="0.13" />
+            <stop offset="60%" stopColor={warmLeak ? '#f4b06a' : '#7aa8cc'} stopOpacity="0.05" />
+            <stop offset="100%" stopColor={warmLeak ? '#f4b06a' : '#7aa8cc'} stopOpacity="0" />
+          </radialGradient>
+          <linearGradient id="phMetal" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#9aa0a6" />
+            <stop offset="50%" stopColor="#5a5f66" />
+            <stop offset="100%" stopColor="#3a3f45" />
+          </linearGradient>
+          <linearGradient id="phSky0" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#0a1220" />
+            <stop offset="100%" stopColor="#16222f" />
+          </linearGradient>
+        </defs>
+        {scenes}
+        {h % 3 === 0 && <circle cx={lx} cy={ly} r="30" fill="#fff" opacity="0.11" />}
+        <rect width="200" height="150" fill={h % 2 === 0 ? '#f4a03f' : '#7aa8cc'} opacity="0.045" />
+        <circle cx={lx} cy={ly} r="80" fill="url(#phLeak)" />
+        <g fill="#fff">
+          <circle cx="26" cy="30" r="0.5" opacity="0.1" />
+          <circle cx="64" cy="14" r="0.45" opacity="0.09" />
+          <circle cx="102" cy="52" r="0.5" opacity="0.08" />
+          <circle cx="146" cy="24" r="0.45" opacity="0.1" />
+          <circle cx="178" cy="66" r="0.5" opacity="0.08" />
+          <circle cx="118" cy="96" r="0.45" opacity="0.08" />
+          <circle cx="44" cy="118" r="0.5" opacity="0.07" />
+          <circle cx="170" cy="126" r="0.45" opacity="0.09" />
+        </g>
+        <rect width="200" height="150" fill="url(#phVig)" />
+      </svg>
+    );
+  }
   return (
-    <svg width="200" height="150" viewBox="0 0 200 150" role="img" aria-label="照片">
-      <defs>
-        <radialGradient id="phVig" cx="50%" cy="44%" r="75%">
-          <stop offset="0%" stopColor="#000" stopOpacity="0" />
-          <stop offset="78%" stopColor="#000" stopOpacity="0" />
-          <stop offset="100%" stopColor="#000" stopOpacity="0.38" />
-        </radialGradient>
-        <radialGradient id="phLeak" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor={warmLeak ? '#f4b06a' : '#7aa8cc'} stopOpacity="0.13" />
-          <stop offset="60%" stopColor={warmLeak ? '#f4b06a' : '#7aa8cc'} stopOpacity="0.05" />
-          <stop offset="100%" stopColor={warmLeak ? '#f4b06a' : '#7aa8cc'} stopOpacity="0" />
-        </radialGradient>
-        <linearGradient id="phMetal" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#9aa0a6" />
-          <stop offset="50%" stopColor="#5a5f66" />
-          <stop offset="100%" stopColor="#3a3f45" />
-        </linearGradient>
-        <linearGradient id="phSky0" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#0a1220" />
-          <stop offset="100%" stopColor="#16222f" />
-        </linearGradient>
-      </defs>
-      {scenes}
-      {h % 3 === 0 && <circle cx={lx} cy={ly} r="30" fill="#fff" opacity="0.11" />}
-      <rect width="200" height="150" fill={h % 2 === 0 ? '#f4a03f' : '#7aa8cc'} opacity="0.045" />
-      <circle cx={lx} cy={ly} r="80" fill="url(#phLeak)" />
-      <g fill="#fff">
-        <circle cx="26" cy="30" r="0.5" opacity="0.1" />
-        <circle cx="64" cy="14" r="0.45" opacity="0.09" />
-        <circle cx="102" cy="52" r="0.5" opacity="0.08" />
-        <circle cx="146" cy="24" r="0.45" opacity="0.1" />
-        <circle cx="178" cy="66" r="0.5" opacity="0.08" />
-        <circle cx="118" cy="96" r="0.45" opacity="0.08" />
-        <circle cx="44" cy="118" r="0.5" opacity="0.07" />
-        <circle cx="170" cy="126" r="0.45" opacity="0.09" />
-      </g>
-      <rect width="200" height="150" fill="url(#phVig)" />
-    </svg>
+    <img
+      src={`/photos/${photoId}.png`}
+      alt="照片"
+      loading="lazy"
+      width={768}
+      height={576}
+      style={{ width: '100%', height: 'auto', display: 'block' }}
+      onError={() => setFailed(true)}
+    />
   );
 }
 
@@ -2309,30 +2327,45 @@ function PhotoFx({ leak, lx, ly, warm = true }: { leak: string; lx: number; ly: 
 
 export function MomentPhoto({ selfieId }: { selfieId: string }) {
   const scene = SELFIE_SCENES[selfieId];
+  const [failed, setFailed] = useState(false);
   if (!scene) return null;
-  // v3.3 手机摄影质感：每张照片自己的白平衡偏移 + 偶发闪光热斑
-  let hh = 0;
-  for (let i = 0; i < selfieId.length; i++) hh = (hh * 31 + selfieId.charCodeAt(i)) >>> 0;
-  const wb = hh % 2 === 0 ? '#f4a03f' : '#7aa8cc';
+  // v4.10 文生图 PNG（public/selfies/）；加载失败回退下方 SVG 渲染（含 v3.3 手机摄影后期层）。
+  if (failed) {
+    // v3.3 手机摄影质感：每张照片自己的白平衡偏移 + 偶发闪光热斑
+    let hh = 0;
+    for (let i = 0; i < selfieId.length; i++) hh = (hh * 31 + selfieId.charCodeAt(i)) >>> 0;
+    const wb = hh % 2 === 0 ? '#f4a03f' : '#7aa8cc';
+    return (
+      <svg width="200" height="150" viewBox="0 0 200 150" role="img" aria-label="朋友圈自拍">
+        <defs>
+          <radialGradient id="sfVig" cx="50%" cy="44%" r="75%">
+            <stop offset="0%" stopColor="#000" stopOpacity="0" />
+            <stop offset="80%" stopColor="#000" stopOpacity="0" />
+            <stop offset="100%" stopColor="#000" stopOpacity="0.3" />
+          </radialGradient>
+          <linearGradient id="sfMetal" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#9aa0a6" />
+            <stop offset="50%" stopColor="#5a5f66" />
+            <stop offset="100%" stopColor="#3a3f45" />
+          </linearGradient>
+        </defs>
+        {scene}
+        {hh % 3 === 0 && <circle cx={hh % 2 ? 38 : 162} cy={hh % 5 < 2 ? 30 : 120} r="26" fill="#fff" opacity="0.1" />}
+        <rect width="200" height="150" fill={wb} opacity="0.05" />
+        <rect width="200" height="150" fill="url(#sfVig)" />
+      </svg>
+    );
+  }
   return (
-    <svg width="200" height="150" viewBox="0 0 200 150" role="img" aria-label="朋友圈自拍">
-      <defs>
-        <radialGradient id="sfVig" cx="50%" cy="44%" r="75%">
-          <stop offset="0%" stopColor="#000" stopOpacity="0" />
-          <stop offset="80%" stopColor="#000" stopOpacity="0" />
-          <stop offset="100%" stopColor="#000" stopOpacity="0.3" />
-        </radialGradient>
-        <linearGradient id="sfMetal" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#9aa0a6" />
-          <stop offset="50%" stopColor="#5a5f66" />
-          <stop offset="100%" stopColor="#3a3f45" />
-        </linearGradient>
-      </defs>
-      {scene}
-      {hh % 3 === 0 && <circle cx={hh % 2 ? 38 : 162} cy={hh % 5 < 2 ? 30 : 120} r="26" fill="#fff" opacity="0.1" />}
-      <rect width="200" height="150" fill={wb} opacity="0.05" />
-      <rect width="200" height="150" fill="url(#sfVig)" />
-    </svg>
+    <img
+      src={`/selfies/${selfieId}.png`}
+      alt="朋友圈自拍"
+      loading="lazy"
+      width={768}
+      height={576}
+      style={{ width: '100%', height: 'auto', display: 'block' }}
+      onError={() => setFailed(true)}
+    />
   );
 }
 

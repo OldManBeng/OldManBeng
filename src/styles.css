@@ -703,7 +703,7 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   background: var(--ink);
   box-shadow: 0 3px 10px color-mix(in srgb, var(--ink) 50%, transparent);
 }
-.bubble-photo svg { display: block; width: 100%; height: auto; }
+.bubble-photo svg, .bubble-photo img { display: block; width: 100%; height: auto; }
 .bubble.arriving { animation: bubble-in 300ms var(--ease-out); }
 @keyframes bubble-in {
   from { opacity: 0; transform: translateY(10px) scale(0.96); }
@@ -1332,7 +1332,7 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   box-shadow: 0 3px 12px color-mix(in srgb, var(--ink) 50%, transparent);
   border: 1px solid color-mix(in srgb, var(--white) 5%, transparent);
 }
-.moment-photo svg { display: block; width: 100%; height: auto; }
+.moment-photo svg, .moment-photo img { display: block; width: 100%; height: auto; }
 .moment-caption { font-size: var(--fs-5); line-height: 1.7; color: var(--text); }
 .moment-likes {
   font-size: var(--fs-3);
