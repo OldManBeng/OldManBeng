@@ -251,7 +251,7 @@ export const ENDING_EPIGRAPHS: Record<string, Gatha> = {
     gloss: '「别回，让她看见」——他护住了家。那口唾沫，回头落在发消息的人身上。',
   },
   end_confessed: {
-    verse: '若人有过，自解知非，改自行善，罪自消灭。',
+    verse: '若人有过，自解知非，改恶行善，罪自消灭。',
     source: '《法句经》',
     gloss: '半年后那条「带闺女去看海」的消息，比退回的红包重。',
   },

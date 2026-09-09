@@ -315,7 +315,7 @@ export const ZHOU_CHAIN: Record<string, ChainNode> = {
       {
         text: '「老师先说要留什么作业呀，我再报名字。」',
         personaText: {
-          sweet_daughter: '「哥哥你先说留什么作业，我再报名字——万一你说罚抄课文呢」',
+          sweet_daughter: '「老师你先说留什么作业，我再报名字——万一你说罚抄课文呢」',
         },
         style: 'playful',
         trust: 8,
@@ -459,7 +459,7 @@ export const ZHOU_LINES: TargetScript['lines'] = {
   ],
   packet_received: [
     '一点心意 别推辞',
-    '买枝好笔 字要练',
+    '买支好笔 字要练',
     '别省',
     '先生的一点意思',
     '拿去买书 比给我省钱强',

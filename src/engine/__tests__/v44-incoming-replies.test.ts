@@ -108,7 +108,7 @@ describe('v4.4 主动聊天解耦 + 应答话术', () => {
 
   it('解耦验证：accept_incoming 后 pendingOptions 来自应答库，不再触发常规话术', () => {
     let s = fresh(21);
-    s = pushIncoming(s, 'lao_li', '在吗。打完这三个字，我在车里坐了十分钟。你要睡了，明天看见也行。不急。', 'li_miss');
+    s = pushIncoming(s, 'lao_li', '在吗。打完这两个字，我在车里坐了十分钟。你要睡了，明天看见也行。不急。', 'li_miss');
     const before = JSON.stringify({
       chainFlags: Object.keys(s.flags).filter((k) => k.startsWith('chain_')),
       lastTopic: s.targets.find((t) => t.targetId === 'lao_li')?.lastTopic,
@@ -135,7 +135,7 @@ describe('v4.4 主动聊天解耦 + 应答话术', () => {
   it('增益验证：选走心话 trust 涨，选冷场话 trust 跌 + wariness 涨', () => {
     // 正增益
     let s1 = fresh(31);
-    s1 = pushIncoming(s1, 'lao_li', '在吗。打完这三个字，我在车里坐了十分钟。', 'li_miss');
+    s1 = pushIncoming(s1, 'lao_li', '在吗。打完这两个字，我在车里坐了十分钟。', 'li_miss');
     s1 = dispatch(s1, { type: 'accept_incoming', targetId: 'lao_li' });
     const li1 = s1.targets.find((t) => t.targetId === 'lao_li')!;
     const t0 = li1.trust;
@@ -153,7 +153,7 @@ describe('v4.4 主动聊天解耦 + 应答话术', () => {
 
     // 负增益
     let s2 = fresh(32);
-    s2 = pushIncoming(s2, 'lao_li', '在吗。打完这三个字，我在车里坐了十分钟。', 'li_miss');
+    s2 = pushIncoming(s2, 'lao_li', '在吗。打完这两个字，我在车里坐了十分钟。', 'li_miss');
     s2 = dispatch(s2, { type: 'accept_incoming', targetId: 'lao_li' });
     const li2 = s2.targets.find((t) => t.targetId === 'lao_li')!;
     const t0b = li2.trust;

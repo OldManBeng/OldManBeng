@@ -103,7 +103,7 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
         text: '「她怎么能这么说你」',
         style: 'caring',
         trust: 9,
-        replies: ['「她说的对。家里事我管得少。」', '「就是有时候吧……车上坐着,比楼上那个家,像家。」'],
+        replies: ['「她说得对。家里事我管得少。」', '「就是有时候吧……车上坐着,比楼上那个家,像家。」'],
       },
       {
         text: '「王总,你不是不着家,你是把家让给了他们娘俩」',
@@ -114,7 +114,7 @@ export const WANG_CHAIN: Record<string, ChainNode> = {
         replies: ['（片刻后）', '「领导,你这句话,我存着了。」', '（他真的截图了。你后来在另一个"妹妹"那儿见过同一句——她也收到了这张截图。）'],
       },
       {
-        text: '「59 比我当年强多了」',
+        text: '「41 比我当年强多了」',
         style: 'playful',
         trust: 6,
         replies: ['「你考多少?」', '「38。」', '「哈哈哈哈那你是学妹里最没出息的。」'],
@@ -356,7 +356,7 @@ export const WANG_FREE: FreeNode[] = [
     minTrust: 35,
     openers: ['（02:30）｜车库。第二根了。', '楼上灯还亮着。她没睡。', '（他没再说别的。就是,人在车库里,想跟人说句话。）'],
     options: [
-      { text: '「我在呢,王总」', style: 'caring', trust: 9, replies: ['「嗯。」', '「也没什么要紧事。」', '（又过了十分钟:)「领导,睡吧。你也熬着呢。」'] },
+      { text: '「我在呢,王总」', style: 'caring', trust: 9, replies: ['「嗯。」', '「也没什么要紧事。」', '（又过了十分钟）「领导,睡吧。你也熬着呢。」'] },
       { text: '「上去呀,别让嫂子等急了」', style: 'sweet', trust: 4, wariness: 3, replies: ['「她等我干什么。她等我认错。」', '「我不上去,她正好。」'] },
       { text: '（发他一个搞笑视频,岔开话题）', style: 'playful', trust: 5, replies: ['「哈哈哈哈。」', '（片刻后）'] },
     ],

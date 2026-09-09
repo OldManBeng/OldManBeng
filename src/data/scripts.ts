@@ -324,7 +324,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
     id: 'c_li_11',
     minTrust: 60,
     minStage: 'harvest',
-    openers: ['（深夜，他发来很长一段话，打字很慢，错别字很多）', '我知道你可能有别人。手机里不止我一个说话的人。', '可我就想问你一句：你叫我的那句"叔叔"，有一句是真的吗？'],
+    openers: ['（深夜，他发来很长一段话，打字很慢，错别字很多）', '我知道你可能有别人。手机里不止我一个说话的人。', '可我就想问你一句：你叫我的那声"叔叔"，有一声是真的吗？'],
     options: [
       {
         text: '「李叔，都是真的。我跟你说的话，都是真的」（继续）',
@@ -449,7 +449,7 @@ export const LAO_LI_FREE: FreeNode[] = [
   },
   {
     id: 'f_li_3',
-    openers: ['（他只发来一个"在吗"。今天一个字多的都没说。）'],
+    openers: ['（他只发来一个"在吗"。今天多一个字都没说。）'],
     options: [
       { text: '「在呢，李叔」', style: 'caring', trust: 6, replies: ['嗯。', '（然后他半天没说话。你陪着等了一会儿。他最后说：）没事了。你睡吧。'] },
       { text: '「怎么啦，今天这么安静」', style: 'sweet', trust: 5, replies: ['没事。老毛病，腰疼。', '躺会儿就好。'] },

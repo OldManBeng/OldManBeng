@@ -37,7 +37,7 @@ export const PLAYER_BIOS: PlayerBioOption[] = [
   },
   {
     id: 'moon_side',
-    text: '白天代驾，晚上失眠，白天你看到的不是我',
+    text: '白天上班，晚上代驾，白天你看到的不是我',
     note: '两份工的疲惫感——同为夜班的人一眼认出同类。',
     gains: { divorced_driver: 0.10, night_guard: 0.10, designated_driver: 0.08 },
     penalties: { widowed_teacher: 0.03 },

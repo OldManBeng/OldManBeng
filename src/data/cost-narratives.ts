@@ -67,7 +67,7 @@ export const PACKET_SOURCE_SUBTITLE: Record<string, Record<PacketTier, string[]>
   },
   hao_ge: {
     small: [
-      '（38 块的通宵包早面——这笔够他一百个包夜。）',
+      '（38 块的通宵包早面——今晚这碗，他转给了你。）',
       '（键盘的猫粮，又降了一档。）',
     ],
     mid: [
@@ -139,7 +139,7 @@ export const ASK_COST_NARRATOR_V2: Record<string, string[]> = {
     '（凌晨一点的车库，烟灰缸满了。你这一笔，够他抽一个月。）',
   ],
   hao_ge: [
-    '（38 块的通宵包早面。这一笔，够他网吧一百个包夜。你算过。）',
+    '（38 块的通宵包早面。这一笔，够他小半个月。你算过。）',
     '（他打字还是那么快。快得像怕你等不及就走了。）',
     '（他那个月的亏损是两千二。你这笔占了多少台机器的电费，你算过。）',
     '（键盘（猫）的进口猫粮，降回了国产。他没跟你说。你从他的朋友圈看出来了。）',
@@ -159,7 +159,7 @@ export const ASK_COST_NARRATOR_V2: Record<string, string[]> = {
 /** 他主动转钱（没人开口要过）时的旁白——写在 packet 日志的 line 字段里。 */
 export const GIFT_NARRATOR: Record<string, string[]> = {
   lao_li: [
-    '转完那句"拿着买点热的"，他就收车了。凌晨五点半，是他的下班的点。',
+    '转完那句"拿着买点热的"，他就收车了。凌晨五点半，是他下班的点。',
     '红包到账时间 05:12。那是他收车加油的十分钟——他把你的名字排在了油前面。',
   ],
   zhou_teacher: [
@@ -172,7 +172,7 @@ export const GIFT_NARRATOR: Record<string, string[]> = {
   ],
   hao_ge: [
     '转账时间凌晨两点十七。他刚收完最后一台机的班。',
-    '这笔比通宵包早面贵三十倍。他没算过——算了就不转了。',
+    '这笔比通宵包早面贵三倍。他没算过——算了就不转了。',
   ],
   chen_gong: [
     '附言带编号：T-补。他给每笔转账都编号，怕忘了。',
@@ -182,7 +182,7 @@ export const GIFT_NARRATOR: Record<string, string[]> = {
 
 export const GIFT_NARRATOR_GENERIC: string[] = [
   '到账时间是他那边的凌晨。他的白天，跟你的不一样长。',
-  '他转完这条消息就去干活了。这笔钱在他那边是怎么来的，你没问。',
+  '他转完这笔钱就去干活了。这笔钱在他那边是怎么来的，你没问。',
 ];
 
 /** 收工账：今天进账的每一笔，长在谁的哪件事上（sleep 时汇总一行）。 */

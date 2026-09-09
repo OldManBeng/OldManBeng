@@ -89,7 +89,7 @@ export const LIFE_EVENTS: LifeEventDef[] = [
   {
     id: 'li_daughter_birthday', day: 11, targetId: 'lao_li',
     text: '老李的闺女下礼拜生日。十五岁。他把这日子记得比谁都清楚——他准备了好几年，每年都失败。',
-    blockedLine: '老李的女儿今天满十五岁。他把你删了，这个日子你只能猜。',
+    blockedLine: '老李的女儿下礼拜满十五岁。他把你删了，这个日子你只能猜。',
     incoming: {
       minTrust: 10,
       opener: '丫头 叔跟你商量个事｜闺女下礼拜生日 十五了｜你说十五的姑娘 喜欢啥｜叔十年没给她买对过东西',
@@ -151,7 +151,7 @@ export const LIFE_EVENTS: LifeEventDef[] = [
   {
     id: 'hao_cat_sick', day: 10, targetId: 'hao_ge',
     text: '那只叫"键盘"的橘猫吐了两天。阿豪带它去了宠物医院，检查加药花了八百三。"比我一天流水都高。"他嘴上骂，第二天买了进口猫粮。',
-    costText: '"键盘"病了。宠物医院报价八百三，阿豪在楼道里站了十分钟，进去说"医生，用便宜点的方案行不行"。回来的路上他没提这事，只发了四个字："猫没事，放心。"',
+    costText: '"键盘"病了。宠物医院报价八百三，阿豪在楼道里站了十分钟，进去说"医生，用便宜点的方案行不行"。回来的路上他没提这事，只发了五个字："猫没事，放心。"',
     costFrom: 200,
   },
   {
