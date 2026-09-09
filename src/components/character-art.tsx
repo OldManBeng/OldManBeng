@@ -26,6 +26,29 @@ const Defs = () => (
       <stop offset="0%" stopColor="#f0c49a" />
       <stop offset="100%" stopColor="#d9a678" />
     </linearGradient>
+    {/* v4.7 老头肤色竖向渐变三档（顶=hi 调亮 / 底=base）——替代平涂 */}
+    <linearGradient id="omFace0" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stopColor="#f8debc" />
+      <stop offset="100%" stopColor="#eec69e" />
+    </linearGradient>
+    <linearGradient id="omFace1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stopColor="#f0cc9e" />
+      <stop offset="100%" stopColor="#dfae82" />
+    </linearGradient>
+    <linearGradient id="omFace2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stopColor="#dcba88" />
+      <stop offset="100%" stopColor="#c69567" />
+    </linearGradient>
+    {/* v4.7 老头虹膜渐变（上浅下深——男性化暖棕）+ 前置硬闪光热点（左上） */}
+    <linearGradient id="omIris" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stopColor="#6a4e30" />
+      <stop offset="100%" stopColor="#2a1e14" />
+    </linearGradient>
+    <radialGradient id="omFlash" cx="41%" cy="34%" r="66%">
+      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.1" />
+      <stop offset="45%" stopColor="#ffffff" stopOpacity="0.04" />
+      <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+    </radialGradient>
     <linearGradient id="omGlass" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stopColor="#a8c4d8" stopOpacity="0.32" />
       <stop offset="100%" stopColor="#5b8db8" stopOpacity="0.10" />
@@ -507,18 +530,79 @@ function AccessoryLayer({ accessory }: { accessory: Accessory }) {
 function ShotScene({ kind }: { kind: NonNullable<Target['portraitSpec']['shotType']> }) {
   switch (kind) {
     case 'wheel':
+      // v4.7 夜间驾驶舱自拍——远景城市散景 → 仪表台 → 前景方向盘+握轮的手（全游戏最常消费的一张）
       return (
         <g>
-          <rect width="54" height="54" fill="#2a3038" />
-          <rect width="54" height="22" fill="#4a5866" opacity="0.7" />
-          <rect x="0" y="20" width="54" height="3" fill="#1c2128" />
-          <circle cx="27" cy="46" r="21" fill="none" stroke="#1a1e24" strokeWidth="5" />
-          <circle cx="27" cy="46" r="21" fill="none" stroke="#3a424c" strokeWidth="1.2" />
-          <path d="M 27 26 L 27 40 M 12 44 L 22 46 M 42 44 L 32 46" stroke="#1a1e24" strokeWidth="3" />
-          <ellipse cx="19" cy="44" rx="5" ry="3.4" fill="#caa27c" />
-          <ellipse cx="35" cy="44" rx="5" ry="3.4" fill="#caa27c" />
-          <circle cx="27" cy="46" r="3.4" fill="#262c34" />
-          <rect x="0" y="0" width="54" height="4" fill="#f4d03f" opacity="0.08" />
+          <defs>
+            <linearGradient id="whDash" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#242c34" />
+              <stop offset="100%" stopColor="#161c22" />
+            </linearGradient>
+            <radialGradient id="whGauge" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#3a2c1a" />
+              <stop offset="72%" stopColor="#1c1814" />
+              <stop offset="100%" stopColor="#12100c" />
+            </radialGradient>
+          </defs>
+          {/* 挡风玻璃外的夜（渐变底 + 地平线光带） */}
+          <rect width="54" height="54" fill="#0c1218" />
+          <path d="M 0 26 Q 27 20 54 26 L 54 36 L 0 36 Z" fill="#1a2430" opacity="0.9" />
+          {/* 城市灯散景（两档：远的大糊 / 近的小实） */}
+          <g>
+            <circle cx="9" cy="12" r="4" fill="#f4b04a" opacity="0.12" />
+            <circle cx="43" cy="9" r="5" fill="#f4b04a" opacity="0.1" />
+            <circle cx="24" cy="7" r="3.4" fill="#7ab0cc" opacity="0.12" />
+            <circle cx="37" cy="15" r="2.6" fill="#f4d03f" opacity="0.14" />
+            <circle cx="14" cy="18" r="2" fill="#7ab0cc" opacity="0.16" />
+            <circle cx="48" cy="18" r="1.8" fill="#e8684a" opacity="0.16" />
+          </g>
+          {/* 仪表台暗带 + 双仪表盘（表圈/暗面/指针/琥珀背光） */}
+          <rect x="0" y="26" width="54" height="10" fill="url(#whDash)" />
+          <circle cx="14" cy="31" r="4.6" fill="none" stroke="#2c343c" strokeWidth="1.2" />
+          <circle cx="14" cy="31" r="3.4" fill="url(#whGauge)" />
+          <path d="M 14 31 L 12.6 28.6" stroke="#f4d03f" strokeWidth="0.7" strokeLinecap="round" />
+          <path d="M 14 31 L 15.8 32.4" stroke="#c8422e" strokeWidth="0.55" strokeLinecap="round" />
+          <circle cx="14" cy="31" r="0.5" fill="#4a525a" />
+          <circle cx="40" cy="31" r="4.6" fill="none" stroke="#2c343c" strokeWidth="1.2" />
+          <circle cx="40" cy="31" r="3.4" fill="url(#whGauge)" />
+          <path d="M 40 31 L 38.8 33.2" stroke="#f4d03f" strokeWidth="0.7" strokeLinecap="round" />
+          <circle cx="40" cy="31" r="0.5" fill="#4a525a" />
+          {/* 收音机绿点 + 出风口 */}
+          <circle cx="24.6" cy="30.4" r="0.7" fill="#3acc6e" opacity="0.7" />
+          <rect x="20" y="32.4" width="9" height="1.8" rx="0.9" fill="#0e1418" />
+          <g stroke="#20282e" strokeWidth="0.6">
+            <line x1="21.6" y1="32.8" x2="21.6" y2="33.8" />
+            <line x1="24.5" y1="32.8" x2="24.5" y2="33.8" />
+            <line x1="27.4" y1="32.8" x2="27.4" y2="33.8" />
+          </g>
+          {/* 前景方向盘：斜置圆环（深色皮质外圈 + 顶缘高光弧出立体感） */}
+          <g transform="rotate(-14 27 50)">
+            <circle cx="27" cy="50" r="19.5" fill="none" stroke="#171a1e" strokeWidth="5" />
+            <circle cx="27" cy="50" r="19.5" fill="none" stroke="#3a4046" strokeWidth="1.2" />
+            {/* 顶缘高光弧（硬闪光方向自洽：左上） */}
+            <path d="M 12.6 41.5 A 19.5 19.5 0 0 1 34 33.4" fill="none" stroke="#7a848e" strokeWidth="0.8" opacity="0.5" />
+            {/* 轮缘缝线（虚线两段） */}
+            <path d="M 14 40 A 19.5 19.5 0 0 1 26 30.6" fill="none" stroke="#4a525a" strokeWidth="0.4" strokeDasharray="1 1.6" opacity="0.7" />
+            {/* 辐条三根汇于轮毂 */}
+            <path d="M 27 50 L 27 33" stroke="#171a1e" strokeWidth="3.4" strokeLinecap="round" />
+            <path d="M 27 50 L 11 56" stroke="#171a1e" strokeWidth="3.4" strokeLinecap="round" />
+            <path d="M 27 50 L 43 56" stroke="#171a1e" strokeWidth="3.4" strokeLinecap="round" />
+            <circle cx="27" cy="50" r="3.2" fill="#22282e" />
+            <circle cx="27" cy="50" r="1.2" fill="#3c444c" />
+          </g>
+          {/* 握轮的手（左下——自拍时另一只手举机，这只手扶着轮缘） */}
+          <g>
+            <path d="M 38.6 44.4 Q 42.6 43.4 45.4 45.6 Q 47.4 48 45.8 51.4 Q 43.4 54 39.4 53 Q 36.4 51.6 36.8 48.2 Z" fill="#caa27c" />
+            {/* 指节三道 */}
+            <path d="M 40.8 45.9 Q 41.4 46.5 40.9 47.3 M 42.6 46.3 Q 43.2 47 42.7 47.8" stroke="#a87e56" strokeWidth="0.5" fill="none" strokeLinecap="round" opacity="0.8" />
+            {/* 袖口（深色夹克） */}
+            <path d="M 44.8 52.6 L 54 50 L 54 54 L 46.6 54 Z" fill="#2a2e34" />
+            <path d="M 45 53.2 L 53.8 50.8" stroke="#14181c" strokeWidth="0.5" opacity="0.7" />
+          </g>
+          {/* 挡风玻璃斜向反光带 */}
+          <path d="M 30 0 L 38 0 L 22 54 L 16 54 Z" fill="#ffffff" opacity="0.045" />
+          {/* 顶灯仪表辉光 */}
+          <rect x="0" y="0" width="54" height="8" fill="#f4d03f" opacity="0.05" />
         </g>
       );
     case 'business':
@@ -589,16 +673,84 @@ function ShotScene({ kind }: { kind: NonNullable<Target['portraitSpec']['shotTyp
         </g>
       );
     case 'cap':
+      // v4.7 保安帽照——夜色岗亭 + 日光灯辉光下的正脸：帽檐投影横带压额（关键真实感线索）
       return (
         <g>
-          <rect width="54" height="54" fill="#2c3a30" />
-          <circle cx="40" cy="10" r="10" fill="#f4e8c0" opacity="0.3" />
-          <path d="M 12 54 Q 13 36 27 34 Q 41 36 42 54 Z" fill="#3a4638" />
-          <circle cx="27" cy="24" r="9.4" fill="#4a3c30" />
-          <path d="M 16.6 21 Q 17 8 27 7.6 Q 37 8 37.4 21 L 39 23 Q 27 19 15 23 Z" fill="#2c2620" />
-          <path d="M 15 22.6 Q 27 18.6 39 22.6" stroke="#4a4438" strokeWidth="2" fill="none" />
-          <rect x="19.4" y="22.4" width="15.2" height="4.6" rx="2.2" fill="#1c1a16" />
-          <path d="M 12 54 Q 14 40 20 37 M 42 54 Q 40 40 34 37" stroke="#f4e8c0" strokeWidth="1" opacity="0.35" fill="none" />
+          <defs>
+            <linearGradient id="cpWall" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#1c222e" />
+              <stop offset="100%" stopColor="#12161f" />
+            </linearGradient>
+            <linearGradient id="cpFace" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#d8ae80" />
+              <stop offset="100%" stopColor="#c29268" />
+            </linearGradient>
+            <linearGradient id="cpIris" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#6a4e30" />
+              <stop offset="100%" stopColor="#2a1e14" />
+            </linearGradient>
+          </defs>
+          {/* 背景：岗亭墙面 + 日光灯管辉光（夜巡的冷白光） */}
+          <rect width="54" height="54" fill="url(#cpWall)" />
+          <rect x="0" y="8" width="54" height="1.6" fill="#e8ecf0" opacity="0.5" />
+          <ellipse cx="27" cy="10" rx="24" ry="9" fill="#c8d4e0" opacity="0.06" />
+          <g stroke="#262c38" strokeWidth="0.5" opacity="0.6">
+            <line x1="0" y1="20" x2="54" y2="20" />
+            <line x1="0" y1="34" x2="54" y2="34" />
+          </g>
+          {/* 制服肩 + 领（藏蓝） */}
+          <path d="M 8 54 Q 10 44 18 41.5 L 27 44 L 36 41.5 Q 44 44 46 54 Z" fill="#3a4a5a" />
+          <path d="M 20.4 42.6 L 27 46.6 L 33.6 42.6 L 35.4 43.6 L 27 49.4 L 18.6 43.6 Z" fill="#2a3644" />
+          {/* 肩章带 + 胸口徽记 */}
+          <rect x="11" y="45" width="7" height="2.4" rx="0.8" fill="#2a3644" />
+          <rect x="36" y="45" width="7" height="2.4" rx="0.8" fill="#2a3644" />
+          <circle cx="41" cy="51.4" r="1" fill="#c8b06a" opacity="0.7" />
+          {/* 脸基座（颅骨+下颌，face 路径同语言小号版） */}
+          <ellipse cx="27" cy="28" rx="10.6" ry="11" fill="url(#cpFace)" />
+          <path d="M 16.4 30.8 Q 16.8 39.6 27 40.4 Q 37.2 39.6 37.6 30.8 Q 37.2 26.5 27 26.2 Q 16.8 26.5 16.4 30.8 Z" fill="url(#cpFace)" />
+          <ellipse cx="27" cy="38.6" rx="2.4" ry="1.2" fill="#dcc09a" opacity="0.35" />
+          <ellipse cx="21.4" cy="31.6" rx="2" ry="1.2" fill="#dcc09a" opacity="0.3" />
+          <ellipse cx="32.6" cy="31.6" rx="2" ry="1.2" fill="#dcc09a" opacity="0.3" />
+          {/* 帽檐投影横带（檐下眉眼压暗——真实感锚点） */}
+          <rect x="16.4" y="22.4" width="21.2" height="5.4" fill="#8c6a48" opacity="0.3" />
+          {/* 眼（结构化：虹膜渐变+缘环+双高光+粗睑线） */}
+          <g>
+            <ellipse cx="22.8" cy="26.2" rx="2" ry="1.45" fill="#f0ead8" />
+            <ellipse cx="31.2" cy="26.2" rx="2" ry="1.45" fill="#f0ead8" />
+            <circle cx="22.8" cy="26.3" r="1" fill="url(#cpIris)" />
+            <circle cx="31.2" cy="26.3" r="1" fill="url(#cpIris)" />
+            <circle cx="22.8" cy="26.3" r="1" fill="none" stroke="#3d2c1c" strokeWidth="0.2" opacity="0.7" />
+            <circle cx="31.2" cy="26.3" r="1" fill="none" stroke="#3d2c1c" strokeWidth="0.2" opacity="0.7" />
+            <circle cx="22.8" cy="26.3" r="0.48" fill="#1c1610" />
+            <circle cx="31.2" cy="26.3" r="0.48" fill="#1c1610" />
+            <circle cx="23.1" cy="25.9" r="0.38" fill="#fff" opacity="0.92" />
+            <circle cx="31.5" cy="25.9" r="0.38" fill="#fff" opacity="0.92" />
+            <circle cx="22.55" cy="26.8" r="0.17" fill="#fff" opacity="0.55" />
+            <circle cx="30.95" cy="26.8" r="0.17" fill="#fff" opacity="0.55" />
+            <path d="M 20.9 25.4 Q 22.8 24.9 24.7 25.45" stroke="#26221c" strokeWidth="1.05" fill="none" strokeLinecap="round" />
+            <path d="M 29.3 25.45 Q 31.2 24.9 33.1 25.4" stroke="#26221c" strokeWidth="1.05" fill="none" strokeLinecap="round" />
+          </g>
+          {/* 帽檐下的浓眉 */}
+          <path d="M 20.8 23.9 Q 22.8 23.2 24.6 23.8" stroke="#3a342c" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+          <path d="M 29.4 23.8 Q 31.2 23.2 33.2 23.9" stroke="#3a342c" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+          {/* 鼻 + 嘴 + 法令纹 */}
+          <path d="M 27.6 26.8 Q 26.9 29 26.5 30.4" stroke="#a87e56" strokeWidth="0.85" fill="none" strokeLinecap="round" />
+          <ellipse cx="25.8" cy="30.6" rx="0.8" ry="0.5" fill="#a87e56" opacity="0.6" />
+          <ellipse cx="28.2" cy="30.6" rx="0.8" ry="0.5" fill="#a87e56" opacity="0.6" />
+          <path d="M 23.6 33.4 Q 27 35 30.4 33.4" stroke="#7c4a38" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+          <path d="M 23.8 30.8 Q 23.4 32 23.7 33 M 30.2 30.8 Q 30.6 32 30.3 33" stroke="#a87e56" strokeWidth="0.45" fill="none" opacity="0.45" />
+          {/* 胡茬点阵 */}
+          <g fill="#3a3026" opacity="0.24">
+            <circle cx="24.2" cy="35.6" r="0.45" /><circle cx="26" cy="36.4" r="0.45" /><circle cx="28" cy="36.5" r="0.45" /><circle cx="29.8" cy="35.7" r="0.45" /><circle cx="25.4" cy="34.9" r="0.4" /><circle cx="28.6" cy="35" r="0.4" />
+          </g>
+          {/* 帽体（帽檐压到眉上方 + 顶钮 + 缝线） */}
+          <path d="M 16.6 22.2 Q 17 10.4 27 10 Q 37 10.4 37.4 22.2 L 38.6 23.6 Q 27 19.8 15.4 23.6 Z" fill="#2c2620" />
+          <path d="M 15.4 23.4 Q 27 19.6 38.6 23.4" stroke="#4a4438" strokeWidth="1.6" fill="none" />
+          <rect x="19.6" y="23.2" width="14.8" height="4.2" rx="2" fill="#1c1a16" />
+          <circle cx="27" cy="13.4" r="0.9" fill="#4a4438" />
+          <path d="M 20.4 16.4 Q 27 14.6 33.6 16.4" stroke="#141210" strokeWidth="0.5" fill="none" opacity="0.6" />
+          {/* 制服反光条（袖口/门襟一道） */}
+          <path d="M 12 54 Q 14 40 18 41.5" stroke="#c8d4e0" strokeWidth="1" fill="none" opacity="0.35" />
         </g>
       );
     case 'kid':
@@ -633,35 +785,112 @@ function ShotScene({ kind }: { kind: NonNullable<Target['portraitSpec']['shotTyp
         </g>
       );
     case 'fishing':
+      // v4.7 钓鱼照——黎明水面：锥形鱼竿斜贯 + 立漂 + 漂周同心水波（钓友头像的情感锚点）
       return (
         <g>
-          <rect width="54" height="54" fill="#8a9498" />
-          <rect width="54" height="10" fill="#c4cbc8" opacity="0.5" />
-          <rect y="28" width="54" height="26" fill="#5a7a6e" />
-          <path d="M 0 30 Q 14 28 27 30 T 54 30" stroke="#c4d4cc" strokeWidth="0.8" fill="none" opacity="0.5" />
-          <path d="M 38 12 L 44 40" stroke="#2a2c28" strokeWidth="1.8" />
-          <circle cx="13" cy="34" r="5" fill="#3a3c34" />
-          <path d="M 10 40 Q 13 36 16 40 Z" fill="#3a3c34" />
-          <path d="M 11 39 L 38 13" stroke="#c4c8c0" strokeWidth="0.5" opacity="0.6" />
-          <rect x="6" y="46" width="9" height="5" rx="1" fill="#2a2c28" />
+          <defs>
+            <linearGradient id="fsSky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#8a97a4" />
+              <stop offset="52%" stopColor="#c9a878" />
+              <stop offset="100%" stopColor="#e8c894" />
+            </linearGradient>
+            <linearGradient id="fsWater" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#5a7a6e" />
+              <stop offset="100%" stopColor="#2a4640" />
+            </linearGradient>
+          </defs>
+          {/* 黎明天空 + 晨雾 */}
+          <rect width="54" height="30" fill="url(#fsSky)" />
+          <circle cx="14" cy="12" r="5" fill="#fff4d8" opacity="0.55" />
+          <rect x="0" y="0" width="54" height="30" fill="#cde4ea" opacity="0.07" />
+          {/* 远岸剪影 + 芦苇 */}
+          <path d="M 0 26 Q 14 20.5 28 26 L 54 24 L 54 30 L 0 30 Z" fill="#1e3441" opacity="0.85" />
+          <path d="M 47 26 Q 45.8 18 48 14" stroke="#4c6a46" strokeWidth="0.9" fill="none" />
+          <path d="M 50 26 Q 51.4 20 49.6 16" stroke="#4c6a46" strokeWidth="0.7" fill="none" />
+          <ellipse cx="48" cy="13.4" rx="0.9" ry="2.2" fill="#7a6a3e" opacity="0.8" />
+          {/* 水面（渐变 + 三道横纹） */}
+          <rect x="0" y="29" width="54" height="25" fill="url(#fsWater)" />
+          <path d="M 0 31.5 Q 13.5 29.5 27 31.5 T 54 31.5" stroke="#c4d4cc" strokeWidth="0.7" fill="none" opacity="0.4" />
+          <path d="M 0 38 Q 13.5 36 27 38 T 54 38" stroke="#c4d4cc" strokeWidth="0.5" fill="none" opacity="0.28" />
+          <path d="M 0 46 Q 13.5 44 27 46 T 54 46" stroke="#c4d4cc" strokeWidth="0.4" fill="none" opacity="0.16" />
+          {/* 漂周同心水波（鱼线入水的涟漪） */}
+          <g fill="none" stroke="#c4d4cc">
+            <ellipse cx="36" cy="43.4" rx="4.4" ry="1.3" strokeWidth="0.55" opacity="0.5" />
+            <ellipse cx="36" cy="43.4" rx="8" ry="2.3" strokeWidth="0.45" opacity="0.32" />
+            <ellipse cx="36" cy="43.4" rx="12.4" ry="3.6" strokeWidth="0.35" opacity="0.18" />
+          </g>
+          {/* 鱼竿锥形（粗把→细梢斜贯）+ 导线环 + 线轮鼓包 */}
+          <path d="M 6 54 L 7.6 53.4 L 46 10.4 L 44.6 9 Z" fill="#5a3e22" />
+          <path d="M 7 54 L 8.6 53.4 L 46.8 10.8 L 45.6 9.6 Z" fill="#7a5a34" opacity="0.45" />
+          <ellipse cx="13.6" cy="47.8" rx="2.4" ry="3.2" transform="rotate(38 13.6 47.8)" fill="#2a2c28" />
+          <ellipse cx="13.6" cy="47.8" rx="1.1" ry="1.8" transform="rotate(38 13.6 47.8)" fill="#4c545a" />
+          <g fill="none" stroke="#c4c8c0" strokeWidth="0.55">
+            <path d="M 16.8 44.4 L 19.2 46" />
+            <path d="M 22 38.8 L 24.6 40.2" />
+            <path d="M 27.6 33.2 L 30.4 34.4" />
+            <path d="M 33.6 27.2 L 36.6 28" />
+            <path d="M 40 21.6 L 42.8 22" />
+          </g>
+          {/* 鱼线（竿梢垂弧到立漂） */}
+          <path d="M 44.6 9.6 Q 42 26 36 42.6" stroke="#c4c8c0" strokeWidth="0.4" fill="none" opacity="0.7" />
+          {/* 立漂（红顶段 + 白身 + 细天线——水面上只露一点） */}
+          <line x1="36" y1="40.4" x2="36" y2="42.4" stroke="#e8e4d8" strokeWidth="0.6" />
+          <rect x="35.5" y="42.2" width="1" height="1.4" fill="#c8422e" />
+          <ellipse cx="36" cy="43.6" rx="0.8" ry="1" fill="#e8e4d8" />
+          {/* 岸/钓箱一角（近景压角） */}
+          <path d="M 0 54 L 0 46 L 10 44.4 L 14 54 Z" fill="#3c4436" />
+          <rect x="2.6" y="45.8" width="8" height="1.6" rx="0.8" fill="#2a2f26" />
         </g>
       );
     case 'brunch':
+      // v4.7 精致摆拍——中老年男性朋友圈的「生活品质」：蛋糕+拿铁拉花+盘边折起来的老花镜
       return (
         <g>
-          <rect width="54" height="54" fill="#c8b49a" />
-          <rect width="54" height="54" fill="#d8c4aa" opacity="0.5" />
-          <circle cx="20" cy="22" r="12" fill="#f4f0e8" />
-          <circle cx="20" cy="22" r="9" fill="#e8dcc4" />
-          <ellipse cx="16" cy="20" rx="4" ry="2.6" fill="#e8b86a" />
-          <ellipse cx="23" cy="24" rx="4.6" ry="2.6" fill="#8ac47a" />
-          <ellipse cx="20" cy="17" rx="3" ry="1.8" fill="#d4553f" opacity="0.7" />
-          <circle cx="40" cy="16" r="6.4" fill="#f4f0e8" />
-          <circle cx="40" cy="16" r="4.8" fill="#6a4a2c" />
-          <path d="M 34 8 Q 40 4 46 8" stroke="#f4f0e8" strokeWidth="2.4" fill="none" />
-          <rect x="30" y="40" width="18" height="6" rx="3" fill="#d9a678" />
-          <rect x="44" y="38" width="7" height="9" rx="3.4" fill="#3a3f45" />
-          <rect x="45.4" y="40" width="4.2" height="3" rx="1.4" fill="#c8ccd4" />
+          <defs>
+            <linearGradient id="brWood" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#a8845e" />
+              <stop offset="100%" stopColor="#8a6a48" />
+            </linearGradient>
+            <radialGradient id="brGlow" cx="50%" cy="30%" r="60%">
+              <stop offset="0%" stopColor="#fff0cc" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#fff0cc" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          {/* 暖光氛围 + 木桌面（板缝） */}
+          <rect width="54" height="54" fill="#c8a888" />
+          <rect x="0" y="24" width="54" height="30" fill="url(#brWood)" />
+          <g stroke="#6e5236" strokeWidth="0.5" opacity="0.5">
+            <line x1="0" y1="36" x2="54" y2="36" />
+            <line x1="0" y1="46" x2="54" y2="46" />
+            <line x1="18" y1="24" x2="16" y2="54" />
+            <line x1="40" y1="24" x2="42" y2="54" />
+          </g>
+          {/* 头顶暖光池 */}
+          <rect width="54" height="54" fill="url(#brGlow)" />
+          {/* 白瓷盘 + 蛋糕 + 草莓 */}
+          <ellipse cx="19" cy="38" rx="12.5" ry="8" fill="#f4f0e8" />
+          <ellipse cx="19" cy="37.4" rx="9.6" ry="6.2" fill="#e8dcc4" />
+          <path d="M 13.4 38.6 Q 19 32.6 24.6 38.6 Q 19 41.6 13.4 38.6 Z" fill="#e8b878" />
+          <path d="M 14.8 38.4 Q 19 34.4 23.2 38.4" stroke="#d49a56" strokeWidth="0.5" fill="none" opacity="0.7" />
+          <path d="M 16.6 33.4 Q 19 31.2 21.4 33.4 L 20.6 35.4 L 17.4 35.4 Z" fill="#d4553f" />
+          <circle cx="18" cy="34.6" r="0.3" fill="#fff" opacity="0.5" />
+          <ellipse cx="24.4" cy="35.4" rx="1.4" ry="1" fill="#d4553f" opacity="0.9" />
+          {/* 拿铁：杯身 + 心形拉花（一撇奶泡） */}
+          <path d="M 33 26.5 L 43 26.5 L 42 38.5 Q 38 42 34 38.5 Z" fill="#f4f0e8" />
+          <ellipse cx="38" cy="26.5" rx="5" ry="1.6" fill="#e8dcc4" />
+          <path d="M 36 26.6 Q 38 24.9 40 26.6 Q 38 28.3 36 26.6 Z" fill="#c9a274" />
+          <path d="M 37 26.6 Q 38 25.8 39 26.6" stroke="#f4f0e8" strokeWidth="0.45" fill="none" />
+          <rect x="34.5" y="38.8" width="7" height="1.4" rx="0.5" fill="#d8ccb4" opacity="0.7" />
+          {/* 盘边一副折起来的老花镜（点题：这份精致是租来的） */}
+          <g transform="rotate(-8 44 45)">
+            <rect x="38.4" y="43.2" width="10.4" height="2.2" rx="1" fill="#d8c4a4" stroke="#8a7454" strokeWidth="0.45" />
+            <line x1="43.4" y1="43.2" x2="43.4" y2="45.4" stroke="#8a7454" strokeWidth="0.5" />
+            <circle cx="40.6" cy="44.3" r="0.4" fill="none" stroke="#6e5a3e" strokeWidth="0.3" opacity="0.7" />
+            <circle cx="46.4" cy="44.3" r="0.4" fill="none" stroke="#6e5a3e" strokeWidth="0.3" opacity="0.7" />
+          </g>
+          {/* 餐巾一角 */}
+          <path d="M 4 46 L 14 44 L 16.5 54 L 4.5 54 Z" fill="#f4f0e8" opacity="0.85" />
+          <path d="M 7 49.5 L 13 48.4" stroke="#c8b89a" strokeWidth="0.4" opacity="0.7" />
         </g>
       );
     default:
@@ -749,9 +978,9 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
         <ellipse cx={27 - rx - 0.2} cy="30.6" rx="1" ry="0.8" fill={sk.shade} opacity="0.5" />
         <ellipse cx={27 + rx + 0.2} cy="30.6" rx="1" ry="0.8" fill={sk.shade} opacity="0.5" />
 
-        {/* ---- 脸基座：颅骨椭圆 + 按脸型的下颌剪影 ---- */}
-        <ellipse cx="27" cy="24.8" rx={rx} ry={F.ry} fill={sk.base} />
-        <path d={JAW_PATH[F.type]} fill={sk.base} />
+        {/* ---- 脸基座：颅骨椭圆 + 按脸型的下颌剪影（v4.7 竖向渐变肤） ---- */}
+        <ellipse cx="27" cy="24.8" rx={rx} ry={F.ry} fill={`url(#omFace${spec.skin ?? 1})`} />
+        <path d={JAW_PATH[F.type]} fill={`url(#omFace${spec.skin ?? 1})`} />
         {/* 下颌两侧阴影（沿各自的轮廓线走） */}
         {F.type === 'square' && (
           <g>
@@ -913,7 +1142,7 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
         )}
         {wary && <path d="M 25.8 21.4 L 26.6 23 M 28.2 21.4 L 27.4 23" stroke={sk.shade} strokeWidth="0.7" strokeLinecap="round" />}
 
-        {/* ---- 眼：眼白 + 瞳仁 + 瞳孔 + 高光；含笑换月牙眼 ---- */}
+        {/* ---- 眼（v4.7 结构化：虹膜渐变+缘环+双高光+粗睑线；含笑换月牙眼） ---- */}
         {smiling ? (
           <g stroke="#26221c" strokeWidth="1.5" strokeLinecap="round" fill="none">
             <path d="M 20.4 24.4 Q 22.4 22.6 24.4 24.4" />
@@ -923,16 +1152,28 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
           </g>
         ) : (
           <g>
-            <ellipse cx="22.4" cy={eyeY} rx="2.1" ry={scleraRy} fill="#f6f1e6" />
-            <ellipse cx="31.6" cy={eyeY} rx="2.1" ry={scleraRy} fill="#f6f1e6" />
-            <circle cx="22.4" cy={eyeY + 0.1} r="1.05" fill="#4c3a26" />
-            <circle cx="31.6" cy={eyeY + 0.1} r="1.05" fill="#4c3a26" />
+            {/* 眼白（老年人微黄一档） */}
+            <ellipse cx="22.4" cy={eyeY} rx="2.1" ry={scleraRy} fill={target.age >= 50 ? '#f0ead8' : '#f6f1e6'} />
+            <ellipse cx="31.6" cy={eyeY} rx="2.1" ry={scleraRy} fill={target.age >= 50 ? '#f0ead8' : '#f6f1e6'} />
+            {/* 虹膜（渐变 + 缘环） */}
+            <circle cx="22.4" cy={eyeY + 0.1} r="1.05" fill="url(#omIris)" />
+            <circle cx="31.6" cy={eyeY + 0.1} r="1.05" fill="url(#omIris)" />
+            <circle cx="22.4" cy={eyeY + 0.1} r="1.05" fill="none" stroke="#3d2c1c" strokeWidth="0.22" opacity="0.7" />
+            <circle cx="31.6" cy={eyeY + 0.1} r="1.05" fill="none" stroke="#3d2c1c" strokeWidth="0.22" opacity="0.7" />
+            {/* 瞳孔 */}
             <circle cx="22.4" cy={eyeY + 0.1} r="0.5" fill="#1c1610" />
             <circle cx="31.6" cy={eyeY + 0.1} r="0.5" fill="#1c1610" />
-            <circle cx={22.8} cy={eyeY - 0.4} r="0.4" fill="#fff" opacity="0.95" />
-            <circle cx={32} cy={eyeY - 0.4} r="0.4" fill="#fff" opacity="0.95" />
-            <path d={`M 20.3 ${lidY} Q 22.4 ${lidY - 0.5} 24.5 ${lidY + (wary ? 0.8 : 0.1)}`} stroke={sk.line} strokeWidth="0.7" fill="none" />
-            <path d={`M 29.5 ${lidY + (wary ? 0.8 : 0.1)} Q 31.6 ${lidY - 0.5} 33.7 ${lidY}`} stroke={sk.line} strokeWidth="0.7" fill="none" />
+            {/* 双高光：主（左上，随硬闪光方向）+ 次（右下小点） */}
+            <circle cx="22.75" cy={eyeY - 0.4} r="0.4" fill="#fff" opacity="0.92" />
+            <circle cx="31.95" cy={eyeY - 0.4} r="0.4" fill="#fff" opacity="0.92" />
+            <circle cx="22.1" cy={eyeY + 0.55} r="0.18" fill="#fff" opacity="0.55" />
+            <circle cx="31.3" cy={eyeY + 0.55} r="0.18" fill="#fff" opacity="0.55" />
+            {/* 上睑线（加粗成真睫毛线；自然弧、外眼角平收——不上挑） */}
+            <path d={`M 20.3 ${lidY + 0.1} Q 22.4 ${lidY - 0.55} 24.5 ${lidY + (wary ? 0.85 : 0.15)}`} stroke="#26221c" strokeWidth={wary ? 1.05 : 1.15} fill="none" strokeLinecap="round" />
+            <path d={`M 29.5 ${lidY + (wary ? 0.85 : 0.15)} Q 31.6 ${lidY - 0.55} 33.7 ${lidY + 0.1}`} stroke="#26221c" strokeWidth={wary ? 1.05 : 1.15} fill="none" strokeLinecap="round" />
+            {/* 上睑褶线（极淡一笔） */}
+            <path d={`M 20.5 ${lidY - 1} Q 22.4 ${lidY - 1.5} 24.3 ${lidY - 0.9}`} stroke={sk.line} strokeWidth="0.45" fill="none" opacity="0.45" />
+            <path d={`M 29.7 ${lidY - 0.9} Q 31.6 ${lidY - 1.5} 33.5 ${lidY - 1}`} stroke={sk.line} strokeWidth="0.45" fill="none" opacity="0.45" />
           </g>
         )}
         <path d="M 20.8 26.6 Q 22.4 27.4 24 26.7" stroke={sk.shade} strokeWidth="0.5" fill="none" opacity="0.55" />
@@ -946,6 +1187,19 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
         <ellipse cx="25.6" cy="29.6" rx="0.9" ry="0.55" fill={sk.shade} opacity="0.65" />
         <ellipse cx="28.6" cy="29.6" rx="0.9" ry="0.55" fill={sk.shade} opacity="0.65" />
         <ellipse cx="27.2" cy="28.6" rx="1.3" ry="0.7" fill={sk.hi} opacity="0.3" />
+        {/* v4.7 鼻尖油光（闪光下的 T 区反光——老头油皮，与女主磨皮哑光对照） */}
+        <circle cx="27.2" cy="29.2" r="0.5" fill="#ffffff" opacity="0.12" />
+
+        {/* v4.7 额纹（年龄驱动：50+ 三道，年轻的一道更淡） */}
+        {target.age >= 50 ? (
+          <g stroke={sk.shade} strokeWidth="0.45" fill="none" strokeLinecap="round" opacity="0.28">
+            <path d="M 23 18.6 Q 27 17.9 31 18.6" />
+            <path d="M 23.4 20.1 Q 27 19.5 30.6 20.1" />
+            <path d="M 23.8 21.6 Q 27 21 30.2 21.6" opacity="0.6" />
+          </g>
+        ) : (
+          <path d="M 23.6 19.8 Q 27 19.2 30.4 19.8" stroke={sk.shade} strokeWidth="0.4" fill="none" strokeLinecap="round" opacity="0.18" />
+        )}
 
         {hasMole && <circle cx={21.4 + (h % 3)} cy="35.4" r="0.55" fill={sk.line} opacity="0.65" />}
 
@@ -1006,7 +1260,19 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
         )}
 
         <AccessoryLayer accessory={spec.accessory ?? 'none'} />
+
+        {/* ---- v4.7 摄影后期（face 路径）：鼻尖油光之上、暗角之下的颗粒 ---- */}
         </>)}
+        {/* ---- v4.7 摄影后期（全路径共用）：前置硬闪光热点 + 感光颗粒（位置按 id 哈希确定性派生） ---- */}
+        <rect width="54" height="54" fill="url(#omFlash)" />
+        <g fill="#ffffff">
+          {[0, 1, 2, 3, 4, 5, 6].map((i) => {
+            const gx = 6 + ((h * (i + 3)) % 43);
+            const gy = 6 + ((h * (i + 7)) % 43);
+            const gr = 0.3 + ((h + i * 13) % 5) * 0.09;
+            return <circle key={i} cx={gx} cy={gy} r={gr} opacity={0.08 + ((h + i * 31) % 7) * 0.01} />;
+          })}
+        </g>
         <rect width="54" height="54" fill="url(#omVig)" />
       </g>
       <clipPath id={`clip-${uid}`}>
