@@ -2029,53 +2029,104 @@ const SELFIE_SCENES: Record<string, ReactElement> = {
         <rect x="150" y="44" width="42" height="30" rx="2" fill="#1c1216" />
         <rect x="156" y="50" width="30" height="3" fill="#4a3a42" />
       </g>
-      {/* 闺蜜（右，波波头，稍后侧） */}
+      {/* 闺蜜（右，波波头，稍后侧）——v4.6 同步新头像语言：结构眼 + 卧蚕 + 唇高光 + 发泽带 */}
       <g>
         <path d="M 128 96 Q 122 58 148 55 Q 176 57 172 96 Q 176 100 174 106 L 126 106 Q 124 100 128 96 Z" fill="#3a2a26" />
         <ellipse cx="149" cy="80" rx="16" ry="17" fill="#f8dcc2" />
         <path d="M 133 78 Q 133 60 149 58.5 Q 165 60 165 78 Q 158 68 149 67.5 Q 140 68 133 78 Z" fill="#3a2a26" />
+        {/* 波波头发泽带 */}
+        <path d="M 135 66 Q 142 59 152 60" stroke="#ffffff" strokeWidth="1.6" opacity="0.18" fill="none" strokeLinecap="round" />
         <path d="M 135 76 Q 141 72 146 73" stroke="#ffffff" strokeWidth="1" opacity="0.2" fill="none" />
-        <circle cx="143" cy="82" r="1.6" fill="#26221c" />
-        <circle cx="155" cy="82" r="1.6" fill="#26221c" />
-        <path d="M 142 89.5 Q 149 93.5 156 89.5" stroke="#c46a5a" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+        {/* 眼：结构化（虹膜渐变 + 双高光 + 双眼皮 + 卧蚕） */}
+        <g>
+          <ellipse cx="143" cy="82" rx="2.3" ry="2.4" fill="#f6f2ea" />
+          <ellipse cx="155" cy="82" rx="2.3" ry="2.4" fill="#f6f2ea" />
+          <circle cx="143" cy="82.3" r="1.7" fill="#6a4c2e" />
+          <circle cx="155" cy="82.3" r="1.7" fill="#6a4c2e" />
+          <circle cx="143" cy="82.3" r="0.8" fill="#1c1410" />
+          <circle cx="155" cy="82.3" r="0.8" fill="#1c1410" />
+          <circle cx="143.6" cy="81.4" r="0.75" fill="#ffffff" opacity="0.95" />
+          <circle cx="155.6" cy="81.4" r="0.75" fill="#ffffff" opacity="0.95" />
+          <circle cx="142.5" cy="83.6" r="0.35" fill="#ffffff" opacity="0.6" />
+          <circle cx="154.5" cy="83.6" r="0.35" fill="#ffffff" opacity="0.6" />
+          <path d="M 140.7 81 Q 143 79.5 145.3 81" stroke="#241a12" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+          <path d="M 152.7 81 Q 155 79.5 157.3 81" stroke="#241a12" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+          {/* 双眼皮 */}
+          <path d="M 141 78.9 Q 143 78.4 145.2 79" stroke="#c89878" strokeWidth="0.5" fill="none" opacity="0.6" />
+          <path d="M 152.8 79 Q 155 78.4 157 78.9" stroke="#c89878" strokeWidth="0.5" fill="none" opacity="0.6" />
+          {/* 卧蚕 */}
+          <path d="M 141 85.6 Q 143 86.3 145 85.6" stroke="#ffead2" strokeWidth="0.7" fill="none" strokeLinecap="round" opacity="0.7" />
+          <path d="M 153 85.6 Q 155 86.3 157 85.6" stroke="#ffead2" strokeWidth="0.7" fill="none" strokeLinecap="round" opacity="0.7" />
+        </g>
+        {/* 渐变唇（抿嘴笑 + 中央高光） */}
+        <path d="M 142 89.5 Q 149 92.5 156 89.5 Q 149 91.4 142 89.5 Z" fill="#c46a5a" />
+        <path d="M 144 90 Q 149 92 154 90" stroke="#ffffff" strokeWidth="0.5" opacity="0.4" fill="none" />
         <ellipse cx="139" cy="87" rx="2.6" ry="1.5" fill="#f0a08c" opacity="0.45" />
         <ellipse cx="159" cy="87" rx="2.6" ry="1.5" fill="#f0a08c" opacity="0.45" />
         {/* 闺蜜的肩膀（紫色上衣） */}
         <path d="M 118 126 Q 124 100 148 98 Q 172 100 180 126 Z" fill="#7a4a7a" />
       </g>
-      {/* 主角（左，深色双马尾，更近镜头） */}
+      {/* 主角（左，深色双马尾，更近镜头）——v4.6 与新头像同语言：结构眼/渐变唇/发际线/光泽带 */}
       <g>
         <path d="M 46 108 Q 38 62 70 58 Q 102 62 94 108 Q 98 114 96 122 L 44 122 Q 42 114 46 108 Z" fill="#241c20" />
-        {/* 双马尾 */}
+        {/* 双马尾 + 内侧阴影 + 光泽带 */}
         <path d="M 42 84 Q 30 92 32 112 L 42 108 Z" fill="#241c20" />
         <path d="M 98 84 Q 110 92 108 112 L 98 108 Z" fill="#241c20" />
+        <path d="M 34 100 Q 33 106 35.5 110" stroke="#000000" strokeWidth="2.4" fill="none" opacity="0.25" strokeLinecap="round" />
+        <path d="M 106 100 Q 107 106 104.5 110" stroke="#000000" strokeWidth="2.4" fill="none" opacity="0.25" strokeLinecap="round" />
+        <path d="M 36 92 Q 35 98 37 103" stroke="#ffffff" strokeWidth="1.6" opacity="0.14" fill="none" strokeLinecap="round" />
+        <path d="M 104 92 Q 105 98 103 103" stroke="#ffffff" strokeWidth="1.6" opacity="0.14" fill="none" strokeLinecap="round" />
         <ellipse cx="70" cy="84" rx="21" ry="22" fill="#fbdfc0" />
         <path d="M 49 82 Q 49 56 70 54.5 Q 91 56 91 82 Q 82 68 70 67.5 Q 58 68 49 82 Z" fill="#241c20" />
-        <path d="M 52 76 Q 60 68 70 67.6" stroke="#ffffff" strokeWidth="1.2" opacity="0.22" fill="none" />
+        {/* 发际线 */}
+        <path d="M 52 74 Q 70 63 88 76" stroke="#d8a67e" strokeWidth="0.9" fill="none" opacity="0.55" />
         {/* 空气刘海中分 */}
-        <path d="M 70 68 Q 66 70 64 75 M 70 68 Q 74 70 76 75" stroke="#241c20" strokeWidth="2" fill="none" strokeLinecap="round" />
-        {/* 眼睛（圆亮） */}
-        <ellipse cx="63" cy="86" rx="3.4" ry="4.2" fill="#ffffff" />
-        <ellipse cx="77" cy="86" rx="3.4" ry="4.2" fill="#ffffff" />
-        <circle cx="63" cy="86.5" r="2.6" fill="#4a3020" />
-        <circle cx="77" cy="86.5" r="2.6" fill="#4a3020" />
-        <circle cx="63" cy="86.5" r="1.2" fill="#1c1410" />
-        <circle cx="77" cy="86.5" r="1.2" fill="#1c1410" />
-        <circle cx="64.2" cy="84.8" r="1" fill="#fff" />
-        <circle cx="78.2" cy="84.8" r="1" fill="#fff" />
-        <path d="M 58.6 82.2 Q 62.6 80.2 67.2 81.4" stroke="#241a12" strokeWidth="1.4" fill="none" strokeLinecap="round" />
-        <path d="M 72.8 81.4 Q 77.4 80.2 81.4 82.2" stroke="#241a12" strokeWidth="1.4" fill="none" strokeLinecap="round" />
-        {/* 开口笑 */}
+        <path d="M 70 68 Q 66 70 64 75 M 70 68 Q 74 70 76 75" stroke="#241c20" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+        {/* 前发光泽带 */}
+        <path d="M 53 70 Q 60 62 70 61.5" stroke="#ffffff" strokeWidth="1.6" opacity="0.16" fill="none" strokeLinecap="round" />
+        <path d="M 87 70 Q 80 62 70 61.5" stroke="#ffffff" strokeWidth="1.6" opacity="0.16" fill="none" strokeLinecap="round" />
+        {/* 眼：结构化（虹膜渐变 + 缘环 + 双高光 + 睫线 + 双眼皮 + 卧蚕） */}
+        <g>
+          <ellipse cx="63" cy="86" rx="3.1" ry="3.7" fill="#f6f2ea" />
+          <ellipse cx="77" cy="86" rx="3.1" ry="3.7" fill="#f6f2ea" />
+          <circle cx="63" cy="86.4" r="2.3" fill="#6a4c2e" />
+          <circle cx="77" cy="86.4" r="2.3" fill="#6a4c2e" />
+          <circle cx="63" cy="86.4" r="2.3" fill="none" stroke="#5a4028" strokeWidth="0.4" opacity="0.5" />
+          <circle cx="77" cy="86.4" r="2.3" fill="none" stroke="#5a4028" strokeWidth="0.4" opacity="0.5" />
+          <circle cx="63" cy="86.4" r="1.05" fill="#1c1410" />
+          <circle cx="77" cy="86.4" r="1.05" fill="#1c1410" />
+          <circle cx="63.9" cy="85.2" r="0.95" fill="#ffffff" opacity="0.98" />
+          <circle cx="77.9" cy="85.2" r="0.95" fill="#ffffff" opacity="0.98" />
+          <circle cx="62.2" cy="87.8" r="0.45" fill="#ffffff" opacity="0.6" />
+          <circle cx="76.2" cy="87.8" r="0.45" fill="#ffffff" opacity="0.6" />
+          {/* 上睫线（自然弧，外眼角不上挑） */}
+          <path d="M 60.1 85.8 Q 63 81.8 65.9 85.8" stroke="#241a12" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+          <path d="M 79.9 85.8 Q 77 81.8 74.1 85.8" stroke="#241a12" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+          {/* 双眼皮褶线 */}
+          <path d="M 60.8 81.6 Q 63 80.8 65.2 81.5" stroke="#c89878" strokeWidth="0.55" fill="none" opacity="0.65" />
+          <path d="M 74.8 81.5 Q 77 80.8 79.2 81.6" stroke="#c89878" strokeWidth="0.55" fill="none" opacity="0.65" />
+          {/* 下睫 */}
+          <path d="M 65.3 89.4 L 66.1 89.9 M 61.3 89.6 L 62 90.2" stroke="#241a12" strokeWidth="0.5" strokeLinecap="round" />
+          <path d="M 74.7 89.4 L 73.9 89.9 M 78.7 89.6 L 78 90.2" stroke="#241a12" strokeWidth="0.5" strokeLinecap="round" />
+          {/* 卧蚕 */}
+          <path d="M 60.5 90.6 Q 63 91.5 65.5 90.6" stroke="#ffead2" strokeWidth="0.9" fill="none" strokeLinecap="round" opacity="0.75" />
+          <path d="M 74.5 90.6 Q 77 91.5 79.5 90.6" stroke="#ffead2" strokeWidth="0.9" fill="none" strokeLinecap="round" opacity="0.75" />
+        </g>
+        {/* 渐变咬唇（开口笑 + 中央高光） */}
         <path d="M 63 96.5 Q 70 102.5 77 96.5 Q 70 99 63 96.5 Z" fill="#c4554a" />
-        <ellipse cx="70" cy="96.8" rx="4.6" ry="1.6" fill="#ffffff" opacity="0.75" />
-        <ellipse cx="56.6" cy="92" rx="3.4" ry="2" fill="#f0a08c" opacity="0.5" />
-        <ellipse cx="83.4" cy="92" rx="3.4" ry="2" fill="#f0a08c" opacity="0.5" />
-        {/* 樱花发卡 */}
+        <path d="M 65 97.4 Q 70 100.8 75 97.4 Q 70 99.2 65 97.4 Z" fill="#000000" opacity="0.18" />
+        <ellipse cx="70" cy="96.9" rx="4.6" ry="1.6" fill="#ffffff" opacity="0.7" />
+        <path d="M 65.8 96.4 Q 70 95.6 74.2 96.4" stroke="#ffffff" strokeWidth="0.55" opacity="0.45" fill="none" />
+        <ellipse cx="56.6" cy="92" rx="3.4" ry="2" fill="#f0a08c" opacity="0.4" />
+        <ellipse cx="83.4" cy="92" rx="3.4" ry="2" fill="#f0a08c" opacity="0.4" />
+        {/* 樱花发卡（五瓣 + 花心高光 + 一叶） */}
         <g transform="rotate(10 47 66)">
           {[0, 72, 144, 216, 288].map((a) => (
             <ellipse key={a} cx="47" cy="64" rx="1.5" ry="2.2" fill="#f6b8c8" transform={`rotate(${a} 47 66)`} />
           ))}
           <circle cx="47" cy="66" r="1.1" fill="#f4d03f" />
+          <circle cx="46.7" cy="65.7" r="0.32" fill="#ffffff" opacity="0.85" />
+          <path d="M 48.6 69 Q 51 70 50.4 72.4 Q 48.4 71.4 48.6 69 Z" fill="#8ab87a" opacity="0.85" />
         </g>
         {/* 主角肩膀（奶白上衣） */}
         <path d="M 36 132 Q 44 102 70 100 Q 96 102 104 132 Z" fill="#f4ede4" />
@@ -2441,16 +2492,23 @@ const SELFIE_SCENES: Record<string, ReactElement> = {
 };
 
 // ---------------------------------------------------------------------------
-// 女主角头像系统（v3.0 全面重绘）：
-//  - 真结构五官：上睫线、虹膜双色、双高光、下睫、眉型分档、鼻唇结构；
-//  - 4 种眼型（上挑/圆亮/温软/平静）× 4 种唇形（红唇/张口笑/抿嘴笑/淡然）；
-//  - 4 种发型（长发/双马尾/丸子头/波波头）+ 发丝高光；
+// 女主角头像系统（v4.6 重绘：结构层 + 美颜自拍氛围）：
+//  - 结构层（与老头头像 v3.0 同代技法）：颅骨+下颌剪影拼合、三档肤质
+//    （base 渐变/shade 修容/hi 高光）、真眼四件（虹膜渐变+双高光+上下睫线+
+//    卧蚕）、前后发层分离 + 发际线 + 光泽带、脖颈 + 肩 + 衣领投影；
+//  - 自拍氛围层：45° 定向柔光、两档虚化散景背景、面部 bloom、感光颗粒、暗角
+//    ——观感是「用美颜相机拍的、但底子是真结构」的自拍；
+//  - 4 种眼型（上挑/圆亮/温软/平静）× 4 种唇形（咬唇红/张口笑/抿嘴笑/淡然）；
+//  - 4 种发型（长发/双马尾/丸子头/波波头）+ 4 款衣领（V领/白领/套头/暗领）；
 //  - 人设专属配饰：耳坠 / 樱花发卡 / 素色发髻 / 贝雷帽；
-//  - 6 款可选头像=发型×发色×瞳色×唇色组合，数据驱动。
+//  - 10 款可选头像 = 发型×发色×瞳型×唇色×配饰×衣领组合，数据驱动。
+//  - 红线（v3.3 设计原则）：净版皮肤——不做眼位不对称、不加痣。她的好看
+//    是修过但没修过头的，与 NPC 的「不讲究」形成对照。
 // ---------------------------------------------------------------------------
 type EyeStyle = 'up' | 'round' | 'soft' | 'calm';
 type HairStyle = 'long' | 'twin' | 'bun' | 'bob';
 type Extra = 'earring' | 'flower' | 'beret' | 'none';
+type Outfit = 'vneck' | 'collar' | 'sweater' | 'hoodie';
 
 interface GirlSpec {
   bg: string;
@@ -2460,28 +2518,29 @@ interface GirlSpec {
   lip: string;
   eye: EyeStyle;
   extra: Extra;
+  /** v4.6：衣领款（解耦自眼型——同一双眼睛可以穿不同的领口）。 */
+  outfit: Outfit;
 }
 
 const PERSONA_STYLE: Record<PersonaId, GirlSpec> = {
-  femme_fatale: { bg: '#1c1016', hair: '#181418', hairStyle: 'long', accent: '#c0392b', lip: '#c22a44', eye: 'up', extra: 'earring' },
-  sweet_daughter: { bg: '#14202a', hair: '#4a3020', hairStyle: 'twin', accent: '#e67e22', lip: '#e07856', eye: 'round', extra: 'flower' },
-  wise_sister: { bg: '#101a14', hair: '#2c2018', hairStyle: 'bun', accent: '#27ae60', lip: '#c96a5e', eye: 'soft', extra: 'none' },
-  artistic_soul: { bg: '#16141c', hair: '#262428', hairStyle: 'bob', accent: '#8e44ad', lip: '#b05a68', eye: 'calm', extra: 'beret' },
+  femme_fatale: { bg: '#1c1016', hair: '#181418', hairStyle: 'long', accent: '#c0392b', lip: '#c22a44', eye: 'up', extra: 'earring', outfit: 'vneck' },
+  sweet_daughter: { bg: '#14202a', hair: '#4a3020', hairStyle: 'twin', accent: '#e67e22', lip: '#e07856', eye: 'round', extra: 'flower', outfit: 'collar' },
+  wise_sister: { bg: '#101a14', hair: '#2c2018', hairStyle: 'bun', accent: '#27ae60', lip: '#c96a5e', eye: 'soft', extra: 'none', outfit: 'sweater' },
+  artistic_soul: { bg: '#16141c', hair: '#262428', hairStyle: 'bob', accent: '#8e44ad', lip: '#b05a68', eye: 'calm', extra: 'beret', outfit: 'hoodie' },
 };
 
-/** 10 款可选头像（发型×发色×瞳型×唇色×配饰组合）——v4.3.3 从 6 扩到 10，
- *  人设页 5×2 两行网格展示，不再横向溢出。 */
-export const AVATAR_PRESETS: (GirlSpec & { id: number })[] = [
-  { id: 1, bg: '#1c1016', hair: '#181418', hairStyle: 'long', accent: '#c0392b', lip: '#c22a44', eye: 'up', extra: 'earring' },
-  { id: 2, bg: '#14202a', hair: '#4a3020', hairStyle: 'twin', accent: '#e67e22', lip: '#e07856', eye: 'round', extra: 'flower' },
-  { id: 3, bg: '#101a14', hair: '#2c2018', hairStyle: 'bun', accent: '#27ae60', lip: '#c96a5e', eye: 'soft', extra: 'none' },
-  { id: 4, bg: '#16141c', hair: '#262428', hairStyle: 'bob', accent: '#8e44ad', lip: '#b05a68', eye: 'calm', extra: 'beret' },
-  { id: 5, bg: '#1c1618', hair: '#6b3a2a', hairStyle: 'long', accent: '#d4a017', lip: '#c75850', eye: 'soft', extra: 'earring' },
-  { id: 6, bg: '#10161c', hair: '#38506b', hairStyle: 'bob', accent: '#2e86ab', lip: '#d4705e', eye: 'round', extra: 'none' },
-  { id: 7, bg: '#1a1420', hair: '#52425e', hairStyle: 'twin', accent: '#a569bd', lip: '#b86a78', eye: 'up', extra: 'none' },
-  { id: 8, bg: '#201416', hair: '#7a4a3a', hairStyle: 'bun', accent: '#cb7623', lip: '#cc6f62', eye: 'calm', extra: 'flower' },
-  { id: 9, bg: '#141c16', hair: '#3a5240', hairStyle: 'long', accent: '#52b788', lip: '#c2705f', eye: 'round', extra: 'beret' },
-  { id: 10, bg: '#1c1a14', hair: '#5e5236', hairStyle: 'bob', accent: '#b5a642', lip: '#bf5f58', eye: 'soft', extra: 'earring' },
+/** 10 款可选头像（发型×发色×瞳型×唇色×配饰×衣领组合）——每款一套完整造型身份。 */
+export const AVATAR_PRESETS: (GirlSpec & { id: number; label: string })[] = [
+  { id: 1, label: '御姐款', bg: '#1c1016', hair: '#181418', hairStyle: 'long', accent: '#c0392b', lip: '#c22a44', eye: 'up', extra: 'earring', outfit: 'vneck' },
+  { id: 2, label: '学妹款', bg: '#14202a', hair: '#4a3020', hairStyle: 'twin', accent: '#e67e22', lip: '#e07856', eye: 'round', extra: 'flower', outfit: 'collar' },
+  { id: 3, label: '姐姐款', bg: '#101a14', hair: '#2c2018', hairStyle: 'bun', accent: '#27ae60', lip: '#c96a5e', eye: 'soft', extra: 'none', outfit: 'sweater' },
+  { id: 4, label: '文青款', bg: '#16141c', hair: '#262428', hairStyle: 'bob', accent: '#8e44ad', lip: '#b05a68', eye: 'calm', extra: 'beret', outfit: 'hoodie' },
+  { id: 5, label: '栗发耳坠', bg: '#1c1618', hair: '#6b3a2a', hairStyle: 'long', accent: '#d4a017', lip: '#c75850', eye: 'soft', extra: 'earring', outfit: 'hoodie' },
+  { id: 6, label: '冷淡波波', bg: '#10161c', hair: '#38506b', hairStyle: 'bob', accent: '#2e86ab', lip: '#d4705e', eye: 'round', extra: 'none', outfit: 'vneck' },
+  { id: 7, label: '紫调马尾', bg: '#1a1420', hair: '#52425e', hairStyle: 'twin', accent: '#a569bd', lip: '#b86a78', eye: 'up', extra: 'none', outfit: 'sweater' },
+  { id: 8, label: '棕丸子', bg: '#201416', hair: '#7a4a3a', hairStyle: 'bun', accent: '#cb7623', lip: '#cc6f62', eye: 'calm', extra: 'flower', outfit: 'collar' },
+  { id: 9, label: '长直文艺', bg: '#141c16', hair: '#3a5240', hairStyle: 'long', accent: '#52b788', lip: '#c2705f', eye: 'round', extra: 'beret', outfit: 'sweater' },
+  { id: 10, label: '复古波波', bg: '#1c1a14', hair: '#5e5236', hairStyle: 'bob', accent: '#b5a642', lip: '#bf5f58', eye: 'soft', extra: 'earring', outfit: 'collar' },
 ];
 
 /** 可选头像渲染（AvatarId 1-6）。 */
@@ -2495,17 +2554,17 @@ export function PersonaAvatar({ personaId, size = 44 }: { personaId: PersonaId; 
 }
 
 function PersonaFace({ st, size }: { st: GirlSpec; size: number }) {
-  // 脸基座几何（女款：下颌收窄，下巴尖一点）
-  const chinY = 39.6;
-  const jawW = 6.4;
+  // ---- 脸基座几何（女款：颅骨椭圆 + 收窄下颌剪影拼合——软尖下巴） ----
+  const chinY = 41.2;
+  const jawW = 6.9;
   // 瞳色从发色派生（深发深瞳/浅发暖瞳）
   const irisDark = st.eye === 'round' ? '#3a2a1a' : '#2e2418';
 
+  // 上睫线（flip=±1）：内→外自然弧，拱顶略偏中，外眼角与内眼角平齐（不做上挑）
   const lashPath = (cx: number, flip: number) => {
-    // 上睫线：外眼角上挑（flip=±1），含眼尾小睫毛
-    const outer = cx + flip * 2.6;
-    const outerY = 26.4 - (st.eye === 'up' ? 1.1 : 0.5);
-    return `M ${cx - flip * 2.5} 27.2 Q ${cx} 25.2 ${outer} ${outerY} L ${outer + flip * 0.7} ${outerY - 0.9}`;
+    const outer = cx + flip * 2.7;
+    const peak = st.eye === 'up' ? 23.3 : 23.7;
+    return `M ${cx - flip * 2.6} 27.1 Q ${cx} ${peak} ${outer} 27.15`;
   };
 
   return (
@@ -2517,227 +2576,355 @@ function PersonaFace({ st, size }: { st: GirlSpec; size: number }) {
           <stop offset="100%" stopColor="#000" stopOpacity="0.4" />
         </radialGradient>
         <linearGradient id="pfFace" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#fbdfc0" />
-          <stop offset="100%" stopColor="#f0c4a0" />
+          <stop offset="0%" stopColor="#fce0c4" />
+          <stop offset="100%" stopColor="#f2c6a2" />
         </linearGradient>
         <linearGradient id="pfIris" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#6a4c2e" />
+          <stop offset="0%" stopColor="#7a5634" />
           <stop offset="100%" stopColor={irisDark} />
         </linearGradient>
+        <linearGradient id="pfSoft" x1="0" y1="0" x2="0.7" y2="1">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.07" />
+          <stop offset="60%" stopColor="#ffffff" stopOpacity="0.02" />
+          <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+        </linearGradient>
       </defs>
+
+      {/* ===== 氛围层：底色 + 两档虚化散景 + 45° 柔光 + 星点 ===== */}
       <circle cx="27" cy="27" r="26" fill={st.bg} />
-      {/* 氛围：两团 accent 光斑 + 三粒散景 */}
-      <circle cx="39" cy="15" r="13" fill={st.accent} opacity="0.12" />
-      <circle cx="13" cy="40" r="10" fill={st.accent} opacity="0.07" />
-      <circle cx="42" cy="34" r="1.1" fill="#ffffff" opacity="0.16" />
-      <circle cx="10" cy="18" r="0.9" fill="#ffffff" opacity="0.13" />
-      <circle cx="44" cy="9" r="0.7" fill="#ffffff" opacity="0.12" />
+      {/* 外档散景（大而糊——像手机镜头里融掉的灯） */}
+      <g fill={st.accent}>
+        <circle cx="40" cy="13" r="9" opacity="0.11" />
+        <circle cx="10" cy="42" r="7.5" opacity="0.07" />
+        <circle cx="44" cy="38" r="6" opacity="0.06" />
+        <circle cx="8" cy="12" r="4.5" opacity="0.08" />
+        <circle cx="22" cy="49" r="5" opacity="0.05" />
+      </g>
+      {/* 内档散景（小而实——对上焦的那几粒） */}
+      <g fill={st.accent}>
+        <circle cx="43" cy="9" r="2" opacity="0.16" />
+        <circle cx="6.5" cy="33" r="1.6" opacity="0.12" />
+        <circle cx="47" cy="28" r="1.4" opacity="0.1" />
+      </g>
+      {/* 45° 定向柔光（左上打下来的一带——自拍的顺光方向） */}
+      <path d="M 0 0 L 54 0 L 54 30 Q 26 44 0 20 Z" fill="url(#pfSoft)" />
+      <g fill="#ffffff">
+        <circle cx="42" cy="34" r="1" opacity="0.16" />
+        <circle cx="10" cy="18" r="0.85" opacity="0.13" />
+        <circle cx="44" cy="9" r="0.65" opacity="0.12" />
+      </g>
 
       <g clipPath="url(#pfClip)">
-        {/* ---- 后发层（脸后面） ---- */}
+        {/* ===== 后发层（脸后面的发体：块面 + 内侧阴影 + 顺光光泽带） ===== */}
         {st.hairStyle === 'long' && (
-          <path d="M 12.5 26 Q 11.5 9.5 27 9 Q 42.5 9.5 41.5 26 L 42.5 46 Q 37 43.4 35 44.6 L 35 24 Q 35 14.5 27 13.6 Q 19 14.5 19 24 L 19 44.6 Q 17 43.4 11.5 46 Z" fill={st.hair} />
+          <g>
+            <path d="M 12 26 Q 11 9 27 8.4 Q 43 9 42 26 L 43.5 50 Q 39 48 36.5 49 L 36.5 24 Q 36 14 27 13.2 Q 18 14 17.5 24 L 17.5 49 Q 15 48 10.5 50 Z" fill={st.hair} />
+            {/* 内侧阴影（发缝里见不到光的那层） */}
+            <path d="M 17.5 24 Q 17.5 40 17 49 L 15.5 49 Q 14 36 14.5 26 Z" fill="#000000" opacity="0.22" />
+            <path d="M 36.5 24 Q 36.5 40 37 49 L 38.5 49 Q 40 36 39.5 26 Z" fill="#000000" opacity="0.22" />
+            {/* 顺光光泽带（美颜自拍的发丝反光——平行两弧） */}
+            <path d="M 14.5 17 Q 15 11 20 9.4" stroke="#ffffff" strokeWidth="1.6" opacity="0.16" fill="none" strokeLinecap="round" />
+            <path d="M 18 16 Q 18.6 11.6 22.6 10.2" stroke="#ffffff" strokeWidth="1" opacity="0.1" fill="none" strokeLinecap="round" />
+            <path d="M 39.5 17 Q 39 11 34 9.4" stroke="#ffffff" strokeWidth="1.6" opacity="0.16" fill="none" strokeLinecap="round" />
+          </g>
         )}
         {st.hairStyle === 'twin' && (
           <g fill={st.hair}>
-            <path d="M 14 27 Q 12.8 10.5 27 10 Q 41.2 10.5 40 27 L 40 33 L 36.5 33 L 36.5 22 Q 36 14.5 27 13.8 Q 18 14.5 17.5 22 L 17.5 33 L 14 33 Z" />
-            {/* 双马尾（微卷发梢） */}
-            <path d="M 13.2 26 Q 8.4 33 10.4 41 Q 11.4 45.4 14.6 44 Q 12.8 37 14.2 30 Z" />
-            <path d="M 40.8 26 Q 45.6 33 43.6 41 Q 42.6 45.4 39.4 44 Q 41.2 37 39.8 30 Z" />
-            <path d="M 11.9 40.4 Q 12.6 42.6 14 43.6" stroke={st.hair} strokeWidth="1.1" fill="none" strokeLinecap="round" />
-            <path d="M 42.1 40.4 Q 41.4 42.6 40 43.6" stroke={st.hair} strokeWidth="1.1" fill="none" strokeLinecap="round" />
+            <path d="M 14 27 Q 12.8 10.5 27 10 Q 41.2 10.5 40 27 L 40 34 L 36.5 34 L 36.5 22 Q 36 14.5 27 13.8 Q 18 14.5 17.5 22 L 17.5 34 L 14 34 Z" />
+            {/* 双马尾（卷发梢 + 内侧阴影 + 光泽带） */}
+            <path d="M 13.2 25.5 Q 7.8 32.5 9.4 41.5 Q 10.4 46.5 14.4 45 Q 12 37.5 13.8 29.5 Z" />
+            <path d="M 40.8 25.5 Q 46.2 32.5 44.6 41.5 Q 43.6 46.5 39.6 45 Q 42 37.5 40.2 29.5 Z" />
+            <path d="M 11.4 39.5 Q 12.2 42.4 14.4 43.8" stroke="#000000" strokeWidth="1.3" fill="none" opacity="0.2" strokeLinecap="round" />
+            <path d="M 42.6 39.5 Q 41.8 42.4 39.6 43.8" stroke="#000000" strokeWidth="1.3" fill="none" opacity="0.2" strokeLinecap="round" />
           </g>
         )}
         {st.hairStyle === 'bun' && (
           <g fill={st.hair}>
-            <circle cx="27" cy="8.6" r="4.9" />
-            <path d="M 22.6 10.6 Q 27 13.4 31.4 10.6 L 31.4 13 Q 27 15 22.6 13 Z" />
+            {/* 丸子（缠绕结构：主球 + 裹条） */}
+            <circle cx="27" cy="8.4" r="5" />
+            <path d="M 22.4 7 Q 27 10.6 31.6 7.4 Q 30.4 10.4 27 11.2 Q 23.8 10.4 22.4 7 Z" fill="#000000" opacity="0.18" />
+            <path d="M 22.8 10.4 Q 27 13 31.2 10.4 L 31.2 12.8 Q 27 14.8 22.8 12.8 Z" />
             <path d="M 14.5 28 Q 13.6 11.5 27 11 Q 40.4 11.5 39.5 28 L 36.5 28 L 36.5 21.5 Q 36 14.8 27 14 Q 18 14.8 17.5 21.5 L 17.5 28 Z" />
+            {/* 丸顶光泽 */}
+            <path d="M 23.6 6.4 Q 26 5.2 28.8 6" stroke="#ffffff" strokeWidth="1" opacity="0.22" fill="none" strokeLinecap="round" />
           </g>
         )}
         {st.hairStyle === 'bob' && (
-          <path d="M 13.5 30 Q 12.2 10.5 27 10 Q 41.8 10.5 40.5 30 Q 40 34 37.6 34.6 L 36.8 31 Q 37.4 21.5 27 15.4 Q 16.6 21.5 17.2 31 L 16.4 34.6 Q 14 34 13.5 30 Z" fill={st.hair} />
+          <g fill={st.hair}>
+            <path d="M 13.5 30 Q 12.2 10.5 27 10 Q 41.8 10.5 40.5 30 Q 40.4 35 37.6 35.4 L 36.8 31 Q 37.4 21.5 27 15.4 Q 16.6 21.5 17.2 31 L 16.4 35.4 Q 13.6 35 13.5 30 Z" />
+            {/* 内扣发梢的阴影 */}
+            <path d="M 16.4 31.4 Q 14.8 34.8 16.4 35.4 L 17.2 31.4 Z" fill="#000000" opacity="0.18" />
+            <path d="M 37.6 31.4 Q 39.2 34.8 37.6 35.4 L 36.8 31.4 Z" fill="#000000" opacity="0.18" />
+            {/* 光泽带 */}
+            <path d="M 15.4 18 Q 16.4 12.4 21 10" stroke="#ffffff" strokeWidth="1.4" opacity="0.15" fill="none" strokeLinecap="round" />
+            <path d="M 38.6 18 Q 37.6 12.4 33 10" stroke="#ffffff" strokeWidth="1.4" opacity="0.15" fill="none" strokeLinecap="round" />
+          </g>
         )}
 
-        {/* ---- 耳朵 + 耳饰 ---- */}
-        <ellipse cx="18.6" cy="29.4" rx="1.6" ry="2.7" fill="#f4cba4" />
-        <ellipse cx="35.4" cy="29.4" rx="1.6" ry="2.7" fill="#f4cba4" />
+        {/* ===== 脖颈 + 肩（细脖 + 下颌投影 + 衣领） ===== */}
+        <path d="M 23.9 35.4 L 30.1 35.4 L 29.8 42.8 L 24.2 42.8 Z" fill="#f2c6a2" />
+        <path d="M 23.9 35.4 L 30.1 35.4 L 29.9 38.4 Q 27 40.4 24.1 38.4 Z" fill="#d8a67e" opacity="0.45" />
+        {st.outfit === 'vneck' && (
+          <g>
+            <path d="M 9.5 54 Q 10.5 45.2 17.5 43 Q 20 42.2 22 42.2 L 27 48.6 L 32 42.2 Q 34 42.2 36.5 43 Q 43.5 45.2 44.5 54 Z" fill="#241822" />
+            <path d="M 22 42.2 L 27 48.6 L 32 42.2" stroke={st.accent} strokeWidth="1.1" fill="none" opacity="0.85" />
+            <path d="M 18 45.6 Q 19 47.6 18.4 49.4 M 36 45.6 Q 35 47.6 35.6 49.4" stroke="#000000" strokeWidth="0.6" fill="none" opacity="0.3" strokeLinecap="round" />
+            <circle cx="27" cy="51.8" r="0.9" fill={st.accent} opacity="0.9" />
+          </g>
+        )}
+        {st.outfit === 'collar' && (
+          <g>
+            <path d="M 9.5 54 Q 10.5 45.2 17.5 43 Q 22.5 41.4 27 41.4 Q 31.5 41.4 36.5 43 Q 43.5 45.2 44.5 54 Z" fill="#f4ede4" />
+            <path d="M 20.6 42.2 L 24.4 46 L 27 43.4 L 29.6 46 L 33.4 42.2" stroke={st.accent} strokeWidth="1.4" fill="none" strokeLinecap="round" />
+            <path d="M 12 47.4 Q 13 49.2 12.4 50.8 M 42 47.4 Q 41 49.2 41.6 50.8" stroke="#d8ccb4" strokeWidth="0.6" fill="none" opacity="0.7" strokeLinecap="round" />
+          </g>
+        )}
+        {st.outfit === 'sweater' && (
+          <g>
+            <path d="M 9.5 54 Q 10.3 44.8 17.5 42.8 Q 22.5 41.4 27 41.4 Q 31.5 41.4 36.5 42.8 Q 43.7 44.8 44.5 54 Z" fill={st.accent} />
+            {/* 套头领口 + 织纹 */}
+            <path d="M 21.8 42.4 Q 27 45.4 32.2 42.4 L 32.2 45.4 Q 27 48 21.8 45.4 Z" fill="#ffffff" opacity="0.22" />
+            <path d="M 13 47.4 Q 14.4 49.2 13.6 51 M 41 47.4 Q 39.6 49.2 40.4 51 M 20 50.4 Q 21.4 52 20.8 53.6 M 34 50.4 Q 32.6 52 33.2 53.6" stroke="#000000" strokeWidth="0.5" fill="none" opacity="0.16" strokeLinecap="round" />
+          </g>
+        )}
+        {st.outfit === 'hoodie' && (
+          <g>
+            <path d="M 9.5 54 Q 10.5 45.2 17.5 43 Q 20 42.2 22 42.2 L 27 47.4 L 32 42.2 Q 34 42.2 36.5 43 Q 43.5 45.2 44.5 54 Z" fill="#2a2430" />
+            <path d="M 20.8 44.4 L 24.6 48.2 L 27 45.6 L 29.4 48.2 L 33.2 44.4" stroke={st.accent} strokeWidth="1.1" fill="none" strokeLinecap="round" opacity="0.85" />
+            {/* 帽绳两根 */}
+            <path d="M 23.4 46.4 Q 23.2 49.4 24 52" stroke="#d8ccb4" strokeWidth="1" fill="none" strokeLinecap="round" />
+            <path d="M 30.6 46.4 Q 30.8 49.4 30 52" stroke="#d8ccb4" strokeWidth="1" fill="none" strokeLinecap="round" />
+            <circle cx="24" cy="52.6" r="0.7" fill="#d8ccb4" />
+            <circle cx="30" cy="52.6" r="0.7" fill="#d8ccb4" />
+          </g>
+        )}
+
+        {/* ===== 脸基座：颅骨椭圆 + 下颌剪影拼合 ===== */}
+        <ellipse cx="27" cy="26.8" rx="9" ry="10" fill="url(#pfFace)" />
+        <path d={`M ${27 - jawW} 28.4 Q ${27 - jawW - 0.6} 35.8 27 ${chinY} Q ${27 + jawW + 0.6} 35.8 ${27 + jawW} 28.4 Z`} fill="#f2c6a2" />
+        {/* 修容（美颜压平后的极淡阴影） */}
+        <ellipse cx={27 - 7.6} cy="23.8" rx="1.5" ry="2.8" fill="#d8a67e" opacity="0.22" />
+        <ellipse cx={27 + 7.6} cy="23.8" rx="1.5" ry="2.8" fill="#d8a67e" opacity="0.22" />
+        <path d={`M ${27 - jawW + 0.6} 29.4 Q ${27 - jawW + 0.2} 35.4 27 ${chinY - 0.7}`} stroke="#d8a67e" strokeWidth="0.55" fill="none" opacity="0.4" />
+        <path d={`M ${27 + jawW - 0.6} 29.4 Q ${27 + jawW - 0.2} 35.4 27 ${chinY - 0.7}`} stroke="#d8a67e" strokeWidth="0.55" fill="none" opacity="0.4" />
+        {/* 高光：额带 / 颧骨顶 / 鼻梁 / 下巴尖 */}
+        <ellipse cx="25.6" cy="20.4" rx="5.6" ry="3" fill="#ffead2" opacity="0.5" />
+        <ellipse cx="21.4" cy="28.8" rx="2" ry="1.2" fill="#ffead2" opacity="0.4" />
+        <ellipse cx="32.6" cy="28.8" rx="2" ry="1.2" fill="#ffead2" opacity="0.4" />
+        <ellipse cx="27" cy={chinY - 1.4} rx="2" ry="1" fill="#ffead2" opacity="0.4" />
+
+        {/* ===== 眉（主形一笔 + 上方淡晕一笔 = 雾眉；四档眉弓随眼型） ===== */}
+        {(() => {
+          // up 挑眉 / round 平直少女眉 / soft 弯眉 / calm 自然平眉
+          // [起点x, y, 控制点x, qy, 终点x, y] —— 右眉按 54−x 镜像，y 不动。
+          const brows: Record<EyeStyle, [number, number, number, number, number, number]> = {
+            up: [21.2, 23.4, 23.4, 22.2, 25.4, 23.2],
+            round: [21.4, 23.7, 23.4, 23.1, 25.4, 23.7],
+            soft: [21.3, 23.8, 23.4, 22.6, 25.4, 23.4],
+            calm: [21.4, 23.7, 23.4, 22.9, 25.3, 23.6],
+          };
+          const [x1, y1, qx, qy, x2, y2] = brows[st.eye];
+          const brow = (mirrored: boolean) => {
+            const mx = (x: number) => (mirrored ? 54 - x : x);
+            return `M ${mx(x1)} ${y1} Q ${mx(qx)} ${qy} ${mx(x2)} ${y2}`;
+          };
+          return (
+            <g>
+              {/* 左眉：主形 + 上方淡晕（雾眉） */}
+              <path d={brow(false)} stroke="#4a3626" strokeWidth="0.9" fill="none" strokeLinecap="round" opacity="0.88" />
+              <path d={brow(false)} stroke="#4a3626" strokeWidth="1.7" fill="none" strokeLinecap="round" opacity="0.18" transform="translate(0 -0.35)" />
+              {/* 右眉（镜像） */}
+              <path d={brow(true)} stroke="#4a3626" strokeWidth="0.9" fill="none" strokeLinecap="round" opacity="0.88" />
+              <path d={brow(true)} stroke="#4a3626" strokeWidth="1.7" fill="none" strokeLinecap="round" opacity="0.18" transform="translate(0 -0.35)" />
+            </g>
+          );
+        })()}
+
+        {/* ===== 眼（四型结构化重建：共用底件 + 各自变体） ===== */}
+        {(() => {
+          // 共用参数：各型虹膜半径 / 眼白高
+          const R: Record<EyeStyle, { ir: number; wr: number; wry: number; eyeCx: number }> = {
+            up: { ir: 1.45, wr: 2.35, wry: 1.35, eyeCx: 0.2 },
+            round: { ir: 1.95, wr: 2.5, wry: 3.1, eyeCx: 0 },
+            soft: { ir: 1.6, wr: 2.15, wry: 2.45, eyeCx: 0 },
+            calm: { ir: 1.7, wr: 2.25, wry: 2.55, eyeCx: 0 },
+          };
+          const r = R[st.eye];
+          const cy = 27.5;
+          const eyes = [23.2 - r.eyeCx, 30.8 + r.eyeCx];
+          return (
+            <g>
+              {eyes.map((cx, i) => {
+                const flip = i === 0 ? -1 : 1;
+                return (
+                  <g key={cx}>
+                    {/* 眼白（微蓝灰底——比纯白柔） */}
+                    <ellipse cx={cx} cy={cy} rx={r.wr} ry={r.wry} fill="#f6f2ea" />
+                    {/* 虹膜（渐变 + 虹膜缘环） */}
+                    <circle cx={cx} cy={cy + 0.2} r={r.ir} fill="url(#pfIris)" />
+                    <circle cx={cx} cy={cy + 0.2} r={r.ir} fill="none" stroke="#5a4028" strokeWidth="0.35" opacity="0.5" />
+                    {/* 瞳孔 */}
+                    <circle cx={cx} cy={cy + 0.2} r={r.ir * 0.46} fill="#1c1410" />
+                    {/* 双高光：主（左上大）+ 次（右下小） */}
+                    <circle cx={cx + flip * 0.7} cy={cy - 0.7} r={r.ir * 0.42} fill="#ffffff" opacity={st.eye === 'round' ? 0.98 : 0.92} />
+                    <circle cx={cx - flip * 0.6} cy={cy + 1.1} r={r.ir * 0.2} fill="#ffffff" opacity="0.6" />
+                    {/* 上睫线（自然弧，外眼角不上挑） */}
+                    <path d={lashPath(cx, flip)} stroke="#241a12" strokeWidth={st.eye === 'up' ? 1.65 : 1.45} fill="none" strokeLinecap="round" />
+                    {/* 双眼皮褶线 */}
+                    <path d={`M ${cx - flip * 2.4} ${cy - r.wry - 0.7} Q ${cx} ${cy - r.wry - 1.3} ${cx + flip * 2.6} ${cy - r.wry - 0.6}`} stroke="#c89878" strokeWidth="0.5" fill="none" opacity="0.65" />
+                    {/* 下睫 2 根（外眼角侧） */}
+                    <path d={`M ${cx + flip * 2} ${cy + r.wry - 0.4} L ${cx + flip * 2.7} ${cy + r.wry + 0.1}`} stroke="#241a12" strokeWidth="0.45" strokeLinecap="round" />
+                    <path d={`M ${cx + flip * 1} ${cy + r.wry} L ${cx + flip * 1.5} ${cy + r.wry + 0.5}`} stroke="#241a12" strokeWidth="0.4" strokeLinecap="round" opacity="0.7" />
+                    {/* 卧蚕（美颜自拍的标志结构） */}
+                    <path d={`M ${cx - flip * 2.1} ${cy + r.wry + 0.9} Q ${cx} ${cy + r.wry + 1.7} ${cx + flip * 2.1} ${cy + r.wry + 0.9}`} stroke="#ffead2" strokeWidth="0.75" fill="none" strokeLinecap="round" opacity="0.75" />
+                  </g>
+                );
+              })}
+              {/* soft 型：半垂上睑（温柔感） */}
+              {st.eye === 'soft' && (
+                <g>
+                  <path d={`M 21.2 26.4 Q 23.2 25.8 25.2 26.5`} stroke="#e8c8a8" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+                  <path d={`M 28.8 26.5 Q 30.8 25.8 32.8 26.4`} stroke="#e8c8a8" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+                </g>
+              )}
+              {/* round 型：眼下内眼角淡晕 */}
+              {st.eye === 'round' && (
+                <g>
+                  <path d="M 21.6 30.1 Q 23.2 30.7 24.9 30.1" stroke="#c89878" strokeWidth="0.5" fill="none" opacity="0.6" />
+                  <path d="M 29.1 30.1 Q 30.8 30.7 32.4 30.1" stroke="#c89878" strokeWidth="0.5" fill="none" opacity="0.6" />
+                </g>
+              )}
+            </g>
+          );
+        })()}
+
+        {/* ===== 鼻（女性化极简：高光竖线 + 鼻头小阴影） ===== */}
+        <path d="M 27.2 29.2 Q 27 30.4 26.9 31.1" stroke="#ffd9b8" strokeWidth="0.8" fill="none" strokeLinecap="round" opacity="0.85" />
+        <ellipse cx="26.2" cy="31.4" rx="0.5" ry="0.4" fill="#d8a67e" opacity="0.5" />
+        <ellipse cx="27.9" cy="31.4" rx="0.5" ry="0.4" fill="#d8a67e" opacity="0.5" />
+
+        {/* ===== 唇（四型渐变咬唇妆：外圈主色 + 中央高光点） ===== */}
+        {st.eye === 'up' && (
+          <g>
+            <path d="M 24 33.9 Q 25.3 33.1 27 33.8 Q 28.7 33.1 30 33.9 Q 29 35.6 27 35.7 Q 25 35.6 24 33.9 Z" fill={st.lip} />
+            <path d="M 25.1 34.6 Q 27 35.9 28.9 34.6 Q 27 35.4 25.1 34.6 Z" fill="#000000" opacity="0.22" />
+            <path d="M 25.2 34 Q 27 33.5 28.8 34" stroke="#ffffff" strokeWidth="0.4" opacity="0.55" fill="none" />
+          </g>
+        )}
+        {st.eye === 'round' && (
+          <g>
+            <path d="M 24.2 33.6 Q 27 37.1 29.8 33.6 Q 27 34.9 24.2 33.6 Z" fill={st.lip} />
+            <path d="M 24.2 33.6 Q 27 32.7 29.8 33.6" stroke={st.lip} strokeWidth="0.95" fill="none" strokeLinecap="round" />
+            <ellipse cx="27" cy="34.5" rx="1.1" ry="0.55" fill="#ffffff" opacity="0.55" />
+            <path d="M 25.6 33.9 Q 27 34.6 28.4 33.9" stroke="#ffffff" strokeWidth="0.5" opacity="0.45" fill="none" />
+          </g>
+        )}
+        {st.eye === 'soft' && (
+          <g>
+            <path d="M 24.5 33.9 Q 27 35.5 29.5 33.9" stroke={st.lip} strokeWidth="1.35" fill="none" strokeLinecap="round" />
+            <path d="M 25.4 34.1 Q 27 35.2 28.6 34.1" stroke={st.lip} strokeWidth="0.5" fill="none" strokeLinecap="round" opacity="0.5" />
+          </g>
+        )}
+        {st.eye === 'calm' && (
+          <g>
+            <path d="M 24.9 34 Q 27 34.9 29.1 34" stroke={st.lip} strokeWidth="1.15" fill="none" strokeLinecap="round" />
+            <path d="M 25.8 34.2 Q 27 34.8 28.2 34.2" stroke="#ffffff" strokeWidth="0.35" opacity="0.4" fill="none" />
+          </g>
+        )}
+
+        {/* ===== 腮红（磨皮后晕开的软晕——比旧版大一圈、淡一档） ===== */}
+        <ellipse cx="20.6" cy="31.2" rx="2.6" ry="1.55" fill="#f0a08c" opacity={st.eye === 'round' ? 0.38 : 0.24} />
+        <ellipse cx="33.4" cy="31.2" rx="2.6" ry="1.55" fill="#f0a08c" opacity={st.eye === 'round' ? 0.38 : 0.24} />
+
+        {/* ===== 前发层（刘海 + 发际线 + 鬓角碎发 + 光泽带三段式） ===== */}
+        {st.hairStyle === 'long' && (
+          <g fill={st.hair}>
+            <path d="M 17.5 26 Q 16.8 11.8 27 11.2 Q 37.2 11.8 36.5 26 L 34.4 22.4 Q 34 15.4 27 14.4 Q 21.4 15 20.3 19.6 Q 19.5 22.6 19.5 26 Z" />
+            {/* 发际线（头皮缘——比肤色深一档的弧） */}
+            <path d="M 20.3 19.6 Q 27 14 34.4 22.4" stroke="#d8a67e" strokeWidth="0.55" fill="none" opacity="0.55" />
+            <path d="M 20.4 19.4 Q 22.4 15.6 27 15 Q 24 16.2 22.8 19.7 Q 22 22.2 22 25.4 L 20.6 25.8 Z" opacity="0.85" />
+            <path d="M 33.6 19.4 Q 31.6 15.6 27 15 Q 30 16.2 31.2 19.7 Q 32 22.2 32 25.4 L 33.4 25.8 Z" opacity="0.85" />
+            {/* 鬓角碎发 */}
+            <path d="M 18.2 20.5 Q 17.2 23.6 17.6 26.6" stroke={st.hair} strokeWidth="0.6" fill="none" strokeLinecap="round" opacity="0.8" />
+            <path d="M 35.8 20.5 Q 36.8 23.6 36.4 26.6" stroke={st.hair} strokeWidth="0.6" fill="none" strokeLinecap="round" opacity="0.8" />
+            {/* 光泽带（三段式） */}
+            <path d="M 19.8 15.2 Q 27 11.4 34.4 15.2" stroke="#ffffff" strokeWidth="1.1" opacity="0.18" fill="none" />
+            <path d="M 21.4 14.2 Q 27 11 32.6 14.2" stroke="#ffffff" strokeWidth="0.7" opacity="0.1" fill="none" />
+          </g>
+        )}
+        {st.hairStyle === 'twin' && (
+          <g fill={st.hair}>
+            <path d="M 17.5 24.5 Q 16.9 11.4 27 10.9 Q 37.1 11.4 36.5 24.5 L 34.2 21.7 Q 33.8 15.2 27 14.3 Q 20.2 15.2 19.8 21.7 Z" />
+            {/* 空气刘海中分线 */}
+            <path d="M 27 14.2 Q 24.6 15.9 23.6 19.4" stroke={st.bg} strokeWidth="0.5" fill="none" opacity="0.4" />
+            {/* 发际线 */}
+            <path d="M 19.8 21.7 Q 27 14.2 34.2 21.7" stroke="#d8a67e" strokeWidth="0.5" fill="none" opacity="0.5" />
+            {/* 鬓角碎发 */}
+            <path d="M 18 20 Q 17.2 22.8 17.6 25.6" stroke={st.hair} strokeWidth="0.55" fill="none" strokeLinecap="round" opacity="0.8" />
+            <path d="M 36 20 Q 36.8 22.8 36.4 25.6" stroke={st.hair} strokeWidth="0.55" fill="none" strokeLinecap="round" opacity="0.8" />
+            {/* 发绳（accent） */}
+            <circle cx="13.6" cy="27" r="1.5" fill={st.accent} />
+            <circle cx="40.4" cy="27" r="1.5" fill={st.accent} />
+            <circle cx="13.2" cy="26.5" r="0.5" fill="#ffffff" opacity="0.55" />
+            <circle cx="40" cy="26.5" r="0.5" fill="#ffffff" opacity="0.55" />
+            <path d="M 19.4 14.4 Q 27 11 34.6 14.4" stroke="#ffffff" strokeWidth="1.1" opacity="0.18" fill="none" />
+          </g>
+        )}
+        {st.hairStyle === 'bun' && (
+          <g fill={st.hair}>
+            <path d="M 17.5 26.5 Q 16.8 11.4 27 10.9 Q 37.2 11.4 36.5 26.5 L 34.4 23.3 Q 34 15.6 27 14.7 Q 20 15.6 19.6 23.3 Z" />
+            {/* 发际线 */}
+            <path d="M 19.6 23.3 Q 27 14.7 34.4 23.3" stroke="#d8a67e" strokeWidth="0.5" fill="none" opacity="0.5" />
+            {/* 碎发两根（额前垂落——丸子头总有一两根不服帖） */}
+            <path d="M 18.6 15.4 Q 17.4 18.6 17.8 21.8" stroke={st.hair} strokeWidth="0.7" fill="none" strokeLinecap="round" />
+            <path d="M 35.4 15.4 Q 36.6 18.6 36.2 21.8" stroke={st.hair} strokeWidth="0.7" fill="none" strokeLinecap="round" />
+            <path d="M 24.4 9.4 Q 26.4 7.8 28.8 8.6" stroke="#ffffff" strokeWidth="0.9" opacity="0.25" fill="none" strokeLinecap="round" />
+            <path d="M 20 14.4 Q 27 11 34 14.4" stroke="#ffffff" strokeWidth="1" opacity="0.16" fill="none" />
+          </g>
+        )}
+        {st.hairStyle === 'bob' && (
+          <g fill={st.hair}>
+            <path d="M 17 28.5 Q 15.9 11.3 27 10.8 Q 38.1 11.3 37 28.5 L 34.8 25.3 Q 34.6 16 27 14.6 Q 19.4 16 19.2 25.3 Z" />
+            <path d="M 19.2 25.3 Q 18.6 28.6 19.4 31.4 L 21 30.2 Q 20.4 27.4 20.8 24.6 Z" />
+            <path d="M 34.8 25.3 Q 35.4 28.6 34.6 31.4 L 33 30.2 Q 33.6 27.4 33.2 24.6 Z" />
+            {/* 发际线 */}
+            <path d="M 19.2 25.3 Q 27 14.6 34.8 25.3" stroke="#d8a67e" strokeWidth="0.5" fill="none" opacity="0.5" />
+            {/* 鬓角碎发 */}
+            <path d="M 18.4 21.6 Q 17.6 24.4 18 27.2" stroke={st.hair} strokeWidth="0.55" fill="none" strokeLinecap="round" opacity="0.8" />
+            <path d="M 35.6 21.6 Q 36.4 24.4 36 27.2" stroke={st.hair} strokeWidth="0.55" fill="none" strokeLinecap="round" opacity="0.8" />
+            <path d="M 19.8 14.4 Q 27 11 34.2 14.4" stroke="#ffffff" strokeWidth="1" opacity="0.17" fill="none" />
+          </g>
+        )}
+
+        {/* ===== 配饰（材质细节版） ===== */}
+        {/* 耳坠（水滴 + 闪点） */}
+        <ellipse cx="18.6" cy="30.2" rx="1.6" ry="2.7" fill="#f4cba4" />
+        <ellipse cx="35.4" cy="30.2" rx="1.6" ry="2.7" fill="#f4cba4" />
         {st.extra === 'earring' && (
           <g>
-            <line x1="18.6" y1="31.8" x2="18.6" y2="33.4" stroke={st.accent} strokeWidth="0.7" />
-            <circle cx="18.6" cy="34.4" r="1.3" fill={st.accent} />
-            <circle cx="18.2" cy="34" r="0.4" fill="#ffd9d0" opacity="0.9" />
-            <line x1="35.4" y1="31.8" x2="35.4" y2="33.4" stroke={st.accent} strokeWidth="0.7" />
-            <circle cx="35.4" cy="34.4" r="1.3" fill={st.accent} />
-            <circle cx="35" cy="34" r="0.4" fill="#ffd9d0" opacity="0.9" />
+            <line x1="18.6" y1="32.4" x2="18.6" y2="33.6" stroke={st.accent} strokeWidth="0.7" />
+            <path d="M 17.6 33.6 Q 18.6 36.4 19.6 33.6 Q 18.6 32.9 17.6 33.6 Z" fill={st.accent} />
+            <circle cx="18.2" cy="34" r="0.45" fill="#ffd9d0" opacity="0.95" />
+            <line x1="35.4" y1="32.4" x2="35.4" y2="33.6" stroke={st.accent} strokeWidth="0.7" />
+            <path d="M 34.4 33.6 Q 35.4 36.4 36.4 33.6 Q 35.4 32.9 34.4 33.6 Z" fill={st.accent} />
+            <circle cx="35" cy="34" r="0.45" fill="#ffd9d0" opacity="0.95" />
           </g>
         )}
-
-        {/* ---- 脸基座 ---- */}
-        <ellipse cx="27" cy="27.2" rx="8.9" ry="10.2" fill="url(#pfFace)" />
-        <path d={`M ${27 - jawW} 29.5 Q ${27 - jawW - 0.7} 35.6 27 ${chinY} Q ${27 + jawW + 0.7} 35.6 ${27 + jawW} 29.5 Z`} fill="#f0c4a0" />
-        <ellipse cx="24.4" cy="22.6" rx="5.4" ry="3.6" fill="#fdeada" opacity="0.55" />
-        {/* 下颌修容 */}
-        <path d={`M ${27 - jawW} 29.5 Q ${27 - jawW - 0.5} 35 27 ${chinY - 0.6}`} stroke="#d8a67e" strokeWidth="0.6" fill="none" opacity="0.5" />
-        <path d={`M ${27 + jawW} 29.5 Q ${27 + jawW + 0.5} 35 27 ${chinY - 0.6}`} stroke="#d8a67e" strokeWidth="0.6" fill="none" opacity="0.5" />
-
-        {/* ---- 眉（细淡拱形；calm 平一点，soft 弯一点） ---- */}
-        <path d="M 21.6 23.9 Q 23.4 23 25.2 23.6" stroke="#4a3626" strokeWidth="0.85" fill="none" strokeLinecap="round" opacity="0.85" />
-        <path d="M 28.8 23.6 Q 30.6 23 32.4 23.9" stroke="#4a3626" strokeWidth="0.85" fill="none" strokeLinecap="round" opacity="0.85" />
-
-        {/* ---- 眼（4 型） ---- */}
-        {st.eye === 'round' && (
-          <g>
-            <ellipse cx="23.2" cy="27.4" rx="2.4" ry="3" fill="#ffffff" />
-            <ellipse cx="30.8" cy="27.4" rx="2.4" ry="3" fill="#ffffff" />
-            <circle cx="23.2" cy="27.7" r="1.95" fill="url(#pfIris)" />
-            <circle cx="30.8" cy="27.7" r="1.95" fill="url(#pfIris)" />
-            <circle cx="23.2" cy="27.7" r="0.9" fill="#1c1410" />
-            <circle cx="30.8" cy="27.7" r="0.9" fill="#1c1410" />
-            <circle cx="23.9" cy="26.5" r="0.85" fill="#ffffff" opacity="0.95" />
-            <circle cx="31.5" cy="26.5" r="0.85" fill="#ffffff" opacity="0.95" />
-            <circle cx="22.5" cy="28.7" r="0.4" fill="#ffffff" opacity="0.6" />
-            <circle cx="30.1" cy="28.7" r="0.4" fill="#ffffff" opacity="0.6" />
-            <path d={lashPath(23.2, -1)} stroke="#241a12" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-            <path d={lashPath(30.8, 1)} stroke="#241a12" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-            <path d="M 21.4 29.6 Q 23.2 30.4 25 29.7" stroke="#c89878" strokeWidth="0.55" fill="none" opacity="0.7" />
-            <path d="M 29 29.7 Q 30.8 30.4 32.6 29.6" stroke="#c89878" strokeWidth="0.55" fill="none" opacity="0.7" />
-          </g>
-        )}
-        {st.eye === 'up' && (
-          <g>
-            <path d="M 20.9 27.8 Q 22.6 26.3 24.6 26.9 Q 25.4 27.2 25.5 28 Q 24 29.4 21.6 28.9 Z" fill="#ffffff" />
-            <path d="M 33.1 27.8 Q 31.4 26.3 29.4 26.9 Q 28.6 27.2 28.5 28 Q 30 29.4 32.4 28.9 Z" fill="#ffffff" />
-            <ellipse cx="23.4" cy="27.9" rx="1.5" ry="1.55" fill="url(#pfIris)" />
-            <ellipse cx="30.6" cy="27.9" rx="1.5" ry="1.55" fill="url(#pfIris)" />
-            <circle cx="23.4" cy="27.9" r="0.7" fill="#1c1410" />
-            <circle cx="30.6" cy="27.9" r="0.7" fill="#1c1410" />
-            <circle cx="23.9" cy="27.3" r="0.6" fill="#ffffff" opacity="0.95" />
-            <circle cx="31.1" cy="27.3" r="0.6" fill="#ffffff" opacity="0.95" />
-            <path d={lashPath(23.2, -1)} stroke="#241a12" strokeWidth="1.6" fill="none" strokeLinecap="round" />
-            <path d={lashPath(30.8, 1)} stroke="#241a12" strokeWidth="1.6" fill="none" strokeLinecap="round" />
-            <path d="M 25.5 27.9 Q 24.6 28.9 23.2 29.2" stroke="#241a12" strokeWidth="0.7" fill="none" opacity="0.8" />
-            <path d="M 28.5 27.9 Q 29.4 28.9 30.8 29.2" stroke="#241a12" strokeWidth="0.7" fill="none" opacity="0.8" />
-          </g>
-        )}
-        {st.eye === 'soft' && (
-          <g>
-            <ellipse cx="23.2" cy="27.6" rx="2.1" ry="2.4" fill="#ffffff" />
-            <ellipse cx="30.8" cy="27.6" rx="2.1" ry="2.4" fill="#ffffff" />
-            <circle cx="23.2" cy="27.9" r="1.6" fill="url(#pfIris)" />
-            <circle cx="30.8" cy="27.9" r="1.6" fill="url(#pfIris)" />
-            <circle cx="23.2" cy="27.9" r="0.75" fill="#1c1410" />
-            <circle cx="30.8" cy="27.9" r="0.75" fill="#1c1410" />
-            <circle cx="23.8" cy="27" r="0.7" fill="#ffffff" opacity="0.95" />
-            <circle cx="31.4" cy="27" r="0.7" fill="#ffffff" opacity="0.95" />
-            <path d={lashPath(23.2, -1)} stroke="#241a12" strokeWidth="1.4" fill="none" strokeLinecap="round" />
-            <path d={lashPath(30.8, 1)} stroke="#241a12" strokeWidth="1.4" fill="none" strokeLinecap="round" />
-            {/* 半垂上睑：温柔感 */}
-            <path d="M 21.3 26.7 Q 23.2 26.1 25.1 26.8" stroke="#e8c8a8" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-            <path d="M 28.9 26.8 Q 30.8 26.1 32.7 26.7" stroke="#e8c8a8" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-            <path d="M 21.6 29.4 Q 23.2 30 24.8 29.4" stroke="#c89878" strokeWidth="0.5" fill="none" opacity="0.6" />
-            <path d="M 29.2 29.4 Q 30.8 30 32.4 29.4" stroke="#c89878" strokeWidth="0.5" fill="none" opacity="0.6" />
-          </g>
-        )}
-        {st.eye === 'calm' && (
-          <g>
-            <ellipse cx="23.2" cy="27.5" rx="2.2" ry="2.5" fill="#ffffff" />
-            <ellipse cx="30.8" cy="27.5" rx="2.2" ry="2.5" fill="#ffffff" />
-            <circle cx="23.2" cy="27.8" r="1.7" fill="url(#pfIris)" />
-            <circle cx="30.8" cy="27.8" r="1.7" fill="url(#pfIris)" />
-            <circle cx="23.2" cy="27.8" r="0.8" fill="#1c1410" />
-            <circle cx="30.8" cy="27.8" r="0.8" fill="#1c1410" />
-            <circle cx="23.9" cy="27" r="0.75" fill="#ffffff" opacity="0.95" />
-            <circle cx="31.5" cy="27" r="0.75" fill="#ffffff" opacity="0.95" />
-            <circle cx="22.5" cy="28.5" r="0.35" fill="#ffffff" opacity="0.55" />
-            <circle cx="30.1" cy="28.5" r="0.35" fill="#ffffff" opacity="0.55" />
-            <path d={lashPath(23.2, -1)} stroke="#241a12" strokeWidth="1.4" fill="none" strokeLinecap="round" />
-            <path d={lashPath(30.8, 1)} stroke="#241a12" strokeWidth="1.4" fill="none" strokeLinecap="round" />
-            <path d="M 21.5 29.5 Q 23.2 30.1 24.9 29.5" stroke="#c89878" strokeWidth="0.5" fill="none" opacity="0.55" />
-            <path d="M 29.1 29.5 Q 30.8 30.1 32.5 29.5" stroke="#c89878" strokeWidth="0.5" fill="none" opacity="0.55" />
-          </g>
-        )}
-
-        {/* ---- 鼻（一点式） ---- */}
-        <path d="M 27.3 30 Q 27.05 30.8 26.85 31.3" stroke="#d8a078" strokeWidth="0.65" fill="none" strokeLinecap="round" />
-
-        {/* ---- 唇（4 型） ---- */}
-        {st.eye === 'up' && (
-          <g>
-            <path d="M 24.2 34 Q 25.4 33.2 27 33.9 Q 28.6 33.2 29.8 34 Q 28.9 35.6 27 35.7 Q 25.1 35.6 24.2 34 Z" fill={st.lip} />
-            <path d="M 25 34 Q 27 33.5 29 34" stroke="#ffffff" strokeWidth="0.4" opacity="0.5" fill="none" />
-          </g>
-        )}
-        {st.eye === 'round' && (
-          <g>
-            <path d="M 24.4 33.8 Q 27 37 29.6 33.8 Q 27 35 24.4 33.8 Z" fill={st.lip} />
-            <path d="M 24.4 33.8 Q 27 32.9 29.6 33.8" stroke={st.lip} strokeWidth="0.9" fill="none" strokeLinecap="round" />
-            <ellipse cx="27" cy="34.6" rx="1" ry="0.5" fill="#ffffff" opacity="0.5" />
-          </g>
-        )}
-        {st.eye === 'soft' && (
-          <path d="M 24.6 34 Q 27 35.4 29.4 34" stroke={st.lip} strokeWidth="1.3" fill="none" strokeLinecap="round" />
-        )}
-        {st.eye === 'calm' && (
-          <path d="M 25 34.1 Q 27 34.9 29 34.1" stroke={st.lip} strokeWidth="1.1" fill="none" strokeLinecap="round" />
-        )}
-
-        {/* ---- 腮红（sweet 最浓） ---- */}
-        <ellipse cx="20.9" cy="30.9" rx="2.1" ry="1.25" fill="#f0a08c" opacity={st.eye === 'round' ? 0.5 : 0.3} />
-        <ellipse cx="33.1" cy="30.9" rx="2.1" ry="1.25" fill="#f0a08c" opacity={st.eye === 'round' ? 0.5 : 0.3} />
-
-        {/* ---- 前发层（脸上面的刘海） ---- */}
-        {st.hairStyle === 'long' && (
-          <g fill={st.hair}>
-            <path d="M 17.5 26 Q 16.8 12 27 11.4 Q 37.2 12 36.5 26 L 34.4 22.6 Q 34 15.6 27 14.6 Q 21.6 15.2 20.4 19.6 Q 19.6 22.6 19.6 26 Z" />
-            <path d="M 20.4 19.6 Q 22.4 15.8 27 15.2 Q 24 16.4 22.8 19.8 Q 22 22.2 22 25.4 L 20.6 25.8 Z" opacity="0.85" />
-            <path d="M 33.6 19.6 Q 31.6 15.8 27 15.2 Q 30 16.4 31.2 19.8 Q 32 22.2 32 25.4 L 33.4 25.8 Z" opacity="0.85" />
-            <path d="M 19.6 15.4 Q 27 11.6 34.4 15.4" stroke="#ffffff" strokeWidth="1" opacity="0.18" fill="none" />
-          </g>
-        )}
-        {st.hairStyle === 'twin' && (
-          <g fill={st.hair}>
-            <path d="M 17.5 24.5 Q 16.9 11.6 27 11.1 Q 37.1 11.6 36.5 24.5 L 34.2 21.8 Q 33.8 15.4 27 14.5 Q 20.2 15.4 19.8 21.8 Z" />
-            {/* 空气刘海中分线 */}
-            <path d="M 27 14.4 Q 24.6 16 23.6 19.4" stroke={st.bg} strokeWidth="0.5" fill="none" opacity="0.4" />
-            {/* 发绳（accent） */}
-            <circle cx="13.6" cy="27.2" r="1.5" fill={st.accent} />
-            <circle cx="40.4" cy="27.2" r="1.5" fill={st.accent} />
-            <circle cx="13.2" cy="26.7" r="0.5" fill="#ffffff" opacity="0.55" />
-            <circle cx="40" cy="26.7" r="0.5" fill="#ffffff" opacity="0.55" />
-            <path d="M 19 14.8 Q 27 11.4 35 14.8" stroke="#ffffff" strokeWidth="1" opacity="0.18" fill="none" />
-          </g>
-        )}
-        {st.hairStyle === 'bun' && (
-          <g fill={st.hair}>
-            <path d="M 17.5 26.5 Q 16.8 11.6 27 11.1 Q 37.2 11.6 36.5 26.5 L 34.4 23.4 Q 34 15.8 27 14.9 Q 20 15.8 19.6 23.4 Z" />
-            <path d="M 24.2 9.2 Q 26.2 7.6 28.6 8.4" stroke="#ffffff" strokeWidth="0.9" opacity="0.25" fill="none" strokeLinecap="round" />
-            {/* 碎发两根 */}
-            <path d="M 18.4 15.2 Q 17.2 18.4 17.6 21.6" stroke={st.hair} strokeWidth="0.7" fill="none" strokeLinecap="round" />
-            <path d="M 35.6 15.2 Q 36.8 18.4 36.4 21.6" stroke={st.hair} strokeWidth="0.7" fill="none" strokeLinecap="round" />
-            <path d="M 20 14.6 Q 27 11.6 34 14.6" stroke="#ffffff" strokeWidth="1" opacity="0.16" fill="none" />
-          </g>
-        )}
-        {st.hairStyle === 'bob' && (
-          <g fill={st.hair}>
-            <path d="M 17 28.5 Q 15.9 11.5 27 11 Q 38.1 11.5 37 28.5 L 34.8 25.4 Q 34.6 16.2 27 14.8 Q 19.4 16.2 19.2 25.4 Z" />
-            <path d="M 19.2 25.4 Q 18.6 28.6 19.4 31.4 L 21 30.2 Q 20.4 27.4 20.8 24.6 Z" />
-            <path d="M 34.8 25.4 Q 35.4 28.6 34.6 31.4 L 33 30.2 Q 33.6 27.4 33.2 24.6 Z" />
-            <path d="M 19.8 14.8 Q 27 11.4 34.2 14.8" stroke="#ffffff" strokeWidth="1" opacity="0.17" fill="none" />
-          </g>
-        )}
-
-        {/* ---- 贝雷帽（artistic） ---- */}
+        {/* 贝雷帽（针织纹理 + 绒球 + 帽沿投影） */}
         {st.extra === 'beret' && (
           <g transform="rotate(-9 30 12)">
-            <path d="M 19.5 13.4 Q 20.5 5.8 30.5 5.6 Q 39.5 5.8 39.5 12.2 Q 34 9.8 27 10.4 Q 22 10.9 19.5 13.4 Z" fill={st.accent} />
-            <path d="M 19.5 13.4 Q 27 10.2 39.5 12.2 L 39.2 13.8 Q 30 11.9 20 14.6 Z" fill={st.accent} opacity="0.8" />
-            <circle cx="30.2" cy="6.4" r="1.15" fill={st.hair} />
-            <circle cx="29.8" cy="6.1" r="0.35" fill="#ffffff" opacity="0.5" />
-            <path d="M 24 7.4 Q 28 5.6 33.6 6.9" stroke="#ffffff" strokeWidth="0.8" opacity="0.22" fill="none" />
+            <path d="M 19.5 13.4 Q 20.5 5.6 30.5 5.4 Q 39.5 5.6 39.5 12 Q 34 9.6 27 10.2 Q 22 10.7 19.5 13.4 Z" fill={st.accent} />
+            {/* 帽沿投影（帽压在头发上的那条影） */}
+            <path d="M 20.2 13.6 Q 27 10.8 39.3 12.4 L 39 14.2 Q 30 11.9 20.4 14.8 Z" fill="#000000" opacity="0.25" />
+            {/* 针织纹理 */}
+            <path d="M 23 8.4 Q 28 6.6 33.8 8" stroke="#000000" strokeWidth="0.5" fill="none" opacity="0.18" />
+            <path d="M 22 10.4 Q 28 8.6 34.6 10" stroke="#000000" strokeWidth="0.5" fill="none" opacity="0.14" />
+            <circle cx="30.2" cy="6.2" r="1.15" fill={st.hair} />
+            <circle cx="30" cy="6" r="0.35" fill="#ffffff" opacity="0.55" />
+            <path d="M 24 7.2 Q 28 5.4 33.6 6.7" stroke="#ffffff" strokeWidth="0.8" opacity="0.24" fill="none" />
           </g>
         )}
-        {/* ---- 樱花发卡（sweet） ---- */}
+        {/* 樱花发卡（五瓣 + 花心 + 一叶） */}
         {st.extra === 'flower' && (
           <g transform="rotate(8 35 16)">
             {[0, 72, 144, 216, 288].map((a) => (
@@ -2745,36 +2932,22 @@ function PersonaFace({ st, size }: { st: GirlSpec; size: number }) {
                 transform={`rotate(${a} 35 16)`} />
             ))}
             <circle cx="35" cy="16" r="0.85" fill="#f4d03f" />
+            <circle cx="34.7" cy="15.7" r="0.28" fill="#ffffff" opacity="0.8" />
+            {/* 一片小叶 */}
+            <path d="M 37 18.6 Q 38.8 19.6 38.2 21.4 Q 36.6 20.6 37 18.6 Z" fill="#8ab87a" opacity="0.85" />
           </g>
         )}
 
-        {/* ---- 衣领（分人设） ---- */}
-        {st.eye === 'up' && (
-          <g>
-            <path d="M 15.5 54 Q 16.5 45.5 22 43.4 L 32 43.4 Q 37.5 45.5 38.5 54 Z" fill="#20161c" />
-            <path d="M 22 43.4 Q 27 47.4 32 43.4" stroke={st.accent} strokeWidth="1" fill="none" opacity="0.9" />
-            <circle cx="27" cy="47.6" r="0.9" fill={st.accent} />
-          </g>
-        )}
-        {st.eye === 'round' && (
-          <g>
-            <path d="M 15.5 54 Q 16.5 45.5 22 43.4 L 32 43.4 Q 37.5 45.5 38.5 54 Z" fill="#f4ede4" />
-            <path d="M 21.4 43.2 L 24.8 47 L 27 44.6 L 29.2 47 L 32.6 43.2" stroke={st.accent} strokeWidth="1.4" fill="none" strokeLinecap="round" />
-          </g>
-        )}
-        {st.eye === 'soft' && (
-          <g>
-            <path d="M 15.5 54 Q 16.2 44.6 22 43 L 32 43 Q 37.8 44.6 38.5 54 Z" fill={st.accent} />
-            <path d="M 22.6 43.6 Q 27 45.8 31.4 43.6 L 31.4 46 Q 27 47.8 22.6 46 Z" fill="#ffffff" opacity="0.18" />
-          </g>
-        )}
-        {st.eye === 'calm' && (
-          <g>
-            <path d="M 15.5 54 Q 16.5 45.5 22 43.4 L 32 43.4 Q 37.5 45.5 38.5 54 Z" fill="#2a2430" />
-            <path d="M 20.8 44.6 L 24.6 48.4 L 27 45.8 L 29.4 48.4 L 33.2 44.6" stroke={st.accent} strokeWidth="1.1" fill="none" strokeLinecap="round" opacity="0.85" />
-          </g>
-        )}
-
+        {/* ===== 照片后期层：bloom + 感光颗粒 + 暗角 ===== */}
+        <circle cx="20" cy="20" r="16" fill="#ffffff" opacity="0.045" />
+        <g fill="#ffffff">
+          <circle cx="22" cy="33" r="0.5" opacity="0.12" />
+          <circle cx="42" cy="12" r="0.45" opacity="0.1" />
+          <circle cx="14" cy="44" r="0.5" opacity="0.09" />
+          <circle cx="36" cy="41" r="0.45" opacity="0.08" />
+          <circle cx="45" cy="20" r="0.4" opacity="0.07" />
+          <circle cx="10" cy="24" r="0.4" opacity="0.08" />
+        </g>
         <rect width="54" height="54" fill="url(#pfVig)" />
       </g>
       <clipPath id="pfClip">

@@ -1259,9 +1259,11 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 /* ---------- 人设档案 ---------- */
 .choice-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .choice-grid.avatars { grid-template-columns: repeat(5, 1fr); }
-/* v4.3.3 头像 10 款 5×2：tile 只装头像不装字，收成正方形 */
-.choice-grid.avatars .choice-tile { min-height: 0; padding: 6px 4px; aspect-ratio: 1; }
+/* v4.6 头像 tile = 头像 + 造型名（不再是无名方格）：取消 aspect-ratio 正方形
+   约束，标签行自然撑高；字号压到 --fs-0，五列内四字名不折行。 */
+.choice-grid.avatars .choice-tile { min-height: 0; padding: 7px 2px 6px; }
 .choice-grid.avatars .choice-tile svg { display: block; margin: 0 auto; }
+.choice-grid.avatars .choice-tile .tile-label { font-size: var(--fs-0); white-space: nowrap; }
 .choice-grid .choice-tile.wide { grid-column: span 2; }
 .choice-tile {
   display: flex;

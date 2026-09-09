@@ -1171,7 +1171,9 @@ function ProfilePanel() {
       <div className="choice-grid avatars">
         {AVATAR_PRESETS.map((a) => (
           <button key={a.id} className={`choice-tile ${p.avatarId === a.id ? 'on' : ''}`} onClick={() => setProfile({ avatarId: a.id })}>
-            <ProfileAvatar avatarId={a.id} size={56} />
+            <ProfileAvatar avatarId={a.id} size={64} />
+            {/* v4.6：每款头像有名字——10 款造型身份可辨认，不再是无名的排列 */}
+            <div className="tile-label">{a.label}</div>
           </button>
         ))}
       </div>
