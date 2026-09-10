@@ -204,6 +204,9 @@ button { -webkit-tap-highlight-color: transparent; font-family: inherit; }
   .gatha-gloss { font-size: var(--fs-0) !important; }
   .title-screen { gap: 10px; }
   .content-warning { margin-top: 10px; padding: 10px 12px; }
+  /* 聊天态：流再让一点给选项——矮视口里选项优先完整可点 */
+  .chat-mode .chat-stream { max-height: 34vh; }
+  .chat-mode .option-list { max-height: 44vh; }
 }
 
 /* ---------- 通用工具类 ---------- */
@@ -667,12 +670,18 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 }
 
 /* ---------- 聊天 ---------- */
+/* v4.11.2 手机浏览器适配：聊天态 = 聊天 App 布局——
+   流容器占满剩余空间内滚，回复选项钉在底部永远可见。
+   之前外层 app-shell overflow:hidden + 内层 46vh 流：小屏上选项被裁在
+   视口外，外层滚不动、内层拖动只滚气泡——选项够不着。 */
+.chat-mode { overflow: hidden; }
 .chat-panel {
-  margin-top: 14px;
+  margin-top: 10px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   flex: 1;
+  min-height: 0;
 }
 .chat-header {
   display: flex;
@@ -693,9 +702,18 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   padding: 14px 12px;
   background: color-mix(in srgb, var(--page) 62%, transparent);
   border-radius: var(--r-md);
+  /* 聊天态：吃掉剩余高度内滚（flex 子项 min-height:0 才允许被压缩）。
+     非聊天面板（history 预览等）保留固定高度档。 */
   min-height: 240px;
   max-height: 46vh;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.chat-mode .chat-stream {
+  min-height: 0;
+  max-height: none;
+  flex: 1;
 }
 .bubble {
   max-width: 78%;
@@ -783,7 +801,14 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 .bubble-stamp { color: var(--muted); font-size: var(--fs-0); margin-top: 3px; text-align: right; }
 
 /* ---------- 回复选项（风格签 + 列表按压纪律） ---------- */
-.option-list { display: flex; flex-direction: column; gap: 8px; }
+.option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;              /* 聊天态：钉在流下方，不被裁切 */
+}
+/* 选项多时自身可滚——最矮视口里也能全部够到 */
+.chat-mode .option-list { max-height: 34vh; overflow-y: auto; overscroll-behavior: contain; }
 .option {
   appearance: none;
   border: none;
@@ -981,6 +1006,8 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 
 /* v2.3 手机 App 三段布局 */
 .app-shell { padding: 12px 12px 0; overflow: hidden; }
+/* v4.11.2 聊天态：给回复选项留底部呼吸（app-shell 的 0 底 padding 恢复） */
+.app-shell.chat-mode { padding-bottom: 12px; }
 .app-scroll {
   flex: 1;
   min-height: 0;

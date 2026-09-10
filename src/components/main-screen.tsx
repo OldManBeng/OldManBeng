@@ -283,7 +283,7 @@ export function MainScreen() {
         : '深夜';
 
   return (
-    <div className={`screen main-screen app-shell ${phaseCls}`}>
+    <div className={`screen main-screen app-shell ${phaseCls} ${state.dayPhase === 'chat' ? 'chat-mode' : ''}`}>
       <header className="hud">
         <div className="hud-left">
           <span className="day-chip">第 {state.day}/{state.daysLimit} 天</span>

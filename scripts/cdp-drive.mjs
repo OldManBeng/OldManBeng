@@ -163,6 +163,10 @@ if (chatBtn) {
     await sleep(500);
     if (await evaljs(`!!document.querySelector('.option-list .option')`)) break;
   }
+  /* v4.11.2 手机适配验证：选项列表此刻必须完整落在视口内（不被裁切） */
+  const optVisible = await evaljs(`(() => { const l = document.querySelector('.option-list'); if (!l) return 'no-list'; const r = l.getBoundingClientRect(); const last = l.lastElementChild.getBoundingClientRect(); const scr = document.querySelector('.screen'); return JSON.stringify({ top: Math.round(r.top), bottom: Math.round(r.bottom), vh: innerHeight, lastBottom: Math.round(last.bottom), scrPadB: getComputedStyle(scr).paddingBottom, scrCls: scr.className.slice(0, 90), ok: last.bottom <= innerHeight && r.top >= 0 }); })()`);
+  console.log('option-list viewport check:', optVisible);
+  await screenshot('08b-options-visible');
   /* 连点几个回复选项，让对话推进 */
   for (let i = 0; i < 4; i++) {
     const picked = await evaljs(`(() => { const b = document.querySelector('.option-list .option'); if (!b) return false; b.click(); return true; })()`);
