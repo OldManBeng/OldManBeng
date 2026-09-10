@@ -1,5 +1,6 @@
 import { useGame } from '../store/gameStore';
 import { ALL_TARGET_MAP, PERSONA_MAP, targetAwake, isMorningTarget, SELFIE_LABEL, TRAIT_LABEL } from '../engine/state-machine';
+import { PERSONAS } from '../data/personas';
 import { formatMoney } from '../utils/format';
 import { OldManAvatar, PersonaAvatar, ProfileAvatar, AVATAR_PRESETS, PhotoRender, MomentPhoto } from './character-art';
 import { playMessage, playSend, playPacket, playFail, playBlocked, playMorning } from '../utils/sound';
@@ -73,14 +74,6 @@ function NavIcon({ name }: { name: ModuleTab }) {
         <svg viewBox="0 0 20 20" {...s}>
           <rect x="3" y="5.4" width="14" height="10.4" rx="2" />
           <path d="M 3 8.2 L 17 8.2 M 13.2 12.2 L 14.8 12.2" />
-        </svg>
-      );
-    case 'profile':
-      return (
-        <svg viewBox="0 0 20 20" {...s}>
-          <circle cx="10" cy="7" r="3" />
-          <path d="M 4.4 16.4 Q 5.2 11.8 10 11.8 Q 14.8 11.8 15.6 16.4" />
-          <path d="M 12.6 4.2 Q 14 3.4 14.8 4.8" />
         </svg>
       );
   }
@@ -241,7 +234,7 @@ function DayBriefingModal() {
   );
 }
 
-type ModuleTab = 'today' | 'contacts' | 'moments' | 'history' | 'wallet' | 'profile';
+type ModuleTab = 'today' | 'contacts' | 'moments' | 'history' | 'wallet';
 
 export function MainScreen() {
   const store = useGame();
@@ -249,6 +242,8 @@ export function MainScreen() {
   const risk = riskLabel(state.riskLevel);
   const [tab, setTab] = useState<ModuleTab>('today');
   const [showLog, setShowLog] = useState(false);
+  // v4.11 人设档案从底部导航收进「今天」——「变更人设」按钮唤起浮层。
+  const [profileOpen, setProfileOpen] = useState(false);
   // v4.1.2：切 tab 时内容区滚回顶——朋友圈最新在前，打开就先看到新动态。
   const scrollRef = useRef<HTMLDivElement>(null);
   const switchTab = (next: ModuleTab) => {
@@ -315,12 +310,11 @@ export function MainScreen() {
         <>
           {/* v2.3 手机布局：只有这一块滚动，导航钉死在底部。 */}
           <div className="app-scroll" ref={scrollRef}>
-            {activeTab === 'today' && <TodayPanel phaseLabel={phaseLabel} />}
+            {activeTab === 'today' && <TodayPanel phaseLabel={phaseLabel} onOpenProfile={() => setProfileOpen(true)} />}
             {activeTab === 'contacts' && <ContactsPanel />}
             {activeTab === 'moments' && <MomentsPanel />}
             {activeTab === 'history' && <HistoryPanel />}
             {activeTab === 'wallet' && <WalletPanel />}
-            {activeTab === 'profile' && <ProfilePanel />}
             <footer className="stats-row">
               <span>红包 {state.stats.redPacketsReceived} 个</span>
               <span>开口 {state.stats.asksMade} 次</span>
@@ -361,18 +355,18 @@ export function MainScreen() {
             <button className={activeTab === 'wallet' ? 'nav-btn on' : 'nav-btn'} onClick={() => switchTab('wallet')}>
               <span className="nav-ico"><NavIcon name="wallet" /></span>钱包
             </button>
-            <button className={activeTab === 'profile' ? 'nav-btn on' : 'nav-btn'} onClick={() => switchTab('profile')}>
-              <span className="nav-ico"><NavIcon name="profile" /></span>人设
-            </button>
           </nav>
         </>
       )}
+
+      {/* v4.11 人设档案浮层：从「今天」页的人设行唤起 */}
+      {profileOpen && <ProfileOverlay onClose={() => setProfileOpen(false)} />}
     </div>
   );
 }
 
 /** 「今天」= 每日计划 + 他来找你 + 白天/深夜面板。 */
-function TodayPanel({ phaseLabel }: { phaseLabel: string }) {
+function TodayPanel({ phaseLabel, onOpenProfile }: { phaseLabel: string; onOpenProfile: () => void }) {
   const store = useGame();
   const { state } = store;
   const persona = PERSONA_MAP[state.personaId];
@@ -383,7 +377,11 @@ function TodayPanel({ phaseLabel }: { phaseLabel: string }) {
       <div className="persona-row">
         <PersonaAvatar personaId={state.personaId} size={44} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="persona-line">{state.playerName} · 人设「{persona.name}」</div>
+          <div className="persona-line">
+            {state.playerName} · 人设「{persona.name}」
+            {/* v4.11 变更人设：入口跟着人设行走（底部导航不再占一格） */}
+            <button className="persona-change-btn" onClick={onOpenProfile}>变更人设</button>
+          </div>
           <div className="persona-bio muted small">“{bioTextOf(state.profile.bioId)}”</div>
           <div className="bars" style={{ margin: '5px 0 3px' }}>
             <div className="bar energy"><span style={{ width: `${(state.energy / state.energyMax) * 100}%` }} />精力 {state.energy}/{state.energyMax}（一场 {CHAT_SESSION_COST} 点）</div>
@@ -1153,29 +1151,52 @@ const TRAIT_OPTIONS: { value: PlayerProfile['traitId']; label: string; note: str
 ];
 
 /** 人设：头像/自称年龄/性格——全部影响他的话术与好感走向。
- *  v3.0：人设不只是皮肤——被动/剧情分岔/代价写在卡上，换人设前看得见后果。 */
-function ProfilePanel() {
+ *  v3.0：人设不只是皮肤——被动/剧情分岔/代价写在卡上，换人设前看得见后果。
+ *  v4.11：从「今天」页人设行唤起的全屏浮层（底部导航不再有人设 tab）；
+ *  并补上中途换人设（set_persona）——换的是演法，不是已经认识你的人。 */
+function ProfileOverlay({ onClose }: { onClose: () => void }) {
   const store = useGame();
   const { state } = store;
   const p = state.profile;
   const persona = PERSONA_MAP[state.personaId];
   const setProfile = (patch: Partial<PlayerProfile>) => store.dispatch({ type: 'update_profile', ...patch });
   return (
-    <section className="profile-panel">
-      <h3>人设档案</h3>
-      <p className="muted small">你对外呈现的这个人。换头像、改年龄、调性格——他记住的是同一个你。</p>
-
-      <div className="profile-current">
-        <PersonaAvatar personaId={state.personaId} size={56} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="profile-current-name">{persona.name} <span className="muted small">{persona.tagline}</span></div>
-          {persona.passiveNote && <div className="profile-current-note">被动 · {persona.passiveNote}</div>}
-          {persona.hook && <div className="muted small">剧情 · {persona.hook}</div>}
-          {persona.risk && <div className="muted small" style={{ color: 'var(--danger)', opacity: 0.85 }}>代价 · {persona.risk}</div>}
+    <div className="ask-modal-overlay" onClick={onClose}>
+      <section className="profile-panel profile-overlay" onClick={(e) => e.stopPropagation()}>
+        <div className="profile-overlay-head">
+          <h3>人设档案</h3>
+          <button className="btn small muted-btn" onClick={onClose}>收起</button>
         </div>
-      </div>
+        <p className="muted small">你对外呈现的这个人。换头像、改年龄、调性格——他记住的是同一个你。</p>
 
-      <h4>头像</h4>
+        <div className="profile-current">
+          <PersonaAvatar personaId={state.personaId} size={56} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="profile-current-name">{persona.name} <span className="muted small">{persona.tagline}</span></div>
+            {persona.passiveNote && <div className="profile-current-note">被动 · {persona.passiveNote}</div>}
+            {persona.hook && <div className="muted small">剧情 · {persona.hook}</div>}
+            {persona.risk && <div className="muted small" style={{ color: 'var(--danger)', opacity: 0.85 }}>代价 · {persona.risk}</div>}
+          </div>
+        </div>
+
+        <h4>变更人设</h4>
+        <div className="choice-grid persona-switch-grid">
+          {PERSONAS.map((ps) => (
+            <button
+              key={ps.id}
+              className={`choice-tile ${state.personaId === ps.id ? 'on' : ''}`}
+              title={`${ps.hook ?? ''} ${ps.risk ?? ''}`}
+              onClick={() => store.dispatch({ type: 'set_persona', personaId: ps.id })}
+            >
+              <PersonaAvatar personaId={ps.id} size={44} />
+              <div className="tile-label">{ps.name}</div>
+              <div className="muted small">{ps.tagline}</div>
+            </button>
+          ))}
+        </div>
+        <p className="muted small">换的是演法——已经认识你的人不会重置，他只是觉得你今天说话的味道不一样了。</p>
+
+        <h4>头像</h4>
       <div className="choice-grid avatars">
         {AVATAR_PRESETS.map((a) => (
           <button key={a.id} className={`choice-tile ${p.avatarId === a.id ? 'on' : ''}`} onClick={() => setProfile({ avatarId: a.id })}>
@@ -1220,6 +1241,10 @@ function ProfilePanel() {
       <p className="muted small">
         朋友圈现在挂着{SELFIE_LABEL[p.selfieId]}（第 {p.selfieDay || '—'} 天发布）——发新照片去朋友圈模块。
       </p>
+      <div className="profile-overlay-foot">
+        <button className="btn primary wide" onClick={onClose}>就这么办</button>
+      </div>
     </section>
+    </div>
   );
 }

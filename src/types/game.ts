@@ -257,4 +257,6 @@ export type GameAction =
   /** v4.1.2 主动要钱——绕开剧情链直接开口（理由 + 金额自选，代价照付）。 */
   | { type: 'direct_ask'; targetId: string; reasonId: string; amount: number }
   /** v4.2 突发事件决策——今天的事件选了哪个选项（只能选一次，过夜落锤）。 */
-  | { type: 'resolve_incident'; optionIndex: number };;
+  | { type: 'resolve_incident'; optionIndex: number }
+  /** v4.11 变更人设——白天随时可换（话术/被动/剧情分岔即刻切换；他不看你后台）。 */
+  | { type: 'set_persona'; personaId: PersonaId };;

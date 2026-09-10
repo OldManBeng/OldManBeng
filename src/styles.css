@@ -466,7 +466,23 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 
 .morning-panel { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
 .persona-row { display: flex; gap: 10px; align-items: center; }
-.persona-line { font-size: var(--fs-7); font-weight: 600; letter-spacing: var(--ls-label); }
+.persona-line { font-size: var(--fs-7); font-weight: 600; letter-spacing: var(--ls-label); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* v4.11 变更人设：行内小按钮（plain 语义——蓝字无底） */
+.persona-change-btn {
+  appearance: none;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-size: var(--fs-1);
+  font-weight: 600;
+  letter-spacing: var(--ls-label);
+  padding: 2px 0;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity var(--t-micro) var(--ease);
+}
+.persona-change-btn:hover { opacity: 0.75; }
+.persona-change-btn:active { opacity: 0.55; }
 .event-feed { display: flex; flex-direction: column; gap: 8px; }
 .log-entry {
   background: var(--surface);
@@ -1280,6 +1296,26 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 }
 .profile-current-name { font-size: var(--fs-7); font-weight: 600; letter-spacing: var(--ls-label); }
 .profile-current-note { font-size: var(--fs-3); line-height: 1.6; color: var(--trust); }
+
+/* v4.11 人设档案浮层（从「今天」页人设行唤起） */
+.profile-overlay {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  max-width: 460px;
+  width: 100%;
+  max-height: 86vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: briefing-in var(--t-panel) var(--curve-sheet);
+}
+.profile-overlay-head { display: flex; align-items: center; justify-content: space-between; }
+.profile-overlay-head h3 { margin: 0; }
+.profile-overlay .choice-grid { grid-template-columns: repeat(4, 1fr); }
+.persona-switch-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.profile-overlay-foot { padding-top: 4px; }
 
 /* ---------- 朋友圈 ---------- */
 .moment-poster h4 { margin-bottom: 6px; }

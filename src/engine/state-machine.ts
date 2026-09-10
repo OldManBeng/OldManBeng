@@ -1792,6 +1792,19 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       return s;
     }
 
+    case 'set_persona': {
+      // v4.11 变更人设：她换一个「人」来演。话术链（personaText/linesFor/剧情节点）
+      // 全部动态读 s.personaId——即刻生效；他不看她后台，信任/警惕不动。
+      // 同人设重复 set 是 no-op（不刷日志）。
+      if (!PERSONA_MAP[action.personaId]) return s;
+      if (s.personaId === action.personaId) return s;
+      const old = PERSONA_MAP[s.personaId];
+      s.personaId = action.personaId;
+      const next = PERSONA_MAP[action.personaId];
+      log(s, 'flag', `你卸下了「${old.name}」，换上「${next.name}」。声音的语气变了，人还是那些人。`);
+      return s;
+    }
+
     case 'retire': {
       s.phase = 'ended';
       s.endingId = scoreEnding(s);
