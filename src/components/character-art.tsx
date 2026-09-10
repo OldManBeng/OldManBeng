@@ -1352,11 +1352,11 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
 // v2.4 美化重绘：统一暗角 + 光源方向 + 材质细节（金属/水波/烟雾/木纹），
 //               保留每张原有的构图与叙事（谁的世界、哪个时辰）。
 // ---------------------------------------------------------------------------
-/** v4.12：照片 URL——stage 0 尝试变体（variant>1 → _v{n}），stage≥1 回退基准图；
- *  两级都 404 才落 SVG 兜底。 */
+/** v4.12：照片 URL——stage 0 尝试变体（>1 → _v{n}），stage≥1 回退基准图(_v1)；
+ *  两级都 404 才落 SVG 兜底。v4.13 起按 id 分子目录，6 张统一命名 _v1.._v6。 */
 function variantUrl(base: string, id: string, variant?: number, stage = 0): string {
-  if (stage === 0 && variant && variant > 1) return `${base}/${id}_v${variant}.png`;
-  return `${base}/${id}.png`;
+  if (stage === 0 && variant && variant > 1) return `${base}/${id}/${id}_v${variant}.png`;
+  return `${base}/${id}/${id}_v1.png`;
 }
 
 export function PhotoRender({ photoId, variant }: { photoId: string; variant?: number }) {

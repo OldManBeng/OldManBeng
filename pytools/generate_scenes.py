@@ -114,7 +114,8 @@ for _gi, _id in enumerate(_id_order):
 
 
 def out_dir_for(id_):
-    return os.path.join(PROJECT, "public", "photos" if id_ in PHOTOS else "selfies")
+    # v4.13：每 id 一个子目录，6 张（_v1.._v6）放一起
+    return os.path.join(PROJECT, "public", "photos" if id_ in PHOTOS else "selfies", id_)
 
 
 def patch_workflow(workflow, id_, seed=None, filename=None):
@@ -125,7 +126,7 @@ def patch_workflow(workflow, id_, seed=None, filename=None):
     workflow[SEED_NODE]["inputs"]["value"] = SEEDS[id_] if seed is None else seed
     workflow[SIZE_NODE]["inputs"]["width"] = LATENT_W
     workflow[SIZE_NODE]["inputs"]["height"] = LATENT_H
-    workflow[PREFIX_NODE]["inputs"]["filename_prefix"] = f"{subdir}/{filename or id_}"
+    workflow[PREFIX_NODE]["inputs"]["filename_prefix"] = f"{subdir}/{id_}/{filename or id_}"
 
 
 def resize_to_final(raw_path, id_, filename=None):
@@ -151,7 +152,8 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="只打印 prompt+种子 不提交")
     args = parser.parse_args()
 
-    # 作业表：(id_, 输出文件名, 种子)。变体文件名 {id}_v{v}，基准 {id}。
+    # 作业表：(id_, 输出文件名, 种子)。v4.13 起全部统一命名 {id}_v{v}（1..6），
+    # 基准图即 _v1；旧 --force 上仍叫它「基准」只是习惯话。
     jobs = []
     for i in _id_order:
         if args.only and i != args.only:
@@ -160,7 +162,7 @@ def main():
             for v in range(2, 7):
                 jobs.append((i, f"{i}_v{v}", VARIANT_SEEDS[(i, v)] + args.seed_offset))
         else:
-            jobs.append((i, i, SEEDS[i]))
+            jobs.append((i, f"{i}_v1", SEEDS[i]))
 
     if args.dry_run:
         workflow = load_workflow(WORKFLOW_PATH)
