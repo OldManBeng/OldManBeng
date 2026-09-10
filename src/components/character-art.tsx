@@ -1409,7 +1409,9 @@ export function PhotoRender({ photoId }: { photoId: string }) {
     <img
       src={`/photos/${photoId}.png`}
       alt="照片"
-      loading="lazy"
+      /* 不用 lazy：部分移动 WebView（微信内置等）对懒加载+容器切换会解码失败
+         误触发 onError 落进 SVG 兜底。这两类图都是"刚发生的动作"的结果，必在首屏。 */
+      decoding="async"
       width={768}
       height={576}
       style={{ width: '100%', height: 'auto', display: 'block' }}
@@ -2360,7 +2362,8 @@ export function MomentPhoto({ selfieId }: { selfieId: string }) {
     <img
       src={`/selfies/${selfieId}.png`}
       alt="朋友圈自拍"
-      loading="lazy"
+      /* 同 PhotoRender：不用 lazy——移动 WebView 懒加载误触发 onError 会退回 SVG */
+      decoding="async"
       width={768}
       height={576}
       style={{ width: '100%', height: 'auto', display: 'block' }}
