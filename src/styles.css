@@ -93,6 +93,11 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body, #root { height: 100%; overflow: hidden; }
+/* 手机浏览器：地址栏随滚动收缩，100% 取的是初始视口——dvh 才是实时视口，
+   否则底部导航被浏览器工具栏挡住。 */
+@supports (height: 100dvh) {
+  html, body, #root { height: 100dvh; }
+}
 
 body {
   /* 深夜氛围底（个性化 3）：蓝黑 + 顶部月光晕 */
@@ -188,6 +193,19 @@ button { -webkit-tap-highlight-color: transparent; font-family: inherit; }
 }
 .screen > * { position: relative; z-index: 1; }
 
+/* 矮视口（手机横屏 / 分屏小窗）：序章/标题收紧行距，保证一屏能滚完 */
+@media (max-height: 480px) {
+  .prologue-screen { gap: 8px; }
+  .prologue-block { padding: 12px 16px; }
+  .prologue-body p { margin-bottom: 6px; font-size: var(--fs-4); line-height: 1.6; }
+  .prologue-title { font-size: var(--fs-7); margin-bottom: 8px; }
+  .gatha-block { margin-top: 8px; padding: 8px 10px; }
+  .gatha-verse { font-size: var(--fs-3) !important; line-height: 1.6 !important; }
+  .gatha-gloss { font-size: var(--fs-0) !important; }
+  .title-screen { gap: 10px; }
+  .content-warning { margin-top: 10px; padding: 10px 12px; }
+}
+
 /* ---------- 通用工具类 ---------- */
 .muted { color: var(--muted); }
 .small { font-size: var(--fs-3); line-height: var(--lh-tight); }
@@ -202,7 +220,9 @@ button { -webkit-tap-highlight-color: transparent; font-family: inherit; }
 }
 
 /* ---------- 标题屏 ---------- */
-.title-screen { justify-content: center; text-align: center; gap: 22px; }
+/* 同序章：auto-margin 保险居中——小视口溢出时滚得到，标题不被地址栏挡 */
+.title-screen { text-align: center; gap: 22px; }
+.title-block { position: relative; margin-top: auto; }
 .title-backdrop {
   position: absolute;
   inset: 0;
@@ -211,7 +231,6 @@ button { -webkit-tap-highlight-color: transparent; font-family: inherit; }
   opacity: 0.9;
 }
 .title-backdrop svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.title-block { position: relative; }
 .title-screen h1 {
   font-size: var(--fs-11);
   font-weight: 700;
@@ -312,8 +331,12 @@ button { -webkit-tap-highlight-color: transparent; font-family: inherit; }
 .muted-btn:hover { color: var(--text); }
 
 /* ---------- v2.2 序章 ---------- */
-.prologue-screen { justify-content: center; gap: 22px; max-width: 640px; }
+/* 垂直居中用 auto-margin 而不是 justify-content:center——
+   手机横屏/小视口内容溢出时，flex 居中的溢出头部滚不到（被挡），
+   auto-margin 会自动退化为文档流顶端，滚动可达。 */
+.prologue-screen { gap: 22px; max-width: 640px; }
 .prologue-block {
+  margin-top: auto;
   padding: 24px 28px;
   background: var(--surface);
   border-radius: var(--r-lg);
@@ -330,7 +353,7 @@ button { -webkit-tap-highlight-color: transparent; font-family: inherit; }
   font-size: var(--fs-6);
   line-height: var(--lh-loose);
 }
-.prologue-actions { display: flex; gap: 10px; justify-content: center; align-items: center; }
+.prologue-actions { display: flex; gap: 10px; justify-content: center; align-items: center; flex-shrink: 0; }
 
 /* ---------- 偈语（晨钟 / 序章 / 结局 / 终章）——楷体 + 灯笼金（个性化 4） ---------- */
 .gatha-block {
@@ -1539,6 +1562,13 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   .app-shell { padding: 10px 10px 0; }
   .title-screen h1 { font-size: 29px; letter-spacing: 5px; text-indent: 5px; }
   :root { --fs-11: 29px; }
+  /* v4.11.2 手机浏览器适配：序章块收 padding、偈语正文收紧，
+     保证「标题+正文+偈语+按钮」在最矮视口（横屏/带地址栏）下都完整可见 */
+  .prologue-block { padding: 18px 16px; }
+  .prologue-body p { margin-bottom: 9px; font-size: var(--fs-5); }
+  .prologue-gatha .gatha-verse { font-size: var(--fs-4); }
+  .prologue-gatha .gatha-gloss { font-size: var(--fs-1); }
+  .prologue-screen { gap: 14px; }
 }
 
 /* ---- v4.1.2：名单置顶 + 主动要钱 + 朋友圈首屏 ---- */

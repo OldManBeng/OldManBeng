@@ -16,7 +16,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const chrome = spawn(CHROME, [
   '--headless', '--disable-gpu', `--remote-debugging-port=${PORT}`,
-  '--window-size=560,920', '--hide-scrollbars', '--no-first-run',
+  /* v4.11.2 手机浏览器视口：375×667（iPhone SE / 带地址栏的典型可视高度） */
+  process.env.MOBILE ? '--window-size=375,667' : '--window-size=560,920',
+  '--hide-scrollbars', '--no-first-run',
   '--user-data-dir=' + path.join(process.cwd(), '.cdp-profile'),
 ], { stdio: 'ignore' });
 
