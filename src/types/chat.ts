@@ -12,4 +12,7 @@ export interface ChatMessage {
   stamp?: string;
   /** v2.2：附带照片的 photoId——渲染程序化 SVG 立绘（character-art.tsx）。 */
   photoId?: string;
+  /** v4.12：照片变体 1..6——1=基准图 {photoId}.png，2..6=_v2.._v6（png 直查表）。
+   *  旧存档缺省 → 渲染基准图。变体在发送时由 pickVariant 确定性算好存此，跨渲染站点稳定。 */
+  variant?: number;
 }

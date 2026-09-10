@@ -99,6 +99,8 @@ export interface MomentPost {
   selfieId?: SelfieId;
   /** 老头圈：程序化照片场景 id。 */
   photoId?: string;
+  /** v4.12：照片/自拍变体 1..6——1=基准图，2..6=_v2.._v6。旧存档缺省 → 基准图。 */
+  variant?: number;
   caption: string;
   /** 点赞的人（targetId 列表；玩家的点赞记 'player'）。 */
   likes: string[];

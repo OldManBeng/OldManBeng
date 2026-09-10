@@ -610,6 +610,8 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 .stage-harvest { background: color-mix(in srgb, var(--warm) 15%, transparent); color: var(--warm); }
 .stage-burned { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
 .blocked-note { color: var(--danger); writing-mode: vertical-lr; letter-spacing: 4px; font-size: var(--fs-2); }
+.muted-note { color: var(--text-secondary); writing-mode: vertical-lr; letter-spacing: 4px; font-size: var(--fs-2); }
+.contact-row.muted { opacity: 0.6; }
 
 /* ---------- 风险条 ---------- */
 .risk-strip {

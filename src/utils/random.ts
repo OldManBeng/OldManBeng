@@ -21,3 +21,15 @@ export function nextSeed(state: { rngSeed: number }): number {
   state.rngSeed = v;
   return v;
 }
+
+/** v4.12：照片/自拍变体——由「照片 id + 出现序号」确定性派生。
+ *  FNV-1a 纯函数、不消耗主 RNG 流（人生线 moments 块有「不消耗 RNG」约定），
+ *  同 key 必同图、跨渲染站点稳定；不同出现大概率不同图。返回 1..6（1=基准图）。 */
+export function pickVariant(key: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < key.length; i++) {
+    h ^= key.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return ((h >>> 0) % 6) + 1;
+}

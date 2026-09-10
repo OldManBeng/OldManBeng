@@ -569,10 +569,14 @@ function ContactsPanel() {
       <h3>通讯录（{known.length} 人）</h3>
       <p className="muted small">全部加过微信的人。拉黑的沉底。</p>
       <div className="contacts-list">
-        {[...known].sort((a, b) => Number(a.blocked) - Number(b.blocked)).map((t) => {
+        // v2.0：通讯录：拉黑的沉底。v4.12：免打扰的置底（比拉黑还沉）。
+        {[...known].sort((a, b) => {
+          const rank = (t: typeof a) => t.mutedByPlayer ? 2 : t.blocked ? 1 : 0;
+          return rank(a) - rank(b);
+        }).map((t) => {
           const def = ALL_TARGET_MAP[t.targetId];
           return (
-            <div key={t.targetId} className={`contact-row ${t.blocked ? 'blocked' : ''}`}>
+            <div key={t.targetId} className={`contact-row ${t.blocked ? 'blocked' : ''} ${t.mutedByPlayer ? 'muted' : ''}`}>
               <OldManAvatar target={def} state={t} size={44} />
               <div className="contact-body">
                 <div className="contact-name">{def.handle ?? def.name}</div>
@@ -583,6 +587,7 @@ function ContactsPanel() {
                 <div className="muted small">信任 {Math.round(t.trust)} · 警惕 {Math.round(t.wariness)} · 给过 {formatMoney(t.totalReceived)}</div>
               </div>
               {t.blocked && <span className="blocked-note">不回你了</span>}
+              {t.mutedByPlayer && <span className="muted-note">免打扰</span>}
             </div>
           );
         })}
@@ -656,7 +661,7 @@ function MomentsPanel() {
                 </div>
               </div>
               <div className="moment-photo">
-                {m.author === 'player' && m.selfieId ? <MomentPhoto selfieId={m.selfieId} /> : m.photoId ? <PhotoRender photoId={m.photoId} /> : null}
+                {m.author === 'player' && m.selfieId ? <MomentPhoto selfieId={m.selfieId} variant={m.variant} /> : m.photoId ? <PhotoRender photoId={m.photoId} variant={m.variant} /> : null}
               </div>
               <div className="moment-caption">{m.caption}</div>
               {m.likes.length > 0 && <div className="moment-likes"><Ico name="heart" size={12} /> {m.likes.map(nameFor).join('、')}</div>}
@@ -781,7 +786,7 @@ function HistoryPanel() {
                       <div className="bubble-text">{m.text}</div>
                       {m.photoId && (
                         <div className="bubble-photo">
-                          <PhotoRender photoId={m.photoId} />
+                          <PhotoRender photoId={m.photoId} variant={m.variant} />
                         </div>
                       )}
                       {m.stamp && <div className="bubble-stamp">{m.stamp}</div>}
@@ -827,10 +832,12 @@ function TargetList({ dayPhase }: { dayPhase: 'morning' | 'night' }) {
   const { state } = store;
   // v2.0：名单只显示已认识的（库目标要靠计划偶遇才能解锁进通讯录）。
   // v4.1.2：置顶的排最前（置顶集合的顺序即展示顺序），其余按原顺序。
+  // v4.12：免打扰的沉到非置顶区末尾。
   const known = state.targets.filter((t) => t.discoveredDay > 0);
   const ordered = [
     ...known.filter((t) => state.pinnedTargets.includes(t.targetId)),
-    ...known.filter((t) => !state.pinnedTargets.includes(t.targetId)),
+    ...known.filter((t) => !state.pinnedTargets.includes(t.targetId) && !t.mutedByPlayer),
+    ...known.filter((t) => !state.pinnedTargets.includes(t.targetId) && t.mutedByPlayer),
   ];
   const [askOpenId, setAskOpenId] = useState<string>('');
   return (
@@ -1068,7 +1075,7 @@ function ChatView() {
               </div>
               {m.photoId && !isTyping && (
                 <div className="bubble-photo">
-                  <PhotoRender photoId={m.photoId} />
+                  <PhotoRender photoId={m.photoId} variant={m.variant} />
                 </div>
               )}
               {m.stamp && !isTyping && <div className="bubble-stamp">{m.stamp}</div>}

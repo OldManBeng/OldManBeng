@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
-"""批量生成朋友圈照片与老头发来的照片 25 张 PNG（ComfyUI 文生图 → public/photos + public/selfies）。
+"""批量生成朋友圈照片与老头发来的照片 PNG（ComfyUI 文生图 → public/photos + public/selfies）。
 
 用法:
-    python generate_scenes.py               # 生成全部 25 张（已存在的跳过）
+    python generate_scenes.py               # 生成全部 25 张基准图（已存在的跳过）
     python generate_scenes.py --only cat      # 只重新生成某一张（id 全局唯一）
+    python generate_scenes.py --variants      # 生成全部 125 张变体（{id}_v2.._v6，每张 ×5）
+    python generate_scenes.py --only cat --variants   # 只生成某一张的 5 个变体
+    python generate_scenes.py --variants --seed-offset 3   # 变体种子 +3（re-roll 不合格图，不动 SEEDS）
     python generate_scenes.py --force          # 忽略已存在，全部重生成
-    python generate_scenes.py --dry-run        # 只打印各张 prompt
+    python generate_scenes.py --dry-run        # 只打印各张 prompt + 种子，不提交
 
 17 张照片（老头发来，public/photos/）+ 8 张自拍（女主朋友圈，public/selfies/），4:3 横构图。
-种子固定可复现，换种子改 SEEDS 再 --only 重跑。
+基准图种子在 SEEDS（20260922..），v4.12 变体种子在 VARIANT_SEEDS（20261100..），均固定可复现。
 """
 import argparse
 import os
@@ -84,7 +87,7 @@ SELFIES = {
     "grind": "深夜办公格子间照片：画面里没有任何人，只有一台笔记本电脑屏幕上是代码编辑器（唯一光源），键盘背光，桌上一杯凉咖啡，01:47 的疲惫",
     "travel": "日落盘山公路照片（从车内向右侧车窗拍的干净视角：画面里没有后视镜、没有车门、没有旁边其他车辆），渐变天空与低垂太阳的光晕，远山剪影，下方虚线蜿蜒的盘山公路，镜头光晕，公路旅行",
     "boba": "桌上的奶茶杯照片：杯里的奶茶不要太满（液面在杯口下两指），侧光透过杯身，奶盖与杯内波纹，沉底的珍珠分三层，红色吸管，杯套素色无字，随拍",
-    "sick": "病房特写照片：画面里看不到整个人，只看到一位年轻女性的纤细手臂，手背贴着输液胶布连着输液管，输液管向上连接半空的药袋、一滴正在下落，冷走廊光与一盏暖床头灯，02:40 的孤独",
+    "sick": "病房特写照片：画面里看不到整个人，只看到一位年轻女性的纤细白皙手臂，手臂修长皮肤细腻无汗毛，前臂静脉隐约可见，手背贴着输液胶布连着输液管，输液管向上连接半空的药袋、一滴正在下落，冷走廊光与一盏暖床头灯，02:40 的孤独——绝对不要粗壮的手臂、绝对不要男性手臂、绝对不要中老年手臂、绝对不要汗毛重的皮肤",
 }
 
 # 合并去重表（id 全局唯一）。每张固定种子，记录最终采用的可复现。
@@ -100,12 +103,21 @@ SEEDS["wang_overtime"] = 20260953
 # arch_chess：采用主批 20260937 的 arch_chess_00001_（用户指定沿用最初版）。
 SEEDS["arch_chess"] = 20260937
 
+# ---- v4.12：每张 ×5 同主题变体（{id}_v2.._v6）种子区段 ----
+# 独立区段 20261100..20261124，不撞基准种子 202609xx（基准图仍在 SEEDS）。
+# 提示词逐字复用（同主题），变体差异只来自种子 → 同场景、不同构图/光影。
+VARIANT_SEED_BASE = 20261100
+VARIANT_SEEDS = {}
+for _gi, _id in enumerate(_id_order):
+    for _v in range(2, 7):  # _v2.._v6
+        VARIANT_SEEDS[(_id, _v)] = VARIANT_SEED_BASE + _gi * 5 + (_v - 2)
+
 
 def out_dir_for(id_):
     return os.path.join(PROJECT, "public", "photos" if id_ in PHOTOS else "selfies")
 
 
-def patch_workflow(workflow, id_, seed=None):
+def patch_workflow(workflow, id_, seed=None, filename=None):
     body = PHOTOS[id_] if id_ in PHOTOS else SELFIES[id_]
     subdir = "photos" if id_ in PHOTOS else "selfies"
     workflow[STYLE_NODE]["inputs"]["value"] = SCENE_STYLE
@@ -113,13 +125,13 @@ def patch_workflow(workflow, id_, seed=None):
     workflow[SEED_NODE]["inputs"]["value"] = SEEDS[id_] if seed is None else seed
     workflow[SIZE_NODE]["inputs"]["width"] = LATENT_W
     workflow[SIZE_NODE]["inputs"]["height"] = LATENT_H
-    workflow[PREFIX_NODE]["inputs"]["filename_prefix"] = f"{subdir}/{id_}"
+    workflow[PREFIX_NODE]["inputs"]["filename_prefix"] = f"{subdir}/{filename or id_}"
 
 
-def resize_to_final(raw_path, id_):
+def resize_to_final(raw_path, id_, filename=None):
     out_dir = out_dir_for(id_)
     os.makedirs(out_dir, exist_ok=True)
-    final_path = os.path.join(out_dir, f"{id_}.png")
+    final_path = os.path.join(out_dir, f"{filename or id_}.png")
     with Image.open(raw_path) as im:
         im = im.convert("RGB").resize((FINAL_W, FINAL_H), Image.LANCZOS)
         im.save(final_path, optimize=True)
@@ -130,42 +142,53 @@ def main():
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-    parser = argparse.ArgumentParser(description="批量生成朋友圈照片与自拍 PNG")
+    parser = argparse.ArgumentParser(description="批量生成朋友圈照片与自拍 PNG（基准 25 张 + v4.12 变体 125 张）")
     parser.add_argument("--server", default="192.168.1.127:8188", help="ComfyUI 地址")
     parser.add_argument("--only", choices=_id_order, help="只生成指定 id")
+    parser.add_argument("--variants", action="store_true", help="生成变体 {id}_v2.._v6（每张 ×5）；不带则生成基准图 {id}.png")
+    parser.add_argument("--seed-offset", type=int, default=0, help="所有变体种子 +N（re-roll 不合格图，不改 SEEDS）")
     parser.add_argument("--force", action="store_true", help="已存在也重新生成")
-    parser.add_argument("--dry-run", action="store_true", help="只打印 prompt 不提交")
+    parser.add_argument("--dry-run", action="store_true", help="只打印 prompt+种子 不提交")
     args = parser.parse_args()
 
-    ids = [args.only] if args.only else _id_order
+    # 作业表：(id_, 输出文件名, 种子)。变体文件名 {id}_v{v}，基准 {id}。
+    jobs = []
+    for i in _id_order:
+        if args.only and i != args.only:
+            continue
+        if args.variants:
+            for v in range(2, 7):
+                jobs.append((i, f"{i}_v{v}", VARIANT_SEEDS[(i, v)] + args.seed_offset))
+        else:
+            jobs.append((i, i, SEEDS[i]))
 
     if args.dry_run:
         workflow = load_workflow(WORKFLOW_PATH)
-        for i in ids:
-            patch_workflow(workflow, i)
-            print(f"--- {i}（seed={SEEDS[i]}）---")
+        for i, stem, seed in jobs:
+            patch_workflow(workflow, i, seed=seed, filename=stem)
+            print(f"--- {stem}（seed={seed}）---")
             print(workflow[PROMPT_NODE]["inputs"]["string"])
             print()
         return
 
-    for i in ids:
-        final_path = os.path.join(out_dir_for(i), f"{i}.png")
+    for i, stem, seed in jobs:
+        final_path = os.path.join(out_dir_for(i), f"{stem}.png")
         if os.path.exists(final_path) and not args.force:
-            print(f"{i}: 已存在，跳过（--force 重生成）")
+            print(f"{stem}: 已存在，跳过（--force 重生成）")
             continue
         workflow = load_workflow(WORKFLOW_PATH)
-        patch_workflow(workflow, i)
-        client_id = f"py-scene-{i}-{os.getpid()}"
+        patch_workflow(workflow, i, seed=seed, filename=stem)
+        client_id = f"py-scene-{stem}-{os.getpid()}"
         prompt_id = queue_prompt(args.server, workflow, client_id)
-        print(f"{i}: 已提交 {prompt_id}（seed={SEEDS[i]}），等待生成...")
+        print(f"{stem}: 已提交 {prompt_id}（seed={seed}），等待生成...")
         history = wait_for_history(args.server, prompt_id)
         images = collect_images(history)
         if not images:
-            print(f"{i}: 任务完成但没有输出图片")
+            print(f"{stem}: 任务完成但没有输出图片")
             sys.exit(1)
         raw_path = download_image(args.server, images[0], RAW_DIR, prompt_id)
-        saved = resize_to_final(raw_path, i)
-        print(f"{i}: 已保存 {os.path.abspath(saved)}")
+        saved = resize_to_final(raw_path, i, stem)
+        print(f"{stem}: 已保存 {os.path.abspath(saved)}")
     print("完成")
 
 

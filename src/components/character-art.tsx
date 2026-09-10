@@ -1352,12 +1352,20 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
 // v2.4 美化重绘：统一暗角 + 光源方向 + 材质细节（金属/水波/烟雾/木纹），
 //               保留每张原有的构图与叙事（谁的世界、哪个时辰）。
 // ---------------------------------------------------------------------------
-export function PhotoRender({ photoId }: { photoId: string }) {
+/** v4.12：照片 URL——stage 0 尝试变体（variant>1 → _v{n}），stage≥1 回退基准图；
+ *  两级都 404 才落 SVG 兜底。 */
+function variantUrl(base: string, id: string, variant?: number, stage = 0): string {
+  if (stage === 0 && variant && variant > 1) return `${base}/${id}_v${variant}.png`;
+  return `${base}/${id}.png`;
+}
+
+export function PhotoRender({ photoId, variant }: { photoId: string; variant?: number }) {
   const scenes = PHOTO_SCENES[photoId];
-  const [failed, setFailed] = useState(false);
+  // stage: 0=变体/基准，1=基准图兜底，2=SVG 兜底。
+  const [stage, setStage] = useState(0);
   if (!scenes) return null;
   // v4.10 文生图 PNG（public/photos/）；加载失败回退下方 SVG 渲染（含 v3.0 摄影后期层）。
-  if (failed) {
+  if (stage >= 2) {
     // v3.0 摄影后期：光渗方向按 photoId 稳定哈希——每张照片有自己的光，但同图不变。
     let h = 0;
     for (let i = 0; i < photoId.length; i++) h = (h * 31 + photoId.charCodeAt(i)) >>> 0;
@@ -1405,9 +1413,11 @@ export function PhotoRender({ photoId }: { photoId: string }) {
       </svg>
     );
   }
+  const url = variantUrl('/photos', photoId, variant, stage);
   return (
     <img
-      src={`/photos/${photoId}.png`}
+      key={`${url}#s${stage}`}
+      src={url}
       alt="照片"
       /* 不用 lazy：部分移动 WebView（微信内置等）对懒加载+容器切换会解码失败
          误触发 onError 落进 SVG 兜底。这两类图都是"刚发生的动作"的结果，必在首屏。 */
@@ -1415,7 +1425,7 @@ export function PhotoRender({ photoId }: { photoId: string }) {
       width={768}
       height={576}
       style={{ width: '100%', height: 'auto', display: 'block' }}
-      onError={() => setFailed(true)}
+      onError={() => setStage((s) => Math.min(s + 1, 2))}
     />
   );
 }
@@ -2327,12 +2337,13 @@ function PhotoFx({ leak, lx, ly, warm = true }: { leak: string; lx: number; ly: 
   );
 }
 
-export function MomentPhoto({ selfieId }: { selfieId: string }) {
+export function MomentPhoto({ selfieId, variant }: { selfieId: string; variant?: number }) {
   const scene = SELFIE_SCENES[selfieId];
-  const [failed, setFailed] = useState(false);
+  // stage: 0=变体/基准，1=基准图兜底，2=SVG 兜底。
+  const [stage, setStage] = useState(0);
   if (!scene) return null;
   // v4.10 文生图 PNG（public/selfies/）；加载失败回退下方 SVG 渲染（含 v3.3 手机摄影后期层）。
-  if (failed) {
+  if (stage >= 2) {
     // v3.3 手机摄影质感：每张照片自己的白平衡偏移 + 偶发闪光热斑
     let hh = 0;
     for (let i = 0; i < selfieId.length; i++) hh = (hh * 31 + selfieId.charCodeAt(i)) >>> 0;
@@ -2358,16 +2369,18 @@ export function MomentPhoto({ selfieId }: { selfieId: string }) {
       </svg>
     );
   }
+  const url = variantUrl('/selfies', selfieId, variant, stage);
   return (
     <img
-      src={`/selfies/${selfieId}.png`}
+      key={`${url}#s${stage}`}
+      src={url}
       alt="朋友圈自拍"
       /* 同 PhotoRender：不用 lazy——移动 WebView 懒加载误触发 onError 会退回 SVG */
       decoding="async"
       width={768}
       height={576}
       style={{ width: '100%', height: 'auto', display: 'block' }}
-      onError={() => setFailed(true)}
+      onError={() => setStage((s) => Math.min(s + 1, 2))}
     />
   );
 }

@@ -12,7 +12,7 @@ import { ACTIVE_TARGETS } from '../types/target';
 import { scriptFor } from '../data/script-registry';
 import { DAY_EVENTS } from '../data/events';
 import { ENDINGS } from '../data/endings';
-import { makeRng } from '../utils/random';
+import { makeRng, pickVariant } from '../utils/random';
 import { nightStamp, formatMoney } from '../utils/format';
 import {
   clamp, replyMultiplier, applyOptionToTrust, resolveAsk, walletReady, askChance,
@@ -297,9 +297,12 @@ function maybePushPhoto(t: TargetState, rng: ReturnType<typeof makeRng>, transcr
   let idx = rng.int(0, photos.length - 1);
   if (idx === last && photos.length > 1) idx = (idx + 1) % photos.length;
   t.recentPhotoIdx = idx;
+  const pid = photos[idx];
   transcript.push({
     speaker: 'target' as const,
-    photoId: photos[idx],
+    photoId: pid,
+    // v4.12：变体由纯哈希派生（不消耗 RNG）——key 用会话内唯一序号（与 stamp 的 4+len 一致）。
+    variant: pickVariant(`${pid}#${activeHour}-${4 + transcript.length}`),
     text: '[图片]',
     stamp: nightStamp(activeHour, 4 + transcript.length),
   });
@@ -768,6 +771,7 @@ function runMorning(state: GameState) {
           author: 'target',
           targetId: t.targetId,
           photoId: beat.moment.photoId,
+          variant: pickVariant(`life_${beat.id}_${state.day}`),
           caption: beat.moment.caption,
           likes: [],
           comments: [],
@@ -846,6 +850,7 @@ function runMorning(state: GameState) {
         author: 'target',
         targetId: poster.targetId,
         photoId: pick.photoId,
+        variant: pickVariant(`t${poster.targetId}_${state.day}`),
         caption: rng.pick(pick.captions),
         likes: [],
         comments: [],
@@ -1077,6 +1082,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
         momentDay: s.day,
         author: 'player' as const,
         selfieId: action.selfieId,
+        variant: pickVariant(`${action.selfieId}#${s.day}`),
         caption: rng.pick(captions),
         likes: [] as string[],
         comments: [] as import('../types/game').MomentComment[],

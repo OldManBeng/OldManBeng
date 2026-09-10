@@ -17,6 +17,14 @@ npm test        # balance / simulation / v2-systems / safeguards 四类测试（
 npm run build   # 产物在 dist/
 ```
 
+## v4.12 照片变体：每张 ×5 同主题随机
+
+- **25 张照片各 5 个变体：** 17 张老头照片（`public/photos/{id}_v2.._v6.png`）+ 8 张自拍（`public/selfies/{id}_v2.._v6.png`），提示词逐字复用，变体差异只来自种子（独立种子段 20261100..20261124，不撞基准种子 202609xx）。共 **125 张新 PNG** + 25 张基准图 = 每 id 6 档。
+- **纯哈希派生变体：** 发送/发圈/发人生线动态时用 `pickVariant(出现key)`（FNV-1a 纯函数）算好 1..6，存进 `ChatMessage.variant` / `MomentPost.variant`。不消耗主 RNG 流，保种子确定性；同 key 必同图、跨渲染站点（直播/存档/朋友圈）稳定；旧存档缺省 → 基准图，零迁移。
+- **渲染三阶段回退：** `<img>` 先试变体 URL → 404 回落基准图 → 再 404 落 SVG 场景兜底（原摄影后期层保留）。
+- **生成管线：** `pytools/generate_scenes.py --variants` 批量 125 张；`--only <id> --variants` 单张；`--seed-offset N` 换种子重跑不合格图。
+- **关键种子锚：** `wang_overtime`（挂钟 01:30 证据锚）、`zhou_calligraphy`（「远」字）、`arch_chess`（棋局）、`bestie`（两张脸）——变体 review 时重点核对，不满足用 `--seed-offset` 重跑。
+
 ## v4.10 场景照片：文生图 PNG 管线（老头发来的照片 + 女主朋友圈自拍）
 
 - **剩余内容型 SVG 全部换图**：`PhotoRender`（17 张老头发来的照片，`public/photos/*.png`）与 `MomentPhoto`（8 张女主朋友圈自拍，`public/selfies/*.png`）改为渲染文生图 PNG（768×576，4:3 横构图，CSS 响应式填容器）。数据模型零改动（photoId/selfieId 语义不变），调用点（朋友圈 feed/存档/聊天气泡）零改动。
