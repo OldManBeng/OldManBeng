@@ -6,6 +6,7 @@ import { formatMoney } from '../utils/format';
 import { MONTHLY_GOAL as GOAL } from '../data/constants';
 import type { PersonaId } from '../types/persona';
 import { PersonaAvatar } from './character-art';
+import { Ico } from './icons';
 import { PROLOGUE_GATHAS } from '../data/gathas';
 import { GathaBlock } from './gatha-block';
 
@@ -113,7 +114,7 @@ export function TitleScreen() {
           新的一晚
         </button>
         <button className="btn small" onClick={() => { const v = !muted; setMuted(v); setM(v); }}>
-          {muted ? '🔇 音效关' : '🔊 音效开'}
+          <Ico name={muted ? 'spk-off' : 'spk-on'} size={14} /> {muted ? '音效关' : '音效开'}
         </button>
       </div>
       <div className="content-warning">

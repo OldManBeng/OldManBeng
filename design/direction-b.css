@@ -1,0 +1,99 @@
+/* =============================================================
+   方向 B —— Apple HIG + 轻度个性化（灯笼金）
+   骨架、控件、圆角、动效与方向 A 完全同源（hig-base.css）。
+   个性化收敛在四处，全部可指认：
+     1. 品牌色微调：「钱」的语义位从 systemGreen 换成灯笼金
+        （游戏既有的叙事色——金 = 钱与偈语），蓝仍是唯一的结构性主色；
+     2. 非对称排版：今天页 hero 采用 Apple Music 元数据式双列基线锁定
+        （左侧大号天数 / 右侧底对齐「还差」），不再是标准居中标题；
+     3. 深夜氛围：页面底色带极轻的蓝调与月光晕（凌晨三点的身份），
+        卡片仍守住 Apple 的分层面；
+     4. 偈语沿用楷体 + 灯笼金（金 = 钱与偈语，一处品牌色的自然延伸）。
+   ============================================================= */
+
+[data-theme="light"] {
+  --page: #F2F2F7;
+  --surface: #FFFFFF;
+  --surface-2: #E9E9EB;
+  --fill: rgba(120, 120, 128, 0.12);
+  --hover: rgba(120, 120, 128, 0.08);
+  --hover-strong: rgba(120, 120, 128, 0.16);
+  --label: #000000;
+  --label-2: rgba(60, 60, 67, 0.6);
+  --label-3: rgba(60, 60, 67, 0.3);
+  --sep: rgba(60, 60, 67, 0.29);
+  --accent: #007AFF; --accent-fill: #007AFF;   /* 结构性主色不动：systemBlue */
+  --money: #8F6512;      /* 灯笼金（浅底可读档）——品牌色微调落在这里 */
+  --ok: #34C759; --danger: #FF3B30; --warn: #FF9500;
+  --bubble-in: #E9E9EB; --bubble-ink: #000000;
+  --me-fill: #34C759; --on-me: #000000;
+  --desk: #E9EBF1; --desk-label: #000000; --desk-label-2: rgba(60, 60, 67, 0.6);
+  --desk-fill: rgba(120, 120, 128, 0.2);
+  --bezel: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] {
+  --page: #06070B;
+  --surface: #1C1E24;
+  --surface-2: #2A2C35;
+  --fill: rgba(120, 120, 128, 0.24);
+  --hover: rgba(120, 120, 128, 0.12);
+  --hover-strong: rgba(120, 120, 128, 0.22);
+  --label: #FFFFFF;
+  --label-2: rgba(235, 235, 245, 0.6);
+  --label-3: rgba(235, 235, 245, 0.3);
+  --sep: rgba(84, 84, 88, 0.6);
+  --accent: #0A84FF; --accent-fill: #0A84FF;
+  --money: #EFC878;      /* 灯笼金（深底亮档） */
+  --ok: #30D158; --danger: #FF453A; --warn: #FF9F0A;
+  --bubble-in: #262A33; --bubble-ink: #FFFFFF;
+  --me-fill: #30D158; --on-me: #000000;
+  --desk: #0F1116; --desk-label: #FFFFFF; --desk-label-2: rgba(235, 235, 245, 0.6);
+  --desk-fill: rgba(120, 120, 128, 0.32);
+  --bezel: rgba(255, 255, 255, 0.08);
+}
+
+/* ---- 个性化 3：深夜氛围底 ---- */
+/* 日间：极轻的冷调渐层；夜间：蓝黑底 + 顶部月光晕（凌晨三点的身份） */
+[data-theme="light"] .phone {
+  background: linear-gradient(180deg, #E7EBF4 0%, #F2F2F7 200px), #F2F2F7;
+}
+[data-theme="dark"] .phone {
+  background:
+    radial-gradient(120% 55% at 50% -6%, #1B2233 0%, rgba(27, 34, 51, 0) 55%),
+    linear-gradient(180deg, #0B0E14 0%, #06070B 240px),
+    #06070B;
+}
+/* 聊天推入页不丢月光 */
+[data-theme="light"] .view.chat {
+  background: linear-gradient(180deg, #E7EBF4 0%, #F2F2F7 200px), #F2F2F7;
+}
+[data-theme="dark"] .view.chat {
+  background:
+    radial-gradient(120% 55% at 50% -6%, #1B2233 0%, rgba(27, 34, 51, 0) 55%),
+    linear-gradient(180deg, #0B0E14 0%, #06070B 240px),
+    #06070B;
+}
+
+/* ---- 个性化 2：非对称 hero（Apple Music 元数据式基线锁定） ---- */
+.hero-b {
+  padding: var(--sp-3) var(--sp-2) 0;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: var(--sp-2);
+}
+.hero-b .eyebrow { margin: 0 0 6px; font-size: 13px; color: var(--label-2); }
+.hero-b h1 {
+  margin: 0; font-size: 38px; font-weight: 700;
+  letter-spacing: -0.5px; line-height: 1;
+}
+.hero-b h1 .mul { font-size: 19px; font-weight: 600; color: var(--label-3); letter-spacing: 0; }
+.hero-b .tail { text-align: right; line-height: 1.3; padding-bottom: 4px; }
+.hero-b .tail small { display: block; font-size: 11px; color: var(--label-3); }
+.hero-b .tail b {
+  display: block; font-size: 26px; font-weight: 700;
+  color: var(--money); letter-spacing: -0.3px; font-variant-numeric: tabular-nums;
+}
+
+/* ---- 个性化 1/4 的落点 ---- */
+.balance .amount { color: var(--money); }         /* 余额金：一处品牌色 */
+.gatha .verse { color: var(--money); }             /* 偈语金：金 = 钱与偈语 */

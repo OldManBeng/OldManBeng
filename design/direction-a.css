@@ -1,0 +1,52 @@
+/* =============================================================
+   方向 A —— 标准 Apple HIG（精准复刻）
+   色彩全部取 Apple 系统语义色，不做任何品牌化偏移：
+     主色 systemBlue（每屏唯一主 CTA）
+     语义色仅用于状态：systemGreen 进账 / systemRed 危险 / systemOrange 风险
+   深色为默认基调（贴合游戏深夜题材），日间模式为纯净 Apple 浅色。
+   她的气泡沿用微信绿 —— 聊天软件拟真优先于 iMessage 蓝。
+   ============================================================= */
+
+[data-theme="light"] {
+  --page: #F2F2F7;              /* systemGroupedBackground */
+  --surface: #FFFFFF;           /* 分组容器 / 卡片 */
+  --surface-2: #E9E9EB;         /* 抬升面 */
+  --fill: rgba(120, 120, 128, 0.12);   /* systemFill */
+  --hover: rgba(120, 120, 128, 0.08);
+  --hover-strong: rgba(120, 120, 128, 0.16);
+  --label: #000000;
+  --label-2: rgba(60, 60, 67, 0.6);    /* secondaryLabel */
+  --label-3: rgba(60, 60, 67, 0.3);    /* tertiaryLabel */
+  --sep: rgba(60, 60, 67, 0.29);       /* separator */
+  --accent: #007AFF; --accent-fill: #007AFF;   /* systemBlue */
+  --money: #34C759;                     /* systemGreen：进账状态 */
+  --ok: #34C759;                        /* systemGreen：信任 / 在线 */
+  --danger: #FF3B30; --warn: #FF9500;
+  --bubble-in: #E9E9EB; --bubble-ink: #000000;
+  --me-fill: #34C759; --on-me: #000000;        /* 她的气泡：微信绿 */
+  --desk: #E8E8ED; --desk-label: #000000; --desk-label-2: rgba(60, 60, 67, 0.6);
+  --desk-fill: rgba(120, 120, 128, 0.2);
+  --bezel: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] {
+  --page: #000000;              /* systemGroupedBackground (dark) */
+  --surface: #1C1C1E;
+  --surface-2: #2C2C2E;
+  --fill: rgba(120, 120, 128, 0.24);
+  --hover: rgba(120, 120, 128, 0.12);
+  --hover-strong: rgba(120, 120, 128, 0.22);
+  --label: #FFFFFF;
+  --label-2: rgba(235, 235, 245, 0.6);
+  --label-3: rgba(235, 235, 245, 0.3);
+  --sep: rgba(84, 84, 88, 0.6);
+  --accent: #0A84FF; --accent-fill: #0A84FF;   /* darkSystemBlue */
+  --money: #30D158;
+  --ok: #30D158;
+  --danger: #FF453A; --warn: #FF9F0A;
+  --bubble-in: #2C2C2E; --bubble-ink: #FFFFFF;
+  --me-fill: #30D158; --on-me: #000000;
+  --desk: #161618; --desk-label: #FFFFFF; --desk-label-2: rgba(235, 235, 245, 0.6);
+  --desk-fill: rgba(120, 120, 128, 0.32);
+  --bezel: rgba(255, 255, 255, 0.08);
+}

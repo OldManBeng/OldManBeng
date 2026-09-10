@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>方向 B · HIG + 灯笼金</title>
+<link rel="stylesheet" href="hig-base.css">
+<link rel="stylesheet" href="direction-b.css">
+</head>
+<body>
+
+<!-- SF-Symbols 风格图标（描边、同源参数由 .ico 继承）—— 全站不用 emoji -->
+<svg width="0" height="0"  aria-hidden="true"><defs>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11.5 12 4.5l8 7"/><path d="M6.2 10.2v9.3h11.6v-9.3"/><path d="M10.2 19.5v-4.6h3.6v4.6"/></symbol>
+  <symbol id="i-contacts" viewBox="0 0 24 24"><circle cx="12" cy="8.4" r="3.4"/><path d="M5.4 19.6c.9-3.7 3.5-5.5 6.6-5.5s5.7 1.8 6.6 5.5"/></symbol>
+  <symbol id="i-moments" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M15.6 8.4l-2.1 5.1-5.1 2.1 2.1-5.1z"/></symbol>
+  <symbol id="i-chats" viewBox="0 0 24 24"><path d="M3.5 7a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3h-6.5L6.5 20v-4a3 3 0 0 1-3-3z"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13.5" rx="3.5"/><path d="M20.5 10.5h-3.8a2 2 0 0 0 0 4h3.8"/></symbol>
+  <symbol id="i-persona" viewBox="0 0 24 24"><path d="M11 4l1.7 4.8 4.8 1.7-4.8 1.7L11 17l-1.7-4.8L4.5 10.5 9.3 8.8z"/><path d="M18.3 15.3l.8 2.1 2.1.8-2.1.8-.8 2.1-.8-2.1-2.1-.8 2.1-.8z"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M9.2 5.6 15.6 12l-6.4 6.4"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M14.8 5.6 8.4 12l6.4 6.4"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><circle cx="5.4" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.6" cy="12" r="1.6"/></g></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.4"/><path d="M15.7 15.7 20 20"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 19.6c-4.9-3-8.1-5.9-8.1-9.3 0-2.7 2-4.4 4.3-4.4 1.5 0 2.9.7 3.8 2 .9-1.3 2.3-2 3.8-2 2.3 0 4.3 1.7 4.3 4.4 0 3.4-3.2 6.3-8.1 9.3z"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M12 19.2V5.6"/><path d="M6.4 11.2 12 5.6l5.6 5.6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6l4.8 4.8L19 7.6"/></symbol>
+  <symbol id="i-in" viewBox="0 0 24 24"><path d="M17.4 6.6 6.6 17.4"/><path d="M14.6 17.4H6.6V9.4"/></symbol>
+  <symbol id="i-out" viewBox="0 0 24 24"><path d="M6.6 6.6l10.8 10.8"/><path d="M9.4 6.6h8v8"/></symbol>
+  <symbol id="i-park" viewBox="0 0 24 24"><path d="M12 3.6 7.8 10h8.4z"/><path d="M12 8.4 6.2 15h11.6z"/><path d="M12 15v5.4"/></symbol>
+  <symbol id="i-gym" viewBox="0 0 24 24"><path d="M7.2 9v6M4.4 10.4v3.2M16.8 9v6M19.6 10.4v3.2M7.2 12h9.6"/></symbol>
+  <symbol id="i-market" viewBox="0 0 24 24"><path d="M4.6 9.6h14.8l-1.4 8.9H6z"/><path d="M8.6 9.6 12 4.4l3.4 5.2"/></symbol>
+  <symbol id="i-chess" viewBox="0 0 24 24"><circle cx="12" cy="7.4" r="2.6"/><path d="M9.6 17.2c0-3.6 1-5.2 2.4-6.8 1.4 1.6 2.4 3.2 2.4 6.8z"/><path d="M7.8 19.6h8.4"/></symbol>
+  <symbol id="i-music" viewBox="0 0 24 24"><path d="M9.2 18.4V6.2l9-1.6v11.6"/><circle cx="6.9" cy="18.4" r="2.3"/><circle cx="16" cy="16.2" r="2.3"/></symbol>
+  <symbol id="i-net" viewBox="0 0 24 24"><rect x="4" y="4.8" width="16" height="11.2" rx="2.4"/><path d="M9.5 19.8h5M12 16v3.8"/></symbol>
+  <symbol id="i-drive" viewBox="0 0 24 24"><path d="M4.8 13.8 6.2 9.6A2.4 2.4 0 0 1 8.5 8h7a2.4 2.4 0 0 1 2.3 1.6l1.4 4.2"/><rect x="3.6" y="13.8" width="16.8" height="4" rx="1.8"/><circle cx="7.6" cy="17.8" r="1.6"/><circle cx="16.4" cy="17.8" r="1.6"/></symbol>
+</defs></svg>
+
+<div class="desk">
+  <div class="toolbar">
+    <span class="dir">方向 B · 灯笼金</span>
+    <button type="button" class="tool-btn" data-set-theme="light">浅色</button>
+    <button type="button" class="tool-btn" data-set-theme="dark">深色</button>
+    <a href="a.html">← 方向 A</a>
+  </div>
+
+  <div class="phone">
+    <div class="views">
+
+      <!-- ===== 今天 ===== -->
+      <section class="view" id="view-today">
+        <header class="hero-b">
+          <div>
+            <p class="eyebrow">凌晨三点 · 账单 −¥53/天</p>
+            <h1>第 12 天<span class="mul"> / 30</span></h1>
+          </div>
+          <div class="tail">
+            <small>还差</small>
+            <b class="num">¥638</b>
+          </div>
+        </header>
+
+        <div class="stat-row">
+          <div class="stat"><div class="v num">¥862</div><div class="k">余额</div></div>
+          <div class="stat"><div class="v num">¥638</div><div class="k">还差</div></div>
+          <div class="stat"><div class="v num warn">12%</div><div class="k">风险</div></div>
+        </div>
+        <div class="progress"><i class="w57"></i></div>
+        <p class="note">本月已入 ¥862 / 目标 ¥1500。月底交不上房租，游戏结束。</p>
+
+        <div class="block">
+          <div class="incoming clickable" id="openChat">
+            <span class="ava-wrap">
+              <img class="ava" src="../public/oldmen/lao_li.png" alt="老李">
+              <i class="ava-dot"></i>
+            </span>
+            <div class="inc-body">
+              <div class="inc-name"><b>老李</b><span class="chip ok"><span class="dot"></span>在线</span></div>
+              <p class="inc-text">在吗 收音机响着 屋里就我一个活人</p>
+              <p class="inc-meta">23:41 · 信任 58/100 · 点开回复</p>
+            </div>
+            <svg class="ico chev"><use href="#i-chevron"/></svg>
+          </div>
+        </div>
+
+        <div class="block">
+          <h2 class="section-title">今日计划</h2>
+          <div class="list">
+            <button type="button" class="cell with-icon on">
+              <span class="cell-icon"><svg class="ico"><use href="#i-park"/></svg></span>
+              <span class="cell-main"><b>公园走一圈</b><small>傍晚的江边公园。跑步的、遛狗的、下棋的、钓鱼的——全在这。</small></span>
+              <span class="cell-meta num">精力 −2</span>
+              <svg class="ico check"><use href="#i-check"/></svg>
+            </button>
+            <button type="button" class="cell with-icon">
+              <span class="cell-icon"><svg class="ico"><use href="#i-home"/></svg></span>
+              <span class="cell-main"><b>宅家刷手机</b><small>不化妆，不出门。外卖、短视频、修图。省精力，但也遇不到任何人。</small></span>
+              <span class="cell-meta num">0 精力</span>
+            </button>
+            <button type="button" class="cell with-icon">
+              <span class="cell-icon"><svg class="ico"><use href="#i-market"/></svg></span>
+              <span class="cell-main"><b>菜市场买菜</b><small>学做饭的第一步。摊主会多送你一把葱，你忽然想起有人也是这么被哄的。</small></span>
+              <span class="cell-meta num">¥ −35</span>
+            </button>
+            <button type="button" class="cell with-icon">
+              <span class="cell-icon"><svg class="ico"><use href="#i-net"/></svg></span>
+              <span class="cell-main"><b>去网吧开黑</b><small>通宵包早面38。柜台后面那只橘猫认得你了。</small></span>
+              <span class="cell-meta num">精力 −3</span>
+            </button>
+            <button type="button" class="cell with-icon">
+              <span class="cell-icon"><svg class="ico"><use href="#i-drive"/></svg></span>
+              <span class="cell-main"><b>夜班代驾蹲单</b><small>在酒吧街口等代驾单。凌晨的客人什么都有——包括话多的老板。</small></span>
+              <span class="cell-meta money num">+120</span>
+            </button>
+          </div>
+          <p class="list-footer">选一个去处——今晚遇到谁，由此决定。</p>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn primary" id="openSheet">查看今日简报</button>
+        </div>
+      </section>
+
+      <!-- ===== 朋友圈 ===== -->
+      <section class="view" id="view-moments" hidden>
+        <header class="hero">
+          <h1 class="large-title">朋友圈</h1>
+          <p class="hero-sub">老头们的深夜，比你想的热闹</p>
+        </header>
+
+        <div class="block">
+          <article class="moment">
+            <div class="moment-head">
+              <img class="ava" src="../public/oldmen/lao_li.png" alt="老李">
+              <span><b>老李</b><small>23:47 · 凌晨的高架</small></span>
+            </div>
+            <p class="moment-caption">这台收音机比车龄都大。今晚放的是《夜半歌声》。</p>
+            <img class="moment-photo" src="../public/photos/lao_li_radio_night.png" alt="车载收音机">
+            <div class="moment-inter">
+              <div class="likes"><svg class="ico"><use href="#i-heart"/></svg>老陈，看门老赵</div>
+              <div class="comment"><b>王总</b>：兄弟这不是夜半歌声，是夜半可惜哈哈</div>
+              <div class="comment"><b>老李</b>：车龄二十年 收音机零岁</div>
+            </div>
+          </article>
+        </div>
+
+        <div class="block">
+          <article class="moment">
+            <div class="moment-head">
+              <img class="ava" src="../public/oldmen/zhou.png" alt="周老师">
+              <span><b>周老师</b><small>9:12 · 社区书法班</small></span>
+            </div>
+            <p class="moment-caption">今日习字：宁静致远。第四十个年头，还是写不好那个“远”。</p>
+            <img class="moment-photo" src="../public/photos/zhou_calligraphy.png" alt="书法">
+            <div class="moment-inter">
+              <div class="likes"><svg class="ico"><use href="#i-heart"/></svg>阿豪，陈工</div>
+              <div class="comment"><b>阿豪</b>：周老师下次教我写「发」字呗</div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ===== 聊天记录 ===== -->
+      <section class="view" id="view-logs" hidden>
+        <header class="hero">
+          <h1 class="large-title">聊天记录</h1>
+          <p class="hero-sub">每一场对话都花精力，也都留下痕迹</p>
+        </header>
+        <div class="block">
+          <div class="list">
+            <button type="button" class="cell with-ava">
+              <img class="ava" src="../public/oldmen/lao_li.png" alt="">
+              <span class="cell-main"><b>老李</b><small>他等你回话 · 今晚还差 2 条</small></span>
+              <span class="cell-meta">昨夜</span>
+              <svg class="ico chev"><use href="#i-chevron"/></svg>
+            </button>
+            <button type="button" class="cell with-ava">
+              <img class="ava" src="../public/oldmen/zhou.png" alt="">
+              <span class="cell-main"><b>周老师</b><small>从书法班聊到了那口挂钟</small></span>
+              <span class="cell-meta">周三</span>
+              <svg class="ico chev"><use href="#i-chevron"/></svg>
+            </button>
+            <button type="button" class="cell with-ava">
+              <img class="ava" src="../public/oldmen/wang.png" alt="">
+              <span class="cell-main"><b>王总</b><small>车库那通电话，聊到他儿子</small></span>
+              <span class="cell-meta">周一</span>
+              <svg class="ico chev"><use href="#i-chevron"/></svg>
+            </button>
+            <div class="cell with-ava mute static">
+              <img class="ava" src="../public/oldmen/chen.png" alt="">
+              <span class="cell-main"><b>陈工</b><small>还没说过话</small></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 钱包 ===== -->
+      <section class="view" id="view-wallet" hidden>
+        <header class="hero">
+          <h1 class="large-title">钱包</h1>
+        </header>
+        <div class="balance">
+          <h2 class="amount num">¥862</h2>
+          <p class="sub">本月目标 ¥1500 · 第 12 天</p>
+        </div>
+        <div class="goal-line"><span>已入 ¥862</span><span>还差 ¥638</span></div>
+        <div class="progress"><i class="w57"></i></div>
+
+        <div class="block">
+          <h2 class="section-title">最近流水</h2>
+          <div class="list">
+            <div class="cell static">
+              <span class="cell-icon money"><svg class="ico"><use href="#i-in"/></svg></span>
+              <span class="cell-main"><b>老李 转账</b><small>加油钱 别嫌少</small></span>
+              <span class="cell-meta money num">+66</span>
+            </div>
+            <div class="cell static">
+              <span class="cell-icon money"><svg class="ico"><use href="#i-in"/></svg></span>
+              <span class="cell-main"><b>夜班代驾收入</b><small>酒吧街 · 3 单</small></span>
+              <span class="cell-meta money num">+120</span>
+            </div>
+            <div class="cell static">
+              <span class="cell-icon"><svg class="ico"><use href="#i-out"/></svg></span>
+              <span class="cell-main"><b>健身房打卡</b><small>分期买的会员卡</small></span>
+              <span class="cell-meta num">−20</span>
+            </div>
+            <div class="cell static">
+              <span class="cell-icon"><svg class="ico"><use href="#i-out"/></svg></span>
+              <span class="cell-main"><b>去网吧开黑</b><small>通宵包早面</small></span>
+              <span class="cell-meta num">−38</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="block">
+          <h2 class="section-title">每月固定支出</h2>
+          <div class="list">
+            <div class="cell static"><span class="cell-icon">房</span><span class="cell-main"><b>房租（单间）</b></span><span class="cell-meta num">¥900</span></div>
+            <div class="cell static"><span class="cell-icon">话</span><span class="cell-main"><b>手机话费+流量</b></span><span class="cell-meta num">¥60</span></div>
+            <div class="cell static"><span class="cell-icon">员</span><span class="cell-main"><b>美颜相机会员</b></span><span class="cell-meta num">¥25</span></div>
+            <div class="cell static"><span class="cell-icon">食</span><span class="cell-main"><b>伙食（省着吃）</b></span><span class="cell-meta num">¥600</span></div>
+          </div>
+          <p class="list-footer">每月合计 ¥1585 ≈ 每天 ¥53。这是“还差”的起点。</p>
+        </div>
+      </section>
+
+      <!-- ===== 通讯录 ===== -->
+      <section class="view" id="view-contacts" hidden>
+        <header class="hero">
+          <h1 class="large-title">通讯录</h1>
+          <p class="hero-sub">五个人，五种孤独</p>
+        </header>
+        <div class="search"><svg class="ico"><use href="#i-search"/></svg>搜索：老李、王总…</div>
+        <div class="list">
+          <button type="button" class="cell with-ava">
+            <span class="ava-wrap"><img class="ava" src="../public/oldmen/lao_li.png" alt=""><i class="ava-dot"></i></span>
+            <span class="cell-main"><b>老李</b><small>夜班出租 · 139****6207</small></span>
+            <span class="cell-meta num">23:00</span>
+            <svg class="ico chev"><use href="#i-chevron"/></svg>
+          </button>
+          <button type="button" class="cell with-ava">
+            <img class="ava" src="../public/oldmen/zhou.png" alt="">
+            <span class="cell-main"><b>周老师</b><small>社区书法班 · 管茶水</small></span>
+            <span class="cell-meta num">09:00</span>
+            <svg class="ico chev"><use href="#i-chevron"/></svg>
+          </button>
+          <button type="button" class="cell with-ava">
+            <img class="ava" src="../public/oldmen/wang.png" alt="">
+            <span class="cell-main"><b>王总</b><small>AAA建材 · 量大从优</small></span>
+            <span class="cell-meta num">01:00</span>
+            <svg class="ico chev"><use href="#i-chevron"/></svg>
+          </button>
+          <button type="button" class="cell with-ava">
+            <img class="ava" src="../public/oldmen/hao.png" alt="">
+            <span class="cell-main"><b>阿豪</b><small>豪杰网咖 · 猫比人多</small></span>
+            <span class="cell-meta num">21:00</span>
+            <svg class="ico chev"><use href="#i-chevron"/></svg>
+          </button>
+          <button type="button" class="cell with-ava">
+            <img class="ava" src="../public/oldmen/chen.png" alt="">
+            <span class="cell-main"><b>陈工</b><small>现在只修自己家的钟</small></span>
+            <span class="cell-meta num">22:00</span>
+            <svg class="ico chev"><use href="#i-chevron"/></svg>
+          </button>
+        </div>
+        <p class="list-footer">时间对不上的人，今晚就遇不到。</p>
+      </section>
+
+      <!-- ===== 人设 ===== -->
+      <section class="view" id="view-persona" hidden>
+        <header class="hero">
+          <h1 class="large-title">人设</h1>
+          <p class="hero-sub">她的外壳，和说话的方式</p>
+        </header>
+        <div class="block">
+          <h2 class="section-title">选一张脸</h2>
+          <div class="avatar-grid">
+            <button type="button" class="pick"><img src="../public/avatars/avatar-1.png" alt=""></button>
+            <button type="button" class="pick"><img src="../public/avatars/avatar-2.png" alt=""></button>
+            <button type="button" class="pick"><img src="../public/avatars/avatar-3.png" alt=""></button>
+            <button type="button" class="pick"><img src="../public/avatars/avatar-4.png" alt=""></button>
+            <button type="button" class="pick"><img src="../public/avatars/avatar-5.png" alt=""></button>
+            <button type="button" class="pick on"><img src="../public/avatars/avatar-6.png" alt=""></button>
+            <button type="button" class="pick"><img src="../public/avatars/avatar-7.png" alt=""></button>
+            <button type="button" class="pick"><img src="../public/avatars/avatar-8.png" alt=""></button>
+            <button type="button" class="pick"><img src="../public/avatars/avatar-9.png" alt=""></button>
+            <button type="button" class="pick"><img src="../public/avatars/avatar-10.png" alt=""></button>
+          </div>
+        </div>
+        <div class="block">
+          <h2 class="section-title">说话人设</h2>
+          <div class="segment">
+            <button type="button" class="seg">学妹</button>
+            <button type="button" class="seg on">知心姐姐</button>
+            <button type="button" class="seg">御姐</button>
+            <button type="button" class="seg">文青</button>
+          </div>
+          <p class="note">「今天辛苦了」——知心姐姐：稳、暖、不越界。对老李 <b class="money">+12</b> 亲和。</p>
+          <p class="note">注意：「御姐」会吓退周老师；老李也不吃这套。</p>
+        </div>
+      </section>
+
+      <!-- ===== 聊天（推入页） ===== -->
+      <section class="view chat" id="chat">
+        <header class="chat-head">
+          <button type="button" class="icon-btn" id="closeChat" aria-label="返回"><svg class="ico"><use href="#i-back"/></svg></button>
+          <img class="ava sm" src="../public/oldmen/lao_li.png" alt="老李">
+          <div class="chat-title">
+            <b>李师傅（夜班）</b>
+            <span>夜班出租 · 一对一接送 · 在线</span>
+          </div>
+          <button type="button" class="icon-btn" aria-label="更多"><svg class="ico"><use href="#i-more"/></svg></button>
+        </header>
+
+        <div class="bubbles">
+          <div class="ts">23:41</div>
+          <p class="narr">凌晨。他的收音机在响，屋里就他一个人。</p>
+          <div class="bubble in">收车了 十六单 嗓子哑了 饭还没吃</div>
+          <div class="bubble media"><img src="../public/photos/lao_li_radio_night.png" alt="车载收音机"></div>
+          <div class="bubble in">这台收音机比我车龄都大 今晚放的是夜半歌声</div>
+          <div class="bubble out">辛苦啦李师傅。饭要趁热吃，收音机就当我在陪你说话。</div>
+          <div class="bubble packet"><b>¥66</b><small>加油钱 别嫌少</small></div>
+          <p class="narr">他在等你接话。每一条回复，都花精力。</p>
+        </div>
+
+        <p class="opt-meta">选择回复 · 精力 11/16 · 人设会改变他的信任</p>
+        <div class="opts">
+          <button type="button" class="option">
+            <span class="chip accent">知心姐姐</span>
+            <span class="opt-text">收车这么晚 吃过饭没有 别凑合</span>
+          </button>
+          <button type="button" class="option">
+            <span class="chip accent">学妹</span>
+            <span class="opt-text">哥哥辛苦啦 我给你点了热豆浆 骑手刚走</span>
+          </button>
+          <button type="button" class="option">
+            <span class="chip">自拟</span>
+            <span class="opt-text">明天带我去江边 看看您的钓竿吧</span>
+          </button>
+        </div>
+
+        <div class="input-bar">
+          <input class="field" type="text" placeholder="说点什么…">
+          <button type="button" class="send" aria-label="发送"><svg class="ico"><use href="#i-send"/></svg></button>
+        </div>
+      </section>
+
+    </div><!-- /.views -->
+
+    <nav class="tabbar">
+      <div class="tabs">
+        <button type="button" class="tab on" data-target="#view-today"><span class="icon"><svg class="ico"><use href="#i-home"/></svg></span>今天</button>
+        <button type="button" class="tab" data-target="#view-contacts"><span class="icon"><svg class="ico"><use href="#i-contacts"/></svg><i class="bdot"></i></span>通讯录</button>
+        <button type="button" class="tab" data-target="#view-moments"><span class="icon"><svg class="ico"><use href="#i-moments"/></svg></span>朋友圈</button>
+        <button type="button" class="tab" data-target="#view-logs"><span class="icon"><svg class="ico"><use href="#i-chats"/></svg></span>聊天记录</button>
+        <button type="button" class="tab" data-target="#view-wallet"><span class="icon"><svg class="ico"><use href="#i-wallet"/></svg></span>钱包</button>
+        <button type="button" class="tab" data-target="#view-persona"><span class="icon"><svg class="ico"><use href="#i-persona"/></svg></span>人设</button>
+      </div>
+      <div class="home-indicator"></div>
+    </nav>
+
+    <div class="scrim" id="scrim"></div>
+    <section class="sheet" id="sheet">
+      <div class="grabber"></div>
+      <h2 class="sheet-title">今日简报</h2>
+      <div class="stat-row">
+        <div class="stat"><div class="v num">11/16</div><div class="k">精力</div></div>
+        <div class="stat"><div class="v num">−¥53</div><div class="k">今日账单</div></div>
+        <div class="stat"><div class="v num warn">12%</div><div class="k">风险</div></div>
+      </div>
+      <figure class="gatha">
+        <p class="verse">此有故彼有，此生故彼生。</p>
+        <figcaption class="src">《杂阿含经》</figcaption>
+      </figure>
+      <button type="button" class="btn primary block" id="sheetGo">开始今天</button>
+    </section>
+  </div><!-- /.phone -->
+</div><!-- /.desk -->
+
+<script>
+  const $ = (s, el) => (el || document).querySelector(s);
+  const $$ = (s, el) => Array.from((el || document).querySelectorAll(s));
+
+  // 主题切换
+  $$('[data-set-theme]').forEach(btn =>
+    btn.addEventListener('click', () => { document.documentElement.dataset.theme = btn.dataset.setTheme; }));
+
+  // 页签
+  const tabs = $$('.tab');
+  const pages = $$('.view:not(.chat)');
+  tabs.forEach(tab => tab.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.toggle('on', t === tab));
+    const target = $(tab.dataset.target);
+    pages.forEach(v => { v.hidden = v !== target; });
+  }));
+
+  // 聊天推入
+  $('#openChat').addEventListener('click', () => $('#chat').classList.add('open'));
+  $('#closeChat').addEventListener('click', () => $('#chat').classList.remove('open'));
+
+  // 简报 sheet
+  const sheet = $('#sheet'), scrim = $('#scrim');
+  const closeSheet = () => { sheet.classList.remove('open'); scrim.classList.remove('open'); };
+  $('#openSheet').addEventListener('click', () => { sheet.classList.add('open'); scrim.classList.add('open'); });
+  scrim.addEventListener('click', closeSheet);
+  $('#sheetGo').addEventListener('click', closeSheet);
+</script>
+</body>
+</html>

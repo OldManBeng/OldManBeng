@@ -6,6 +6,8 @@ import { playMessage, playSend, playPacket, playFail, playBlocked, playMorning }
 import { useEffect, useRef, useState } from 'react';
 import { INDUSTRY_COURSE_COST, CHAT_SESSION_COST } from '../data/constants';
 import { DAILY_PLANS } from '../data/plans';
+import { Ico } from './icons';
+import type { IconName } from './icons';
 import { SELFIE_META, MOMENT_PLAYER_COMMENTS, playerCommentPool } from '../data/moments';
 import { DIRECT_ASK_AMOUNTS, DIRECT_ASK_REASONS, reasonForAmount } from '../data/direct-ask';
 import { INCIDENTS } from '../data/incidents';
@@ -84,10 +86,16 @@ function NavIcon({ name }: { name: ModuleTab }) {
   }
 }
 
-/** 计划图标（今天去哪）。 */
-const PLAN_ICONS: Record<string, string> = {
-  plan_home: '🏠', plan_park: '🌳', plan_gym: '🏃', plan_market: '🛵',
-  plan_chess: '♟', plan_square: '🎶', plan_netbar: '🎮', plan_overnight: '🚕',
+/** 计划图标（今天去哪）——SF 风格描边 SVG（v4.11 emoji 全面退场）。 */
+const PLAN_ICONS: Record<string, IconName> = {
+  plan_home: 'home', plan_park: 'park', plan_gym: 'gym', plan_market: 'market',
+  plan_chess: 'chess', plan_square: 'square', plan_netbar: 'net', plan_overnight: 'car',
+};
+
+/** 自拍格图标（发圈器）——与 SELFIE_META 的 id 一一对应（emoji 字段保留给测试 blob，不再上屏）。 */
+const SELFIE_ICONS: Record<string, IconName> = {
+  bestie: 'bestie', gym: 'run', pool: 'pool', cat: 'cat',
+  grind: 'laptop', travel: 'mountain', boba: 'boba', sick: 'iv',
 };
 
 /** v3.1 「新的一天」简报弹框。
@@ -109,13 +117,13 @@ function DayBriefingModal() {
     if (i >= 0) { verse = gatha.details.slice(0, i); source = gatha.details.slice(i + 2); }
     else verse = gatha.details;
   }
-  const rows: { ico: string; label: string; text: string }[] = [];
+  const rows: { ico: IconName; label: string; text: string }[] = [];
   // v4.3.1（审查 P1-4）："带你的姐"的忠告——只在第一天，教学藏在世界观里。
   // 三条规则各自对应引擎机制：开口阶段门槛 / 钱包 3 天冷却 / 已读不回的代价。
   // 她的结局（inc_sister_caught）在 v4.2 已埋——第一天这里说"教不了了"。
   if (day === 1) {
     rows.push({
-      ico: '💬',
+      ico: 'chat',
       label: '姐的微信',
       text: '第一天，记三条。｜一，别急着开口。他们这种人，要的是脸，你一急就成生意了。｜二，一个钱包三天一挖，挖秃了就再没有了。三个哥哥轮着来。｜三，别划掉不回。孤独的人记仇，记得比谁都清。｜剩下的，你自己长。我教不了了。',
     });
@@ -124,28 +132,28 @@ function DayBriefingModal() {
   // 后面 29 天 HUD 的（活命钱）（债）副标签都挂着这一行。
   if (day === 1) {
     rows.push({
-      ico: '💵',
+      ico: 'cash',
       label: '这个月的账',
       text: '本月最低还款 1,500。打工的钱是活命钱——房租、话费、吃饭，全从那里出。能填上这个坑的，只有他们给的钱。',
     });
   }
-  if (bill) rows.push({ ico: '🧾', label: '今日开销', text: bill.details });
+  if (bill) rows.push({ ico: 'bill', label: '今日开销', text: bill.details });
   // "无事发生"不值得占一行——安静的早晨也是一种信息。
-  if (event && event.details !== '无事发生的一天。') rows.push({ ico: '🎲', label: '今天的事', text: event.details });
+  if (event && event.details !== '无事发生的一天。') rows.push({ ico: 'dice', label: '今天的事', text: event.details });
   // v4.0 他的人生线：不等她上线，日子照过。晨报里多一行——他今天过着什么日子。
   for (const l of entries) {
-    if (l.kind === 'life') rows.push({ ico: '🕰', label: '他的今天', text: l.details });
+    if (l.kind === 'life') rows.push({ ico: 'clock', label: '他的今天', text: l.details });
   }
   // v4.1 节奏日：Day 5/10/15/20/25 必现的世界节点——正文走 beat 行（⏳），
   // 有决策的（妈的电话/群里出事/半程账单）紧跟着出决策卡。
   const beatLog = entries.find((l) => l.kind === 'beat');
   if (beatLog) {
-    rows.push({ ico: '⏳', label: '这个月', text: beatLog.details.replace(/^[^——]+——/, '') });
+    rows.push({ ico: 'hourglass', label: '这个月', text: beatLog.details.replace(/^[^——]+——/, '') });
   }
   // v4.2 突发事件：横生枝节的早晨——先看一眼（⚡ 行），决策卡在下面。
   const incLog = entries.find((l) => l.kind === 'incident');
   if (incLog) {
-    rows.push({ ico: '⚡', label: '今天出事了', text: incLog.details.replace(/^[^——]+——/, '') });
+    rows.push({ ico: 'bolt', label: '今天出事了', text: incLog.details.replace(/^[^——]+——/, '') });
   }
   const beatDef = beatLog ? WORLD_BEAT_BY_DAY[day] : undefined;
   const beatBody = beatDef
@@ -171,7 +179,7 @@ function DayBriefingModal() {
           const i = rowIdx++;
           return (
             <div key={r.label} className="briefing-row" style={{ animationDelay: delay(i) }}>
-              <span className="briefing-ico">{r.ico}</span>
+              <span className="briefing-ico"><Ico name={r.ico} size={22} /></span>
               <div className="briefing-row-body">
                 <div className="briefing-label">{r.label}</div>
                 {/* v4.3.3 修：弹框行里的 ｜ 是连发分隔——按段换行渲染，不再露出分隔符。 */}
@@ -201,7 +209,7 @@ function DayBriefingModal() {
           if (!inc) return null;
           return (
             <div className="beat-card incident" style={{ animationDelay: delay(rowIdx) }}>
-              <div className="beat-title">⚡ {inc.title}</div>
+              <div className="beat-title"><Ico name="bolt" size={14} /> {inc.title}</div>
               <div className="beat-body">{inc.body}</div>
               <div className="beat-options">
                 {inc.options.map((opt, i) => (
@@ -421,7 +429,7 @@ function TodayPanel({ phaseLabel }: { phaseLabel: string }) {
         if (!inc) return null;
         return (
           <div className="beat-card inline incident">
-            <div className="beat-title">⚡ {inc.title}</div>
+            <div className="beat-title"><Ico name="bolt" size={14} /> {inc.title}</div>
             <div className="beat-body">{inc.body}</div>
             <div className="beat-options">
               {inc.options.map((opt, i) => (
@@ -513,13 +521,13 @@ function PlanPanel() {
         aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
-        <span className="plan-bar-ico">{PLAN_ICONS[state.todayPlan] ?? '📍'}</span>
+        <span className="plan-bar-ico"><Ico name={PLAN_ICONS[state.todayPlan] ?? 'pin'} size={18} /></span>
         <span className="plan-bar-label">
           {chosen
             ? <>今天的计划 · <strong>{chosen.name}</strong> <span className="plan-note">已定，明天可换</span></>
             : <>今天的计划还没定 <span className="muted">· 点开挑一个，今晚在哪看这个</span></>}
         </span>
-        <span className="plan-bar-caret" aria-hidden>{open ? '▴' : '▾'}</span>
+        <span className="plan-bar-caret" aria-hidden><Ico name={open ? 'chev-up' : 'chev-down'} size={14} /></span>
       </button>
       <div className="plan-bar-body">
         {/* v4.3.3 单子包装：0fr↔1fr 折叠动画要求 grid 容器只有一个子项
@@ -534,7 +542,7 @@ function PlanPanel() {
               <div className="plan-grid">
                 {DAILY_PLANS.map((p) => (
                   <button key={p.id} className="plan-card" onClick={() => { store.dispatch({ type: 'choose_plan', planId: p.id }); setOpen(false); }}>
-                    <div className="plan-name"><span className="plan-ico">{PLAN_ICONS[p.id] ?? '📍'}</span>{p.name}</div>
+                    <div className="plan-name"><span className="plan-ico"><Ico name={PLAN_ICONS[p.id] ?? 'pin'} size={16} /></span>{p.name}</div>
                     <div className="plan-desc">{p.description}</div>
                     <div className="plan-meta muted small">
                       精力 -{p.energyCost}
@@ -613,7 +621,7 @@ function MomentsPanel() {
             <div className="choice-grid moment-grid">
               {SELFIE_META.map((o) => (
                 <button key={o.id} className="choice-tile" title={o.note} onClick={() => store.dispatch({ type: 'post_moment', selfieId: o.id })}>
-                  <div className="tile-emoji">{o.emoji}</div>
+                  <span className="tile-emoji"><Ico name={SELFIE_ICONS[o.id] ?? 'pin'} size={22} /></span>
                   <div className="tile-label">{o.label}</div>
                 </button>
               ))}
@@ -653,7 +661,7 @@ function MomentsPanel() {
                 {m.author === 'player' && m.selfieId ? <MomentPhoto selfieId={m.selfieId} /> : m.photoId ? <PhotoRender photoId={m.photoId} /> : null}
               </div>
               <div className="moment-caption">{m.caption}</div>
-              {m.likes.length > 0 && <div className="moment-likes">♥ {m.likes.map(nameFor).join('、')}</div>}
+              {m.likes.length > 0 && <div className="moment-likes"><Ico name="heart" size={12} /> {m.likes.map(nameFor).join('、')}</div>}
               {m.comments.length > 0 && (
                 <div className="moment-comments">
                   {m.comments.map((c, i) => (
