@@ -117,12 +117,26 @@ if (briefOpen) {
 await screenshot('04b-main-noBrief');
 
 /* 4. 各 tab 截图 */
-const TABS = ['今天', '通讯录', '朋友圈', '聊天记录', '钱包', '人设'];
+const TABS = ['今天', '通讯录', '朋友圈', '聊天记录', '钱包'];
 for (const tab of TABS) {
   await evaljs(`[...document.querySelectorAll('.nav-btn')].find(b => b.textContent.includes('${tab}'))?.click()`);
   await sleep(500);
   await screenshot('05-tab-' + tab);
 }
+
+/* 4.5 v4.11 变更人设浮层：今天页 → 点「变更人设」 */
+await evaljs(`[...document.querySelectorAll('.nav-btn')].find(b => b.textContent.includes('今天'))?.click()`);
+await sleep(400);
+await evaljs(`[...document.querySelectorAll('button')].find(x => x.textContent.includes('变更人设'))?.click()`);
+await sleep(500);
+await screenshot('10-profile-overlay');
+/* 换一个试试（点第一张非选中卡） */
+await evaljs(`(() => { const cards=[...document.querySelectorAll('.persona-switch-grid .choice-tile')]; const c=cards.find(x=>!x.className.includes('on')); if(c){c.click();return true;} return false; })()`);
+await sleep(500);
+await screenshot('11-persona-switched');
+await evaljs(`[...document.querySelectorAll('button')].find(x => x.textContent.includes('就这么办'))?.click()`);
+await sleep(400);
+await screenshot('12-after-close');
 
 /* 5. 点开计划条（今天 tab 上） */
 await evaljs(`[...document.querySelectorAll('.nav-btn')].find(b => b.textContent.includes('今天'))?.click()`);
