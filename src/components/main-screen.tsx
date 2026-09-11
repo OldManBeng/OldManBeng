@@ -3,7 +3,7 @@ import { ALL_TARGET_MAP, PERSONA_MAP, targetAwake, isMorningTarget, SELFIE_LABEL
 import { PERSONAS } from '../data/personas';
 import { formatMoney } from '../utils/format';
 import { OldManAvatar, PersonaAvatar, ProfileAvatar, PERSONA_AVATARS, PhotoRender, MomentPhoto } from './character-art';
-import { playMessage, playSend, playPacket, playFail, playBlocked, playMorning } from '../utils/sound';
+import { playMessage, playSend, playPacket, playFail, playBlocked, playMorning, playPost, playSocial, playBell, playPersonaSwitch, playAvatarPick, playMoney, playRisk, playTab, playPhoto, playTypeTick } from '../utils/sound';
 import { useEffect, useRef, useState } from 'react';
 import { INDUSTRY_COURSE_COST, CHAT_SESSION_COST } from '../data/constants';
 import { DAILY_PLANS } from '../data/plans';
@@ -247,6 +247,7 @@ export function MainScreen() {
   // v4.1.2：切 tab 时内容区滚回顶——朋友圈最新在前，打开就先看到新动态。
   const scrollRef = useRef<HTMLDivElement>(null);
   const switchTab = (next: ModuleTab) => {
+    if (tab !== next) playTab();
     setTab(next);
     scrollRef.current?.scrollTo({ top: 0 });
   };
@@ -256,9 +257,12 @@ export function MainScreen() {
     const fresh = state.log.slice(lastPlayedLog.current);
     lastPlayedLog.current = state.log.length;
     for (const e of fresh) {
+      // v4.14：log 驱动的场景音——只对"新增"条目响一次（读档/重渲染不重放）。
       if (e.kind === 'ask_fail') playFail();
       if (e.kind === 'blocked' || e.kind === 'target_ending') playBlocked();
       if (e.kind === 'day') playMorning();
+      if (e.kind === 'packet') playMoney();            // 红包/转账入账（细碎，大额另由气泡横幅 playPacket）
+      if (e.kind === 'gatha') playBell();              // 偈语/晨钟——仪式感
     }
   }, [state.log]);
   // 聊天中强制回"今天"，聊天是全屏体验。
@@ -624,7 +628,7 @@ function MomentsPanel() {
             <h4>发一张自拍（每天一条）</h4>
             <div className="choice-grid moment-grid">
               {SELFIE_META.map((o) => (
-                <button key={o.id} className="choice-tile" title={o.note} onClick={() => store.dispatch({ type: 'post_moment', selfieId: o.id })}>
+                <button key={o.id} className="choice-tile" title={o.note} onClick={() => { playPost(); store.dispatch({ type: 'post_moment', selfieId: o.id }); }}>
                   <span className="tile-emoji"><Ico name={SELFIE_ICONS[o.id] ?? 'pin'} size={22} /></span>
                   <div className="tile-label">{o.label}</div>
                 </button>
@@ -678,10 +682,10 @@ function MomentsPanel() {
               )}
               {m.author === 'target' && (
                 <div className="moment-actions">
-                  <button className="btn small" disabled={liked} onClick={() => store.dispatch({ type: 'react_moment', momentId: m.id, kind: 'like' })}>
+                  <button className="btn small" disabled={liked} onClick={() => { playSocial(); store.dispatch({ type: 'react_moment', momentId: m.id, kind: 'like' }); }}>
                     {liked ? '已赞' : '点赞'}
                   </button>
-                  <button className="btn small" disabled={commented} onClick={() => setOpenComment(openComment === m.id ? null : m.id)}>
+                  <button className="btn small" disabled={commented} onClick={() => { playSocial(); setOpenComment(openComment === m.id ? null : m.id); }}>
                     {commented ? '已评论' : '评论'}
                   </button>
                 </div>
@@ -857,7 +861,7 @@ function TargetList({ dayPhase }: { dayPhase: 'morning' | 'night' }) {
               <button
                 className={`pin-under-avatar ${isPinned ? 'pinned' : ''}`}
                 title={isPinned ? '取消置顶' : '置顶——重要的老头放最上面'}
-                onClick={() => store.dispatch({ type: 'toggle_pin', targetId: t.targetId })}
+                onClick={() => { playTab(); store.dispatch({ type: 'toggle_pin', targetId: t.targetId }); }}
               >
                 {isPinned ? '已置顶' : '置顶'}
               </button>
@@ -1012,9 +1016,10 @@ function ChatView() {
     const delay = isPlayerMsg ? 40 : Math.min(1200, 350 + cur.text.length * 6);
     const id = window.setTimeout(() => {
       const next = chat.transcript[bubbleCount];
-      // 到达音随气泡：红包系统条用金币声，他的话用消息声；你自己的话和旁白不出声。
+      // 到达音随气泡：红包系统条用金币声，带图消息用快门声，他的话用消息声；你自己的话和旁白不出声。
       if (next && next.speaker !== 'player' && next.speaker !== 'narrator') {
         if (next.label) playPacket();
+        else if (next.photoId) playPhoto();
         else playMessage();
       }
       setBubbleCount((c) => c + 1);
@@ -1031,6 +1036,8 @@ function ChatView() {
     const isPlayerMsg = cur.speaker === 'player';
     const ch = cur.text[typed];
     const speed = isPlayerMsg ? 12 : /[，。？！…—]/.test(ch) ? 140 : 35;
+    // v4.14：打字机轻嗒——只对他（非玩家非旁白）的气泡，且非句读（句读有 140ms 间隔本就够安静）。
+    if (!isPlayerMsg && cur.speaker !== 'narrator' && !/[，。？！…—]/.test(ch)) playTypeTick();
     const id = window.setTimeout(() => setTyped((n) => n + 1), speed);
     return () => window.clearTimeout(id);
   }, [typed, bubbleCount, total, chat, skipAll]);
@@ -1194,7 +1201,7 @@ function ProfileOverlay({ onClose }: { onClose: () => void }) {
               key={ps.id}
               className={`choice-tile ${state.personaId === ps.id ? 'on' : ''}`}
               title={`${ps.hook ?? ''} ${ps.risk ?? ''}`}
-              onClick={() => store.dispatch({ type: 'set_persona', personaId: ps.id })}
+              onClick={() => { playPersonaSwitch(); store.dispatch({ type: 'set_persona', personaId: ps.id }); }}
             >
               <PersonaAvatar personaId={ps.id} size={44} />
               <div className="tile-label">{ps.name}</div>
@@ -1207,7 +1214,7 @@ function ProfileOverlay({ onClose }: { onClose: () => void }) {
         <h4>头像（{PERSONA_MAP[state.personaId].name}的十款穿搭）</h4>
       <div className="choice-grid avatars">
         {PERSONA_AVATARS[state.personaId].map((a) => (
-          <button key={a.n} className={`choice-tile ${p.avatarId === a.n ? 'on' : ''}`} onClick={() => setProfile({ avatarId: a.n })}>
+          <button key={a.n} className={`choice-tile ${p.avatarId === a.n ? 'on' : ''}`} onClick={() => { playAvatarPick(); setProfile({ avatarId: a.n }); }}>
             <ProfileAvatar avatarId={a.n} personaId={state.personaId} size={64} />
             {/* v4.13：头像按人设划分——同脸不同穿搭，#1 是该人设默认脸 */}
             <div className="tile-label">{a.label}</div>

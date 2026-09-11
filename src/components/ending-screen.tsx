@@ -1,7 +1,7 @@
 import { useGame } from '../store/gameStore';
 import { ENDINGS } from '../data/endings';
 import { formatMoney } from '../utils/format';
-import { playEnding } from '../utils/sound';
+import { playEnding, playBell } from '../utils/sound';
 import { PERSONA_MAP } from '../engine/state-machine';
 import { finalEpilogues, epilogueFor } from '../engine/epilogues';
 import { OldManAvatar } from './character-art';
@@ -14,7 +14,12 @@ export function EndingScreen() {
   const store = useGame();
   const { state } = store;
   const ending = ENDINGS.find((e) => e.id === state.endingId) ?? ENDINGS[ENDINGS.length - 1];
-  useEffect(() => { playEnding(); }, []);
+  // v4.14：结局和弦 + 一声长钟（卷首偈的仪式感）——App 层 ambient 已切到 ending 音景。
+  useEffect(() => {
+    playEnding();
+    const t = window.setTimeout(() => playBell(), 600); // 和弦落定后钟声接上
+    return () => window.clearTimeout(t);
+  }, []);
 
   return (
     <div className="screen ending-screen">
