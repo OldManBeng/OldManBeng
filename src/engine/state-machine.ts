@@ -902,6 +902,11 @@ export function scoreEnding(state: GameState): string {
   if (state.targets.every((t) => t.blocked)) return 'end_caught';
   if (state.flags.li_confessed) return 'end_confessed';
   if (state.flags.li_lied_final) return 'end_lied';
+  // v4.13.1（审查 H2）：阿豪/陈工的坦白-撒谎线结局——与老李同优先级层。
+  if (state.flags.hao_confessed) return 'end_hao_confessed';
+  if (state.flags.hao_lied_final) return 'end_hao_lied';
+  if (state.flags.chen_confessed) return 'end_chen_confessed';
+  if (state.flags.chen_gave_savings) return 'end_chen_gave';
   return 'end_broke';
 }
 
@@ -1452,6 +1457,30 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       for (const r of replies) {
         pushBubbles(s.chat.transcript, 'target', r, nightStamp(def.activeHour, 16 + s.chat.transcript.length));
       }
+      // v4.13.1：replies 叙述了他红包/转账的选项（autoPacket）→ 引擎同步落账——
+      // 叙事说转多少，账本记多少。横幅/来源字幕/流水与 ask 红包同通路；他主动的，
+      // 不吃 wariness，只按转账把 daysSincePaid 重置（同教学红包逻辑）。
+      if (option.autoPacket) {
+        const amt = option.autoPacket;
+        t.wariness = clamp(t.wariness + ASK_SUCCESS_WARINESS * 0.5, 0, 100);
+        t.totalReceived += amt;
+        t.timesPaid += 1;
+        t.daysSincePaid = 0;
+        s.money += amt;
+        s.stats.totalEarned += amt;
+        s.stats.redPacketsReceived += 1;
+        s.stats.biggestPacket = Math.max(s.stats.biggestPacket, amt);
+        s.ledger.push({ day: s.day, amount: amt, note: `${def.name} 的红包（心意）`, kind: 'packet' });
+        s.chat.transcript.push({ speaker: 'system' as const, label: `红包 +${amt} 元`, text: '（他主动的）', stamp: nightStamp(def.activeHour, 20) });
+        const tier = packetTierOf(amt);
+        const pool = PACKET_SOURCE_SUBTITLE[def.id]?.[tier] ?? PACKET_SOURCE_GENERIC[tier];
+        s.chat.transcript.push({
+          speaker: 'target' as const,
+          text: pool[s.day % pool.length],
+          stamp: nightStamp(def.activeHour, 21),
+        });
+        log(s, 'packet', `${def.name} 的红包：${amt} 元（他主动的，没人开口要过）`);
+      }
       if (!isChain) {
         s.chat.awaiting = 'closed';
         // v4.4 他先找你的应答会话：收束旁白跟应答组走（他放下手机那一下），
@@ -1802,10 +1831,13 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       // v4.11 变更人设：她换一个「人」来演。话术链（personaText/linesFor/剧情节点）
       // 全部动态读 s.personaId——即刻生效；他不看她后台，信任/警惕不动。
       // 同人设重复 set 是 no-op（不刷日志）。
+      // v4.13：头像空间按人设划分（public/avatars/{personaId}/avatar-1..10），
+      // 旧 avatarId 是旧人设空间里的序号，跨空间无意义 → 重置为新 #1（该人设默认脸）。
       if (!PERSONA_MAP[action.personaId]) return s;
       if (s.personaId === action.personaId) return s;
       const old = PERSONA_MAP[s.personaId];
       s.personaId = action.personaId;
+      s.profile.avatarId = 1;
       const next = PERSONA_MAP[action.personaId];
       log(s, 'flag', `你卸下了「${old.name}」，换上「${next.name}」。声音的语气变了，人还是那些人。`);
       return s;

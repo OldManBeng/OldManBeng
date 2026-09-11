@@ -37,6 +37,10 @@ export interface ChainOption {
   /** v4.2.1（S4）：剧本写死的红包金额（如王总的"四千三"）——
    *  让引擎结算与叙事金额一致。缺省走随机档位。 */
   askAmount?: number;
+  /** v4.13.1：非开口选项的「他主动转账」金额——replies 里叙述了他转了红包
+   *  的选项必须声明此字段，引擎才会在 reply 落账（红包横幅+流水+timesPaid）。
+   *  叙事说转了多少，账本就记多少——没有此字段的话术不得叙述具体转账行为。 */
+  autoPacket?: number;
   /** Marks a story flag set by this option. */
   setFlag?: string;
 }

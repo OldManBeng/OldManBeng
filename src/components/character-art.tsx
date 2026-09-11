@@ -2904,36 +2904,45 @@ const PERSONA_STYLE: Record<PersonaId, GirlSpec> = {
   artistic_soul: { bg: '#16141c', hair: '#262428', hairStyle: 'bob', accent: '#8e44ad', lip: '#b05a68', eye: 'calm', extra: 'beret', outfit: 'hoodie' },
 };
 
-/** 10 款可选头像（发型×发色×瞳型×唇色×配饰×衣领组合）——每款一套完整造型身份。 */
-export const AVATAR_PRESETS: (GirlSpec & { id: number; label: string })[] = [
-  { id: 1, label: '御姐款', bg: '#1c1016', hair: '#181418', hairStyle: 'long', accent: '#c0392b', lip: '#c22a44', eye: 'up', extra: 'earring', outfit: 'vneck' },
-  { id: 2, label: '学妹款', bg: '#14202a', hair: '#4a3020', hairStyle: 'twin', accent: '#e67e22', lip: '#e07856', eye: 'round', extra: 'flower', outfit: 'collar' },
-  { id: 3, label: '姐姐款', bg: '#101a14', hair: '#2c2018', hairStyle: 'bun', accent: '#27ae60', lip: '#c96a5e', eye: 'soft', extra: 'none', outfit: 'sweater' },
-  { id: 4, label: '文青款', bg: '#16141c', hair: '#262428', hairStyle: 'bob', accent: '#8e44ad', lip: '#b05a68', eye: 'calm', extra: 'beret', outfit: 'hoodie' },
-  { id: 5, label: '栗发耳坠', bg: '#1c1618', hair: '#6b3a2a', hairStyle: 'long', accent: '#d4a017', lip: '#c75850', eye: 'soft', extra: 'earring', outfit: 'hoodie' },
-  { id: 6, label: '冷淡波波', bg: '#10161c', hair: '#38506b', hairStyle: 'bob', accent: '#2e86ab', lip: '#d4705e', eye: 'round', extra: 'none', outfit: 'vneck' },
-  { id: 7, label: '紫调马尾', bg: '#1a1420', hair: '#52425e', hairStyle: 'twin', accent: '#a569bd', lip: '#b86a78', eye: 'up', extra: 'none', outfit: 'sweater' },
-  { id: 8, label: '棕丸子', bg: '#201416', hair: '#7a4a3a', hairStyle: 'bun', accent: '#cb7623', lip: '#cc6f62', eye: 'calm', extra: 'flower', outfit: 'collar' },
-  { id: 9, label: '长直文艺', bg: '#141c16', hair: '#3a5240', hairStyle: 'long', accent: '#52b788', lip: '#c2705f', eye: 'round', extra: 'beret', outfit: 'sweater' },
-  { id: 10, label: '复古波波', bg: '#1c1a14', hair: '#5e5236', hairStyle: 'bob', accent: '#b5a642', lip: '#bf5f58', eye: 'soft', extra: 'earring', outfit: 'collar' },
-];
-
 /**
- * v4.8 女主角头像：文生图 PNG（public/avatars/avatar-{id}.png，256×256）。
- * 加载失败时 onError 回退到 PersonaFace SVG——生成脚本见 pytools/generate_avatars.py。
+ * v4.13：每人设 10 款头像（同该人设的脸标准 PERSONA_STYLE，只换穿搭）。
+ * PNG 落在 public/avatars/{personaId}/avatar-{1..10}.png；#1 = 该人设默认脸。
+ * SVG 兜底统一用 PERSONA_STYLE[personaId]（PNG 404 时降级到该人设基准脸，可接受）。
+ * 生成脚本见 pytools/generate_avatars.py（4×10=40，#1 拷贝旧 avatar-1..4，#2-10 新绘）。
  */
-const PNG_AVATAR = (id: number) => `/avatars/avatar-${id}.png`;
-/** 四个人设与头像库 1-4 同款（PERSONA_STYLE === AVATAR_PRESETS[0..3]）。 */
-const PERSONA_TO_PRESET: Record<PersonaId, number> = {
-  femme_fatale: 1, sweet_daughter: 2, wise_sister: 3, artistic_soul: 4,
+const PNG_AVATAR = (personaId: PersonaId, n: number) => `/avatars/${personaId}/avatar-${n}.png`;
+
+/** 每人设 10 款的可选清单（label 供头像网格展示）；#1 = 该人设默认脸。 */
+export const PERSONA_AVATARS: Record<PersonaId, { n: number; label: string }[]> = {
+  femme_fatale: [
+    { n: 1, label: '御姐款' }, { n: 2, label: '丝绒酒红裙' }, { n: 3, label: '黑色吊带' },
+    { n: 4, label: '职场西装' }, { n: 5, label: '皮衣抹胸' }, { n: 6, label: '居家真丝袍' },
+    { n: 7, label: '亮片派对' }, { n: 8, label: '度假罩衫' }, { n: 9, label: '波点裹身裙' }, { n: 10, label: '酒红针织' },
+  ],
+  sweet_daughter: [
+    { n: 1, label: '学妹款' }, { n: 2, label: '学院 JK' }, { n: 3, label: '牛仔背带' },
+    { n: 4, label: '运动卫衣' }, { n: 5, label: '毛绒居家' }, { n: 6, label: '蛋糕裙' },
+    { n: 7, label: '少女泳装' }, { n: 8, label: '复古背带' }, { n: 9, label: '奶黄针织' }, { n: 10, label: '荷叶学院' },
+  ],
+  wise_sister: [
+    { n: 1, label: '姐姐款' }, { n: 2, label: '米色居家' }, { n: 3, label: '围裙厨装' },
+    { n: 4, label: '棉麻衬衫' }, { n: 5, label: '温柔西装' }, { n: 6, label: '居家浴袍' },
+    { n: 7, label: '运动卫衣' }, { n: 8, label: '碎花衬衫裙' }, { n: 9, label: '度假长裙' }, { n: 10, label: '格纹衬衫' },
+  ],
+  artistic_soul: [
+    { n: 1, label: '文青款' }, { n: 2, label: '棉麻长裙' }, { n: 3, label: '风衣衬衫' },
+    { n: 4, label: '书店毛衣' }, { n: 5, label: '复古西装' }, { n: 6, label: '高领毛衣' },
+    { n: 7, label: '帆布外套' }, { n: 8, label: '居家棉麻' }, { n: 9, label: '亚麻长衫' }, { n: 10, label: '格纹衬衫' },
+  ],
 };
 
-function FemaleAvatar({ presetId, st, size }: { presetId: number; st: GirlSpec; size: number }) {
+function FemaleAvatar({ url, st, size }: { url: string; st: GirlSpec; size: number }) {
   const [failed, setFailed] = useState(false);
   if (failed) return <PersonaFace st={st} size={size} />;
   return (
     <img
-      src={PNG_AVATAR(presetId)}
+      key={url}
+      src={url}
       alt="你"
       width={size}
       height={size}
@@ -2948,14 +2957,14 @@ function FemaleAvatar({ presetId, st, size }: { presetId: number; st: GirlSpec; 
   );
 }
 
-/** 可选头像渲染（AvatarId 1-10）。 */
-export function ProfileAvatar({ avatarId, size = 44 }: { avatarId: number; size?: number }) {
-  const st = AVATAR_PRESETS[(avatarId - 1) % AVATAR_PRESETS.length];
-  return <FemaleAvatar presetId={st.id} st={st} size={size} />;
+/** 可选头像渲染（avatarId 1-10 为当前人设内的序号；#1 = 该人设默认脸）。 */
+export function ProfileAvatar({ avatarId, personaId, size = 44 }: { avatarId: number; personaId: PersonaId; size?: number }) {
+  return <FemaleAvatar url={PNG_AVATAR(personaId, avatarId)} st={PERSONA_STYLE[personaId]} size={size} />;
 }
 
+/** 人设头像：渲染该人设的 #1（默认脸）。 */
 export function PersonaAvatar({ personaId, size = 44 }: { personaId: PersonaId; size?: number }) {
-  return <FemaleAvatar presetId={PERSONA_TO_PRESET[personaId]} st={PERSONA_STYLE[personaId]} size={size} />;
+  return <FemaleAvatar url={PNG_AVATAR(personaId, 1)} st={PERSONA_STYLE[personaId]} size={size} />;
 }
 
 function PersonaFace({ st, size }: { st: GirlSpec; size: number }) {

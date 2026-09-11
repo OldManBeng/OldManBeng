@@ -2,7 +2,7 @@ import { useGame } from '../store/gameStore';
 import { ALL_TARGET_MAP, PERSONA_MAP, targetAwake, isMorningTarget, SELFIE_LABEL, TRAIT_LABEL } from '../engine/state-machine';
 import { PERSONAS } from '../data/personas';
 import { formatMoney } from '../utils/format';
-import { OldManAvatar, PersonaAvatar, ProfileAvatar, AVATAR_PRESETS, PhotoRender, MomentPhoto } from './character-art';
+import { OldManAvatar, PersonaAvatar, ProfileAvatar, PERSONA_AVATARS, PhotoRender, MomentPhoto } from './character-art';
 import { playMessage, playSend, playPacket, playFail, playBlocked, playMorning } from '../utils/sound';
 import { useEffect, useRef, useState } from 'react';
 import { INDUSTRY_COURSE_COST, CHAT_SESSION_COST } from '../data/constants';
@@ -653,7 +653,7 @@ function MomentsPanel() {
             <div key={m.id} className={`moment-card ${m.author}`}>
               <div className="moment-head">
                 {m.author === 'player'
-                  ? <ProfileAvatar avatarId={state.profile.avatarId} size={36} />
+                  ? <ProfileAvatar avatarId={state.profile.avatarId} personaId={state.personaId} size={36} />
                   : def ? <OldManAvatar target={def} state={tstate} size={36} /> : null}
                 <div>
                   <div className="moment-name">{m.author === 'player' ? state.playerName || '你' : def?.handle ?? def?.name ?? '他'}</div>
@@ -1203,12 +1203,12 @@ function ProfileOverlay({ onClose }: { onClose: () => void }) {
         </div>
         <p className="muted small">换的是演法——已经认识你的人不会重置，他只是觉得你今天说话的味道不一样了。</p>
 
-        <h4>头像</h4>
+        <h4>头像（{PERSONA_MAP[state.personaId].name}的十款穿搭）</h4>
       <div className="choice-grid avatars">
-        {AVATAR_PRESETS.map((a) => (
-          <button key={a.id} className={`choice-tile ${p.avatarId === a.id ? 'on' : ''}`} onClick={() => setProfile({ avatarId: a.id })}>
-            <ProfileAvatar avatarId={a.id} size={64} />
-            {/* v4.6：每款头像有名字——10 款造型身份可辨认，不再是无名的排列 */}
+        {PERSONA_AVATARS[state.personaId].map((a) => (
+          <button key={a.n} className={`choice-tile ${p.avatarId === a.n ? 'on' : ''}`} onClick={() => setProfile({ avatarId: a.n })}>
+            <ProfileAvatar avatarId={a.n} personaId={state.personaId} size={64} />
+            {/* v4.13：头像按人设划分——同脸不同穿搭，#1 是该人设默认脸 */}
             <div className="tile-label">{a.label}</div>
           </button>
         ))}

@@ -16,8 +16,9 @@ export interface GameStore {
 }
 
 /** v1 存档 → v2：补默认字段（profile/流水/归档/incoming/计划/麻木日限 + 老头新字段 + 45 人库）。
- *  旧档的五个老头视为第 1 天认识；库目标由 state.targets 数量决定补哪些。 */
-function migrate(saved: GameState): GameState {
+ *  旧档的五个老头视为第 1 天认识；库目标由 state.targets 数量决定补哪些。
+ *  v4.13 导出供测试：头像空间按人设划分后的 avatarId 重置红线。 */
+export function migrate(saved: GameState): GameState {
   const base = createInitialState();
   // 1) 老头运行时状态：按 v2 全量名单补齐（旧档只有主五人 → 库目标以"未认识"入场）。
   const byId = new Map(saved.targets.map((t) => [t.targetId, t]));
@@ -40,7 +41,10 @@ function migrate(saved: GameState): GameState {
   return {
     ...saved,
     targets,
-    profile: saved.profile ?? defaultProfile(),
+    // v4.13：头像空间改为按人设划分（avatars/{personaId}/avatar-1..10）；
+    // 旧档 avatarId 是全局 1-10 空间的值，跨空间无意义 → 重置为 1
+    //（= 该人设默认脸，旧档 personaId 的默认脸 PNG 与旧 avatar-1..4 同图，视觉无损）。
+    profile: { ...(saved.profile ?? defaultProfile()), avatarId: 1 },
     ledger: saved.ledger ?? [],
     archives: saved.archives ?? [],
     incoming: saved.incoming ?? [],

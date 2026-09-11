@@ -121,7 +121,7 @@ export const LIFE_EVENTS: LifeEventDef[] = [
   // ---- 王总 · 52 · 建材店老板 —— 他的月历：家长会、查账、车库、教育金 ----
   {
     id: 'wang_parents_meeting', day: 9, targetId: 'boss_wang',
-    text: '儿子的家长会是王总去的。数学28，英语92。老师在台上说"有些家长要上心"，他坐最后一排，点头。回家没跟老婆提，只跟你说了一句："英语随我。"',
+    text: '儿子的家长会是王总去的。第二次月考，数学还是 41，没提。英语92。老师在台上说"有些家长要上心"，他坐最后一排，点头。回家没跟老婆提，只跟你说了一句："英语随我。"',
   },
   {
     id: 'wang_wife_checks', day: 13, targetId: 'boss_wang',
