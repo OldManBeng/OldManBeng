@@ -3,7 +3,7 @@ import { useGame } from './store/gameStore';
 import { TitleScreen, NewGameScreen, PrologueScreen } from './components/screens';
 import { MainScreen } from './components/main-screen';
 import { EndingScreen } from './components/ending-screen';
-import { loadMutePref, setAmbient, currentAmbientId, type AmbientId } from './utils/sound';
+import { loadMutePref, setBgm, currentBgmId, type MusicId, loadMusicMutePref } from './utils/sound';
 import type { PersonaId } from './types/persona';
 
 export default function App() {
@@ -12,20 +12,21 @@ export default function App() {
   const [screen, setScreen] = useState<'none' | 'prologue' | 'newgame'>('none');
   useEffect(() => {
     loadMutePref();
+    loadMusicMutePref();
     const onNewGame = () => setScreen('prologue');
     window.addEventListener('beng:newgame', onNewGame);
     return () => window.removeEventListener('beng:newgame', onNewGame);
   }, []);
 
-  // v4.14 环境音乐：按 phase/标题/结局切换音景（crossfade）。幂等——同态不重复切。
+  // v4.14 独立背景音乐：按 phase/屏幕切换。与音效系统独立静音。
   useEffect(() => {
-    let want: AmbientId = 'none';
-    if (screen !== 'none') want = 'title';            // 序章/建档仍在标题氛围
+    let want: MusicId = 'none';
+    if (screen !== 'none') want = 'title';
     else if (state.phase === 'title') want = 'title';
     else if (state.phase === 'ended') want = 'ending';
     else if (state.dayPhase === 'chat' || state.dayPhase === 'night') want = 'night';
     else want = 'morning';
-    if (currentAmbientId() !== want) setAmbient(want);
+    if (currentBgmId() !== want) setBgm(want);
   }, [screen, state.phase, state.dayPhase]);
 
   // v2.2：新游戏流程 = 序章（交代现象/她/动机）→ 建档（起名+选人设）→ 主线。

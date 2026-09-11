@@ -3,12 +3,10 @@
  *
  * v4.14 架构三层：
  * 1. 音色层——noise burst / 滤波 / 衰减包络，让 7 个基础 SFX 有"质感"
- * 2. 环境层——标题/晨/夜/聊天/结局五态音景（低频 pad + 稀疏音符，不是旋律，
- *    是"安静的房间"）；UI 主动 setAmbient() 切换，crossfade 过渡。
+ * 2. 音乐层——独立 BGM（和弦进行+琶音，按场景 crossfade），与音效独立开关
  * 3. 场景层——打字机/晨钟/朋友圈/人设切换等交互补齐。
  *
- * 静音偏好（beng_muted）同时控制 SFX 与音乐层。
- * 兼容：v4.13 的 7 个 play*() 签名不变，旧调用点零改动即可享受新音色。
+ * 静音偏好独立两条：beng_muted（音效）、beng_music_muted（音乐）。
  */
 
 let ctx: AudioContext | null = null;
@@ -36,18 +34,14 @@ function ac(): AudioContext | null {
 export function setMuted(v: boolean) {
   muted = v;
   try { localStorage.setItem('beng_muted', v ? '1' : '0'); } catch { /* ok */ }
-  // v4.14：静音同时压掉音乐层（保持 ambient 图，gain=0——解除静音 crossfade 回来）
-  const a = ac();
-  if (a && musicGain) {
-    musicGain.gain.cancelScheduledValues(a.currentTime);
-    musicGain.gain.setTargetAtTime(v ? 0 : currentMusicTarget, a.currentTime, 0.3);
-  }
+  // v4.14：静音只关音效，BGM 由 setMusicMuted 独立控制
 }
 export function isMuted() {
   return muted;
 }
 export function loadMutePref() {
   try { muted = localStorage.getItem('beng_muted') === '1'; } catch { /* ok */ }
+  try { musicMuted = localStorage.getItem('beng_music_muted') === '1'; } catch { /* ok */ }
 }
 
 // ---------------------------------------------------------------------------
@@ -241,136 +235,201 @@ export function playTab() {
 }
 
 // ---------------------------------------------------------------------------
-// v4.14 环境音乐层——五态音景（不是旋律，是"安静的房间"）
+// v4.14 独立音乐系统——真正的旋律性 BGM（零音频文件）
+// 与音效系统独立开关（beng_music_muted），标题屏两个按钮分别控制。
 // ---------------------------------------------------------------------------
 
-export type AmbientId = 'none' | 'title' | 'morning' | 'night' | 'ending';
+let musicMuted = false;
 
-interface AmbientSpec {
-  /** pad 基础音（根音，Hz）。 */
-  root: number;
-  /** pad 和弦泛音（root 的倍数）。 */
-  partials: number[];
-  /** pad 音量。 */
-  padGain: number;
-  /** 稀疏钢琴音：随机出现的音池（五声音阶——避免和声冲突，永远"对"）。 */
-  sparsePool: number[];
-  /** 稀疏音出现间隔范围 [min, max] 秒。 */
-  sparseEvery: [number, number];
-  /** 稀疏音音量。 */
-  sparseGain: number;
+/** 音乐静音偏好（与音效静音独立）。 */
+export function setMusicMuted(v: boolean) {
+  musicMuted = v;
+  try { localStorage.setItem('beng_music_muted', v ? '1' : '0'); } catch { /* ok */ }
+  // 立即静音/恢复 BGM
+  if (v) stopBgm();
+  else if (currentBgm !== 'none') startBgm(currentBgm);
+}
+export function isMusicMuted(): boolean { return musicMuted; }
+export function loadMusicMutePref() {
+  try { musicMuted = localStorage.getItem('beng_music_muted') === '1'; } catch { /* ok */ }
 }
 
-const AMBIENTS: Record<Exclude<AmbientId, 'none'>, AmbientSpec> = {
-  // 标题屏：夜空感——低根音 + 高五声稀疏音（月亮、城市、孤独）
+export type MusicId = 'none' | 'title' | 'morning' | 'night' | 'ending';
+
+type Chord = number[]; // 频率数组（Hz）
+
+/** 和弦进行（每个 BGM 场景 4 和弦，每和弦 4 拍 ~3s → ~12s 循环 × 柔和包络）。 */
+const BGM: Record<Exclude<MusicId, 'none'>, {
+  chords: Chord[];
+  bpm: number;
+  arpPattern: number[];  // 琶音踩拍偏移 [0, 0.5, 1, 0.75] 等
+  arpGain: number;
+  padPartials: number[];
+  padGain: number;
+}> = {
+  // 标题屏：Cmaj7 → Am7 → Fmaj7 → G——夜色、城市、孤独的旋律线
   title: {
-    root: 110, partials: [1, 1.5, 2], padGain: 0.028,
-    sparsePool: [523.25, 587.33, 659.25, 783.99, 880], sparseEvery: [4, 9], sparseGain: 0.018,
+    bpm: 68,
+    chords: [
+      [261.63, 329.63, 392, 493.88],   // Cmaj7
+      [220, 261.63, 329.63, 440],       // Am7
+      [174.61, 220, 261.63, 349.23],   // Fmaj7
+      [196, 246.94, 293.66, 392],       // G
+    ],
+    arpPattern: [0, 0.33, 0.67, 0.17, 0.5, 0.83],
+    arpGain: 0.04,
+    padPartials: [1, 1.5, 2],
+    padGain: 0.018,
   },
-  // 白天：暖一点——根音抬高 + 大三度（晨光的暖）
+  // 白天：G → D → Em → C——晨光、暖意、向前走
   morning: {
-    root: 130.81, partials: [1, 1.26, 1.5], padGain: 0.02,
-    sparsePool: [523.25, 587.33, 659.25, 783.99, 880], sparseEvery: [5, 11], sparseGain: 0.014,
+    bpm: 72,
+    chords: [
+      [196, 246.94, 293.66, 392],       // G
+      [146.83, 185, 220, 293.66],       // D
+      [164.81, 196, 246.94, 329.63],    // Em
+      [261.63, 329.63, 392, 523.25],    // C
+    ],
+    arpPattern: [0, 0.25, 0.5, 0.75, 0.125, 0.375, 0.625],
+    arpGain: 0.035,
+    padPartials: [1, 1.26, 1.5],
+    padGain: 0.014,
   },
-  // 深夜：最沉——低根音 + 纯五度（凌晨三点的重量）
+  // 深夜：Am → F → C → G——凌晨三点的重量、他的故事、她的手机屏
   night: {
-    root: 98, partials: [1, 1.5], padGain: 0.03,
-    sparsePool: [440, 523.25, 587.33, 659.25], sparseEvery: [3, 8], sparseGain: 0.014,
+    bpm: 64,
+    chords: [
+      [220, 261.63, 329.63, 440],       // Am
+      [174.61, 220, 261.63, 349.23],   // Fmaj7
+      [261.63, 329.63, 392, 523.25],    // C
+      [196, 246.94, 293.66, 392],       // G
+    ],
+    arpPattern: [0, 0.5, 0.25, 0.75, 0.125, 0.625],
+    arpGain: 0.038,
+    padPartials: [1, 1.5],
+    padGain: 0.02,
   },
-  // 结局：近乎停止——只有一根线（一切归于平）
+  // 结局：C → G/B → Am → F → C/G → F——结束、收线、放下
   ending: {
-    root: 87.31, partials: [1, 2], padGain: 0.032,
-    sparsePool: [523.25, 659.25], sparseEvery: [7, 14], sparseGain: 0.012,
+    bpm: 58,
+    chords: [
+      [261.63, 329.63, 392, 523.25],    // C
+      [246.94, 293.66, 349.23, 493.88], // G/B
+      [220, 261.63, 329.63, 440],       // Am
+      [174.61, 220, 261.63, 349.23],   // F
+      [261.63, 329.63, 392, 493.88],   // C/G (cmaj7 第二转位)
+      [174.61, 220, 261.63, 349.23],   // F
+    ],
+    arpPattern: [0, 0.33, 0.67, 0.17, 0.5, 0.83],
+    arpGain: 0.032,
+    padPartials: [1, 2],
+    padGain: 0.022,
   },
 };
 
-let currentAmbient: AmbientId = 'none';
-let currentMusicTarget = 0.32; // 音乐层目标音量（setMuted 用）
-let ambientNodes: { oscillators: OscillatorNode[]; gain: GainNode; timers: number[] } | null = null;
-/** 解除静音时音乐层的目标 gain（0.32 ≈ pad 0.03 × 10 的总线感）。 */
-const MUSIC_LEVEL = 0.32;
+let currentBgm: MusicId = 'none';
+let bgmNodes: { oscillators: OscillatorNode[]; timers: number[]; gain: GainNode } | null = null;
 
-function stopAmbient(fadeSec = 1.2) {
-  const a = ac();
-  if (!ambientNodes) return;
-  const { oscillators, gain, timers } = ambientNodes;
+/** 停止 BGM（即用）。 */
+function stopBgm() {
+  if (!bgmNodes) return;
+  const { oscillators, timers, gain } = bgmNodes;
   timers.forEach((t) => window.clearTimeout(t));
+  const a = ac();
   if (a) {
-    gain.gain.cancelScheduledValues(a.currentTime);
-    gain.gain.setTargetAtTime(0, a.currentTime, fadeSec / 3);
-    oscillators.forEach((o) => { try { o.stop(a.currentTime + fadeSec + 0.1); } catch { /* already stopped */ } });
+    gain.gain.setTargetAtTime(0, a.currentTime, 0.15);
+    oscillators.forEach((o) => { try { o.stop(a.currentTime + 0.5); } catch { /* ok */ } });
   }
-  ambientNodes = null;
+  bgmNodes = null;
 }
 
-/** 切换环境音景（crossfade）。App 层按 phase/标题/结局调用；重复 set 同态是 no-op。 */
-export function setAmbient(id: AmbientId) {
+/** 启动 BGM 循环（分解和弦琶音 + pad）。音乐静音时静默。 */
+function startBgm(id: Exclude<MusicId, 'none'>) {
   const a = ac();
-  if (!a) return;
-  if (currentAmbient === id) return;
-  currentAmbient = id;
-  // 先淡出旧的
-  stopAmbient(1.2);
-  if (id === 'none') return;
+  if (!a || musicMuted) return;
+  stopBgm();
 
-  const spec = AMBIENTS[id];
-  const gain = a.createGain();
-  gain.gain.value = 0;
-  gain.connect(musicGain!);
-  // 音乐层总 gain 拉到目标（首次 / 解除静音后）
-  musicGain!.gain.cancelScheduledValues(a.currentTime);
-  musicGain!.gain.setTargetAtTime(muted ? 0 : MUSIC_LEVEL, a.currentTime, 0.5);
+  const spec = BGM[id];
+  const busGain = a.createGain();
+  busGain.gain.value = 1;
+  busGain.connect(masterGain!);
 
   const oscillators: OscillatorNode[] = [];
-  // pad：根音 + 泛音簇，轻微 detune 让它"呼吸"
-  for (const p of spec.partials) {
+  const timers: number[] = [];
+
+  // Pad: 根音 + 泛音簇持续（与旧 ambient pad 结构相同但走独立 bus）
+  for (const p of spec.padPartials) {
     const osc = a.createOscillator();
     const g = a.createGain();
     osc.type = 'sine';
-    osc.frequency.value = spec.root * p;
-    osc.detune.value = (Math.random() - 0.5) * 7; // 微失谐——合成 pad 不"死"
-    g.gain.value = spec.padGain / spec.partials.length / p; // 高泛音更轻
-    osc.connect(g).connect(gain);
+    osc.frequency.value = spec.chords[0][0] * p; // 用第一和弦根音
+    osc.detune.value = (Math.random() - 0.5) * 6;
+    g.gain.value = spec.padGain / spec.padPartials.length / p;
+    osc.connect(g).connect(busGain);
     osc.start();
     oscillators.push(osc);
-    // 极慢 LFO 调制音量（呼吸感，周期 ~13s）
+    // 极慢 LFO 呼吸
     const lfo = a.createOscillator();
-    const lfoGain = a.createGain();
-    lfo.frequency.value = 0.075 + Math.random() * 0.02;
-    lfoGain.gain.value = spec.padGain * 0.3;
-    lfo.connect(lfoGain).connect(g.gain);
+    const lfoG = a.createGain();
+    lfo.frequency.value = 0.07 + Math.random() * 0.015;
+    lfoG.gain.value = spec.padGain * 0.35;
+    lfo.connect(lfoG).connect(g.gain);
     lfo.start();
     oscillators.push(lfo);
   }
-  gain.gain.setTargetAtTime(1, a.currentTime, 0.6); // crossfade in
 
-  // 稀疏音：随机间隔从五声池里掉一个音出来（长衰减 sine，像远处的钢琴）
-  const timers: number[] = [];
-  const scheduleNext = () => {
-    if (currentAmbient !== id) return;
-    const wait = spec.sparseEvery[0] + Math.random() * (spec.sparseEvery[1] - spec.sparseEvery[0]);
-    timers.push(window.setTimeout(() => {
-      if (currentAmbient !== id || !ctx) return;
-      const f = spec.sparsePool[Math.floor(Math.random() * spec.sparsePool.length)];
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = f;
-      g.gain.setValueAtTime(0, ctx.currentTime);
-      g.gain.linearRampToValueAtTime(spec.sparseGain, ctx.currentTime + 0.06);
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 3.5);
-      osc.connect(g).connect(gain);
-      osc.start();
-      osc.stop(ctx.currentTime + 3.7);
-      scheduleNext();
-    }, wait * 1000));
+  // 琶音循环：和弦进行 × 拍子 × 分解模式
+  const beatSec = 60 / spec.bpm;
+  const chordLen = 4; // 每和弦 4 拍
+  const beatOffsets = spec.arpPattern;
+  let chordIdx = 0;
+
+  const scheduleLoop = () => {
+    if (currentBgm !== id || !ctx) return;
+    const chord = spec.chords[chordIdx];
+    const t0 = ctx.currentTime;
+
+    // 这个和弦持续期内的所有琶音
+    for (let beat = 0; beat < chordLen; beat++) {
+      for (const offset of beatOffsets) {
+        const t = t0 + beat * beatSec + offset * beatSec;
+        const freq = chord[Math.floor(offset * chord.length) % chord.length];
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'triangle'; // 温暖音色
+        osc.frequency.value = freq + (Math.random() - 0.5) * 2; // 微 detune 不机器
+        // 包络：Attack 30ms → Sustain → Release
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(spec.arpGain, t + 0.03);
+        g.gain.setTargetAtTime(spec.arpGain * 0.6, t + 0.1, 0.12);
+
+        // 该音符持续到下一拍
+        g.gain.setTargetAtTime(0.0001, t + beatSec * 1.2, 0.04);
+
+        osc.connect(g).connect(busGain);
+        osc.start(t);
+        osc.stop(t + beatSec * 1.5);
+        oscillators.push(osc);
+      }
+    }
+
+    // 切换下一个和弦
+    chordIdx = (chordIdx + 1) % spec.chords.length;
+    // 安排在 chordLen 拍后触发下一轮
+    timers.push(window.setTimeout(scheduleLoop, chordLen * beatSec * 1000));
   };
-  scheduleNext();
+  scheduleLoop();
 
-  ambientNodes = { oscillators, gain, timers };
+  bgmNodes = { oscillators, timers, gain: busGain };
 }
 
-/** 当前环境态（App 层幂等切换用）。 */
-export function currentAmbientId(): AmbientId {
-  return currentAmbient;
+/** 切换 BGM（crossfade transition）。App 层按 phase 调用。 */
+export function setBgm(id: MusicId) {
+  if (id === currentBgm) return;
+  stopBgm();
+  currentBgm = id;
+  if (id !== 'none') startBgm(id);
 }
+
+export function currentBgmId(): MusicId { return currentBgm; }
+export function isBgmPlaying(): boolean { return currentBgm !== 'none' && !musicMuted && bgmNodes !== null; }

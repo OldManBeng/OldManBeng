@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useGame } from '../store/gameStore';
 import { PERSONAS } from '../data/personas';
-import { isMuted, loadMutePref, setMuted } from '../utils/sound';
+import { isMuted, loadMutePref, setMuted, isMusicMuted, setMusicMuted } from '../utils/sound';
 import { formatMoney } from '../utils/format';
 import { MONTHLY_GOAL as GOAL } from '../data/constants';
 import type { PersonaId } from '../types/persona';
@@ -67,10 +67,12 @@ function TitleBackdrop() {
 export function TitleScreen() {
   const store = useGame();
   const [muted, setM] = useState(isMuted());
+  const [musicMuted, setMM] = useState(isMusicMuted());
   const [ageOk, setAgeOk] = useState(false);
   useEffect(() => {
     loadMutePref();
     setM(isMuted());
+    setMM(isMusicMuted());
     // v4.3.1 年龄门槛（审查 P0-2）：18+ 确认记在 localStorage，二周目免打断。
     try { if (localStorage.getItem('beng:age_ok') === '1') setAgeOk(true); } catch { /* 隐私模式忽略 */ }
   }, []);
@@ -115,6 +117,9 @@ export function TitleScreen() {
         </button>
         <button className="btn small" onClick={() => { const v = !muted; setMuted(v); setM(v); }}>
           <Ico name={muted ? 'spk-off' : 'spk-on'} size={14} /> {muted ? '音效关' : '音效开'}
+        </button>
+        <button className="btn small" onClick={() => { const v = !musicMuted; setMusicMuted(v); setMM(v); }}>
+          <Ico name={musicMuted ? 'spk-off' : 'spk-on'} size={14} /> {musicMuted ? '音乐关' : '音乐开'}
         </button>
       </div>
       <div className="content-warning">
