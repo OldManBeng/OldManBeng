@@ -3,7 +3,7 @@ import { ALL_TARGET_MAP, PERSONA_MAP, targetAwake, isMorningTarget, SELFIE_LABEL
 import { PERSONAS } from '../data/personas';
 import { formatMoney } from '../utils/format';
 import { OldManAvatar, PersonaAvatar, ProfileAvatar, PERSONA_AVATARS, PhotoRender, MomentPhoto } from './character-art';
-import { playMessage, playSend, playPacket, playFail, playBlocked, playMorning, playPost, playSocial, playBell, playPersonaSwitch, playAvatarPick, playMoney, playRisk, playTab, playPhoto, playTypeTick } from '../utils/sound';
+import { playMessage, playSend, playPacket, playFail, playBlocked, playMorning, playPost, playSocial, playBell, playPersonaSwitch, playAvatarPick, playMoney, playRisk, playTab, playPhoto, playTypeTick, isMuted, setMuted, isMusicMuted, setMusicMuted } from '../utils/sound';
 import { useEffect, useRef, useState } from 'react';
 import { INDUSTRY_COURSE_COST, CHAT_SESSION_COST } from '../data/constants';
 import { DAILY_PLANS } from '../data/plans';
@@ -1175,6 +1175,9 @@ function ProfileOverlay({ onClose }: { onClose: () => void }) {
   const p = state.profile;
   const persona = PERSONA_MAP[state.personaId];
   const setProfile = (patch: Partial<PlayerProfile>) => store.dispatch({ type: 'update_profile', ...patch });
+  // v4.14.1：游戏内的音效/音乐开关（标题屏同款两个偏好，独立 localStorage）。
+  const [sfxOff, setSfxOff] = useState(isMuted());
+  const [bgmOff, setBgmOff] = useState(isMusicMuted());
   return (
     <div className="ask-modal-overlay" onClick={onClose}>
       <section className="profile-panel profile-overlay" onClick={(e) => e.stopPropagation()}>
@@ -1256,6 +1259,19 @@ function ProfileOverlay({ onClose }: { onClose: () => void }) {
       <p className="muted small">
         朋友圈现在挂着{SELFIE_LABEL[p.selfieId]}（第 {p.selfieDay || '—'} 天发布）——发新照片去朋友圈模块。
       </p>
+
+      {/* v4.14.1 游戏内的声音开关：音效与音乐独立（标题屏同款偏好）。 */}
+      <h4>声音</h4>
+      <div className="choice-grid sound-toggles">
+        <button className={`choice-tile wide ${!sfxOff ? 'on' : ''}`} onClick={() => { setMuted(!sfxOff); setSfxOff(!sfxOff); }}>
+          <div className="tile-label"><Ico name={sfxOff ? 'spk-off' : 'spk-on'} size={14} /> 音效{sfxOff ? '关' : '开'}</div>
+          <div className="muted small">红包金币、消息到达、界面音。</div>
+        </button>
+        <button className={`choice-tile wide ${!bgmOff ? 'on' : ''}`} onClick={() => { setMusicMuted(!bgmOff); setBgmOff(!bgmOff); }}>
+          <div className="tile-label"><Ico name={bgmOff ? 'spk-off' : 'spk-on'} size={14} /> 音乐{bgmOff ? '关' : '开'}</div>
+          <div className="muted small">晨光/深夜背景旋律：{isMusicMuted() ? '已停' : '循环中'}。</div>
+        </button>
+      </div>
       <div className="profile-overlay-foot">
         <button className="btn primary wide" onClick={onClose}>就这么办</button>
       </div>
