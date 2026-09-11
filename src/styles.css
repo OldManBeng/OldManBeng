@@ -464,7 +464,10 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   width: 100%;
   line-height: 1.55;
 }
-.newgame-start { margin-top: 8px; }
+.newgame-start {
+  margin-top: 8px;
+  text-align: center;
+}
 
 /* ---------- HUD ---------- */
 .hud {
