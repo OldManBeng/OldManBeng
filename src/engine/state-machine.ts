@@ -1628,9 +1628,9 @@ export function dispatch(state: GameState, action: GameAction): GameState {
     }
 
     case 'toggle_mute': {
-      // v4.3.3 玩家拉黑：她把他设成"消息免打扰"——可逆，与结局性的 blocked 不同。
-      // 拉黑不是删人（他不掉信任、不吃断联惩罚），只是她的世界单方面安静下来：
-      // 他不再被主动推来，她的朋友圈他不再刷到，他的朋友圈她也看不到了。
+      // v4.3.3 玩家拉黑（UI v4.13.2 起「免打扰」按钮统一叫「拉黑」）：可逆，与结局性的
+      // blocked（他删了你）不同。拉黑不是删人（他不掉信任、不吃断联惩罚），只是她的世界
+      // 单方面安静下来：他不再被主动推来，她的朋友圈他不再刷到，他的朋友圈她也看不到了。
       // 解除即恢复——代价是这期间的断联照常累积（他没等的话，也在过着）。
       const known = s.targets.find((t) => t.targetId === action.targetId && t.discoveredDay > 0);
       if (!known) return s;
@@ -1638,8 +1638,8 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       if (known.mutedByPlayer) s.incoming = s.incoming.filter((m) => m.targetId !== action.targetId);
       const def = ALL_TARGET_MAP[action.targetId];
       log(s, 'flag', known.mutedByPlayer
-        ? `你把 ${def?.handle ?? def?.name ?? '他'} 设成了消息免打扰。他的世界照旧，只是不再推到你眼前。`
-        : `你解除了对 ${def?.handle ?? def?.name ?? '他'} 的免打扰。断联的日子照算——他没等的话，也在过着。`);
+        ? `你拉黑了 ${def?.handle ?? def?.name ?? '他'}。他的世界照旧，只是不再推到你眼前。`
+        : `你解除了对 ${def?.handle ?? def?.name ?? '他'} 的拉黑。断联的日子照算——他没等的话，也在过着。`);
       return s;
     }
 

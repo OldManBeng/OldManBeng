@@ -1353,10 +1353,11 @@ export function OldManAvatar({ target, state, size = 44 }: { target: Target; sta
 //               保留每张原有的构图与叙事（谁的世界、哪个时辰）。
 // ---------------------------------------------------------------------------
 /** v4.12：照片 URL——stage 0 尝试变体（>1 → _v{n}），stage≥1 回退基准图(_v1)；
- *  两级都 404 才落 SVG 兜底。v4.13 起按 id 分子目录，6 张统一命名 _v1.._v6。 */
+ *  两级都 404 才落 SVG 兜底。v4.13 起按 id 分子目录，6 张统一命名 _v1.._v6。
+ *  v4.13.2 瘦身：web 图为 560×420 JPEG（raw 768 PNG 存 pytools/raw_scenes/）。 */
 function variantUrl(base: string, id: string, variant?: number, stage = 0): string {
-  if (stage === 0 && variant && variant > 1) return `${base}/${id}/${id}_v${variant}.png`;
-  return `${base}/${id}/${id}_v1.png`;
+  if (stage === 0 && variant && variant > 1) return `${base}/${id}/${id}_v${variant}.jpg`;
+  return `${base}/${id}/${id}_v1.jpg`;
 }
 
 export function PhotoRender({ photoId, variant }: { photoId: string; variant?: number }) {
@@ -1422,8 +1423,8 @@ export function PhotoRender({ photoId, variant }: { photoId: string; variant?: n
       /* 不用 lazy：部分移动 WebView（微信内置等）对懒加载+容器切换会解码失败
          误触发 onError 落进 SVG 兜底。这两类图都是"刚发生的动作"的结果，必在首屏。 */
       decoding="async"
-      width={768}
-      height={576}
+      width={560}
+      height={420}
       style={{ width: '100%', height: 'auto', display: 'block' }}
       onError={() => setStage((s) => Math.min(s + 1, 2))}
     />
@@ -2377,8 +2378,8 @@ export function MomentPhoto({ selfieId, variant }: { selfieId: string; variant?:
       alt="朋友圈自拍"
       /* 同 PhotoRender：不用 lazy——移动 WebView 懒加载误触发 onError 会退回 SVG */
       decoding="async"
-      width={768}
-      height={576}
+      width={560}
+      height={420}
       style={{ width: '100%', height: 'auto', display: 'block' }}
       onError={() => setStage((s) => Math.min(s + 1, 2))}
     />

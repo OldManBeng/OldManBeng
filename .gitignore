@@ -26,6 +26,8 @@ coverage/
 __pycache__/
 # 文生图中间产物（1024 原图，入库前已缩到 public/avatars/）
 pytools/avatar_raw/
+# v4.13.2 场景图 raw 保留（768 PNG；游戏用 560 JPEG 在 public/photos|selfies/）
+pytools/raw_scenes/
 
 # CDP headless Chrome user data dirs（临时，不入库）
 .cdp-*/

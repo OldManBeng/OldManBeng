@@ -567,9 +567,10 @@ function ContactsPanel() {
   return (
     <section className="contacts-panel">
       <h3>通讯录（{known.length} 人）</h3>
-      <p className="muted small">全部加过微信的人。拉黑的沉底。</p>
+      <p className="muted small">全部加过微信的人。你拉黑的置底，删了你的沉在最下面。</p>
       <div className="contacts-list">
-        // v2.0：通讯录：拉黑的沉底。v4.12：免打扰的置底（比拉黑还沉）。
+        {/* v2.0：通讯录：拉黑的沉底。v4.12：免打扰（=玩家拉黑，可逆）的置底（比被删还沉）。
+            t.blocked 是叙事结局态：他删了你（信任跌 0 / 穿帮被识破），不可逆。 */}
         {[...known].sort((a, b) => {
           const rank = (t: typeof a) => t.mutedByPlayer ? 2 : t.blocked ? 1 : 0;
           return rank(a) - rank(b);
@@ -587,7 +588,7 @@ function ContactsPanel() {
                 <div className="muted small">信任 {Math.round(t.trust)} · 警惕 {Math.round(t.wariness)} · 给过 {formatMoney(t.totalReceived)}</div>
               </div>
               {t.blocked && <span className="blocked-note">不回你了</span>}
-              {t.mutedByPlayer && <span className="muted-note">免打扰</span>}
+              {t.mutedByPlayer && !t.blocked && <span className="muted-note">已拉黑（可解除）</span>}
             </div>
           );
         })}
@@ -862,10 +863,10 @@ function TargetList({ dayPhase }: { dayPhase: 'morning' | 'night' }) {
               </button>
               <button
                 className={`pin-under-avatar mute-btn ${isMuted ? 'muted' : ''}`}
-                title={isMuted ? '解除免打扰' : '消息免打扰——他不再被推来，他的圈你也看不到了'}
+                title={isMuted ? '解除拉黑——他的消息重新推来' : '拉黑他——不再收他的消息，他的圈你也看不到了（可解除）'}
                 onClick={() => { playBlocked(); store.dispatch({ type: 'toggle_mute', targetId: t.targetId }); }}
               >
-                {isMuted ? '已免打扰' : '免打扰'}
+                {isMuted ? '已拉黑' : '拉黑'}
               </button>
             </div>
             <div className="target-info">
@@ -886,7 +887,7 @@ function TargetList({ dayPhase }: { dayPhase: 'morning' | 'night' }) {
             {t.blocked ? (
               <div className="blocked-note">他不回你了。</div>
             ) : isMuted ? (
-              <div className="muted small mute-note">消息免打扰中。他的消息不推来，他的朋友圈也看不见。</div>
+              <div className="muted small mute-note">已拉黑。他的消息不推来，他的朋友圈也看不见。</div>
             ) : !awake ? (
               <div className="muted small asleep-note">{dayPhase === 'night' ? '睡下了' : '还没醒'}</div>
             ) : chatted ? (

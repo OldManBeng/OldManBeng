@@ -17,6 +17,13 @@ npm test        # balance / simulation / v2-systems / safeguards 四类测试（
 npm run build   # 产物在 dist/
 ```
 
+## v4.13.2 dist 瘦身：raw 保留 + web 尺寸图
+
+- **问题**：dist 95M——photos(62M)+selfies(29M) 是 150 张 768×576 PNG（每张 ~600KB），而 UI 里照片最大显示 ~420px 宽。
+- **方案**：**raw 保留**于 `pytools/raw_scenes/{photos|selfies}/{id}/{id}_v{1..6}.png`（768 原图，gitignore）；**游戏用图**改为 560×420 JPEG q85 入 `public/`（渲染器 `variantUrl` 读 `.jpg`）。实测 600KB→46KB（13×），dist **95M→13M（-86%）**。SVG 兜底链不变（404 仍落场景 SVG）。
+- **管线**：`pytools/generate_scenes.py` 入库改双写（raw PNG + web JPEG，未来重跑无需再手工处理）；`pytools/shrink_scenes.py` 一次性 raw→web 转换器（`--only <id> --force`）。
+- **头像不动**：avatars(3.4M)/oldmen(1.1M) 已是 256×256（~90KB/张），无瘦身必要。
+
 ## v4.13 人设内头像：每人设 10 款同脸不同穿搭
 
 - **4 人设 × 10 款 = 40 张**：`public/avatars/{personaId}/avatar-{1..10}.png`。#1 = 该人设默认脸（从旧扁平 `avatar-1..4.png` 拷贝，零质量损失复用）；#2-10 新绘（种子段 20261201..20261240），提示词 = 该人设脸标准（年龄/气质/发色发型/眼型/唇型/标志配饰，逐字沿用旧款）+ 人设定制穿搭——御姐偏熟女/约会（丝绒裙/吊带/职场西装/皮衣/真丝袍/亮片/度假/波点/深V针织）、学妹偏学院/可爱（JK/背带/卫衣/毛绒居家/蛋糕裙/泳装/复古背带/奶黄针织/荷叶边）、姐姐偏居家/温柔（米色针织/围裙/棉麻/温柔西装/浴袍/运动/碎花/度假长裙/格纹）、文青偏文艺/复古（棉麻长裙/风衣/书店毛衣/复古西装/高领/帆布/居家/亚麻/怀旧格纹）。

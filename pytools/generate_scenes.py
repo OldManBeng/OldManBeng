@@ -42,6 +42,10 @@ LATENT_W = 1024
 LATENT_H = 768
 FINAL_W = 768
 FINAL_H = 576
+# v4.13.2 瘦身：入库双写——768 PNG 进 pytools/raw_scenes/（raw 保留），
+# 560×420 JPEG q85 进 public/（游戏用，渲染器 variantUrl 读 .jpg）。
+RAW_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "raw_scenes")
+WEB_W, WEB_H, WEB_QUALITY = 560, 420, 85
 
 # 风格前缀：中性手机摄影版（去 surprising compositions / candid moments，防拼贴）。
 SCENE_STYLE = """YOUR CONTEXT:
@@ -118,6 +122,11 @@ def out_dir_for(id_):
     return os.path.join(PROJECT, "public", "photos" if id_ in PHOTOS else "selfies", id_)
 
 
+def raw_dir_for(id_):
+    # v4.13.2：raw 768 PNG 落 pytools/raw_scenes/（同子目录结构，入库前原图）
+    return os.path.join(RAW_ROOT, "photos" if id_ in PHOTOS else "selfies", id_)
+
+
 def patch_workflow(workflow, id_, seed=None, filename=None):
     body = PHOTOS[id_] if id_ in PHOTOS else SELFIES[id_]
     subdir = "photos" if id_ in PHOTOS else "selfies"
@@ -130,13 +139,19 @@ def patch_workflow(workflow, id_, seed=None, filename=None):
 
 
 def resize_to_final(raw_path, id_, filename=None):
-    out_dir = out_dir_for(id_)
-    os.makedirs(out_dir, exist_ok=True)
-    final_path = os.path.join(out_dir, f"{filename or id_}.png")
+    # v4.13.2 双写：768 PNG → pytools/raw_scenes/{sub}/{id}/；560 JPEG → public/{sub}/{id}/
+    stem = filename or id_
+    raw_dir = raw_dir_for(id_)
+    web_dir = out_dir_for(id_)
+    os.makedirs(raw_dir, exist_ok=True)
+    os.makedirs(web_dir, exist_ok=True)
+    raw_png = os.path.join(raw_dir, f"{stem}.png")
+    web_jpg = os.path.join(web_dir, f"{stem}.jpg")
     with Image.open(raw_path) as im:
-        im = im.convert("RGB").resize((FINAL_W, FINAL_H), Image.LANCZOS)
-        im.save(final_path, optimize=True)
-    return final_path
+        im768 = im.convert("RGB").resize((FINAL_W, FINAL_H), Image.LANCZOS)
+        im768.save(raw_png, optimize=True)
+        im768.resize((WEB_W, WEB_H), Image.LANCZOS).save(web_jpg, "JPEG", quality=WEB_QUALITY, optimize=True)
+    return web_jpg
 
 
 def main():
@@ -174,7 +189,7 @@ def main():
         return
 
     for i, stem, seed in jobs:
-        final_path = os.path.join(out_dir_for(i), f"{stem}.png")
+        final_path = os.path.join(out_dir_for(i), f"{stem}.jpg")  # v4.13.2：web 产物是 .jpg
         if os.path.exists(final_path) and not args.force:
             print(f"{stem}: 已存在，跳过（--force 重生成）")
             continue
