@@ -210,7 +210,8 @@ describe('v4.1.2: 主动要钱（direct_ask，v2 对话流改版）', () => {
     expect(s.stats.asksFailed).toBe(1);
     expect(s.targets.find((t) => t.targetId === 'lao_li')!.totalReceived).toBe(0);
     expect(s.dayPhase).toBe('chat');
-    expect(s.chat!.transcript.some((m) => m.speaker === 'target' && DIRECT_ASK_COOLDOWN.some((l) => m.text.includes(l.slice(0, 6))))).toBe(true);
+    // 冷却答复以旁白气泡呈现（v4.13.3：整段全括号=叙事层，speaker 归 narrator）。
+    expect(s.chat!.transcript.some((m) => (m.speaker === 'target' || m.speaker === 'narrator') && DIRECT_ASK_COOLDOWN.some((l) => m.text.includes(l.slice(0, 6))))).toBe(true);
     expect(s.chat!.awaiting).toBe('closed');
   });
 

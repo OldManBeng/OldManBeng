@@ -107,6 +107,18 @@ describe('话术全量审计', () => {
           .replace(/（[^）]*后）/g, '')
           .replace(/（次日[^）]*）/g, '');
         if (isMain && noTimeGaps.includes('（')) issues.push(`${tid}/${where}: 气泡含旁白括号（红线）：${text.slice(0, 22)}…`);
+        // v4.13.3 库话术红线：整段全括号（…）的段是旁白层（引擎按 narrator 呈现，合法）；
+        // 括号之外的"聊天层文本"里不允许再混入括号——他不能边说话边旁白。
+        if (!isMain) {
+          for (const seg of text.split('｜')) {
+            const s2 = seg.trim();
+            if (!s2) continue;
+            const noTime = s2.replace(/（\d{1,2}:\d{2}）/g, '');
+            if (!noTime) continue; // 纯时间戳段
+            const wholeParens = /^（[^（）]*）$/.test(noTime);
+            if (!wholeParens && /（/.test(noTime)) issues.push(`${tid}/${where}: 库气泡讲述层含旁白括号（红线）：${seg.slice(0, 22)}…`);
+          }
+        }
         const cap = poolKey.startsWith('incoming') ? 60 : isMain ? 42 : 60;
         for (const seg of text.split('｜')) {
           if (seg.length > cap) issues.push(`${tid}/${where}: 连发段超长（${seg.length}>${cap}）：${seg.slice(0, 22)}…`);

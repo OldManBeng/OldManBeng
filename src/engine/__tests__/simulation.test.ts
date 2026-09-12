@@ -142,6 +142,48 @@ describe('simulation: multi-target auto runs', () => {
 });
 
 
+describe('simulation: ending reachability (死结局守卫)', () => {
+  it('end_caught：所有认识过的人都被删 → 可达（未偶遇的库目标不挡路）', () => {
+    let s = createInitialState();
+    s = dispatch(s, { type: 'new_game', name: 'auto', motive: 'debt', personaId: 'wise_sister' });
+    for (const t of s.targets) {
+      if (t.discoveredDay) { t.blocked = true; }
+    }
+    s.phase = 'ended';
+    expect(scoreEnding(s)).toBe('end_caught');
+  });
+
+  it('end_caught：还没把认识的人全删光时不可达', () => {
+    let s = createInitialState();
+    s = dispatch(s, { type: 'new_game', name: 'auto', motive: 'debt', personaId: 'wise_sister' });
+    const known = s.targets.filter((t) => t.discoveredDay);
+    for (let i = 0; i < known.length - 1; i++) known[i].blocked = true;
+    s.phase = 'ended';
+    expect(scoreEnding(s)).not.toBe('end_caught');
+  });
+
+  it('end_deposit / end_family_man / end_exposed / 坦白-撒谎系 flag→结局一一对应', () => {
+    const flagEndings: [string, string][] = [
+      ['zhou_took_deposit', 'end_deposit'],
+      ['wang_took_it_all', 'end_family_man'],
+      ['risk_exposed_all', 'end_exposed'],
+      ['li_confessed', 'end_confessed'],
+      ['li_lied_final', 'end_lied'],
+      ['hao_confessed', 'end_hao_confessed'],
+      ['hao_lied_final', 'end_hao_lied'],
+      ['chen_confessed', 'end_chen_confessed'],
+      ['chen_gave_savings', 'end_chen_gave'],
+    ];
+    for (const [flag, ending] of flagEndings) {
+      let s = createInitialState();
+      s = dispatch(s, { type: 'new_game', name: 'auto', motive: 'debt', personaId: 'wise_sister' });
+      s.flags[flag] = true;
+      s.phase = 'ended';
+      expect(scoreEnding(s)).toBe(ending);
+    }
+  });
+});
+
 describe('simulation: chain gating (all targets)', () => {
   const chains: [string, Record<string, { minStage?: string; minTrust?: number; options: unknown[]; openers: unknown[]; next: string }>][] = [
     ['lao_li', LAO_LI_CHAIN],

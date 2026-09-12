@@ -197,7 +197,10 @@ function pushBubbles(transcript: ChatMsg[], speaker: ChatMsg['speaker'], raw: st
   for (const seg of clean.split('｜')) {
     const t = seg.trim();
     if (!t) continue;
-    const who = speaker === 'target' && t.startsWith('（你') ? 'narrator' as const : speaker;
+    // 旁白段：整段被（…）包住的都是叙事层（她的内心独白 / 场景交代），
+    // 不是他说出的话——借他的气泡发出会穿帮（v4.13.3 收编库话术的旁白债）。
+    const wholeParens = /^（[^（）]*）$/.test(t) && !t.includes('[图片') && !t.includes('[语音');
+    const who = speaker === 'target' && (t.startsWith('（你') || wholeParens) ? 'narrator' as const : speaker;
     transcript.push({ speaker: who, text: t, stamp });
     n += 1;
   }
@@ -532,10 +535,12 @@ function runMorning(state: GameState) {
   log(state, 'event', eventLine);
 
   // Bills every day (rent pro-rated: keep simple — daily slice of monthly total).
-  const dailyBills = BILLS.reduce((s, b) => s + b.amount, 0) / 30;
+  // v4.13.3：同一精度记账——取整后同一笔只进一次余额与流水（此前余额扣小数、
+  // 流水记整数，30 天下来账面对不上 ~10 元）。
+  const dailyBills = Math.round(BILLS.reduce((s, b) => s + b.amount, 0) / 30);
   state.money -= dailyBills;
-  state.ledger.push({ day: state.day, amount: -Math.round(dailyBills), note: '房租/话费/会员/伙食（日摊）', kind: 'bill' });
-  log(state, 'bill', `今日开销 ${Math.round(dailyBills)} 元（房租/话费/会员/伙食摊到每天）`);
+  state.ledger.push({ day: state.day, amount: -dailyBills, note: '房租/话费/会员/伙食（日摊）', kind: 'bill' });
+  log(state, 'bill', `今日开销 ${dailyBills} 元（房租/话费/会员/伙食摊到每天）`);
 
   // v2.4 晨钟月轮：每天早上敲一条偈。三十天一轮按五幕递进（因缘→贪欲→痴面具→业渐盈→归悟），
   // day 31+ 取模回卷——字面意义上的轮回。不消耗 RNG（保护种子确定性测试），
@@ -899,7 +904,9 @@ export function scoreEnding(state: GameState): string {
   // 账本先说话。
   if (state.stats.totalEarned >= MONTHLY_GOAL) return 'end_debt_free';
   if (state.numbness >= 70) return 'end_numb';
-  if (state.targets.every((t) => t.blocked)) return 'end_caught';
+  // 只看认识过的人：未偶遇的库目标 stage 恒为 stranger、永远不会 blocked，
+  // 全量 every((t) => t.blocked) 永远为 false（end_caught 曾因此不可达）。
+  if (state.targets.every((t) => t.blocked || !t.discoveredDay)) return 'end_caught';
   if (state.flags.li_confessed) return 'end_confessed';
   if (state.flags.li_lied_final) return 'end_lied';
   // v4.13.1（审查 H2）：阿豪/陈工的坦白-撒谎线结局——与老李同优先级层。
@@ -1268,6 +1275,9 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       // 老头库目标没有剧情链，直接走话术组。
       // v4.1.2：链夜随机穿插——30% 的链夜改聊闲聊组，剧情节点原地保留。
       // 重开后"哪一晚推剧情"随种子变化（剧情弧仍保序），不再每局逐字相同。
+      // 注意：discoveredDay===1 意为"开局即在通讯录的五个主老头"——剧情链
+      // 只对他们播放；偶遇解锁的库目标即使将来配了 chain 也不会走这里，
+      // （给库人物加链时需要另行处理这个门槛。）
       const chainNode = t.discoveredDay === 1 ? pickChainNode(s, def, t) : null;
       const interlude = chainInterludeTonight(s, t, chainNode);
       const activeChain = chainNode && !interlude ? chainNode : null;
