@@ -379,7 +379,8 @@ function TodayPanel({ phaseLabel, onOpenProfile }: { phaseLabel: string; onOpenP
   return (
     <section className="today-panel">
       <div className="persona-row">
-        <PersonaAvatar personaId={state.personaId} size={44} />
+        {/* 今天页也用她选中的头像（此前固定渲染人设默认脸 #1——换头像后这里不变）。 */}
+        <ProfileAvatar avatarId={state.profile.avatarId} personaId={state.personaId} size={44} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="persona-line">
             {state.playerName} · 人设「{persona.name}」
