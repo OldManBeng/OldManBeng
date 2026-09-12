@@ -346,7 +346,7 @@ export const LAO_LI_CHAIN: Record<string, ChainNode> = {
         trust: -20,
         conscience: 20,
         setFlag: 'li_confessed',
-        replies: ['（片刻后）', '（他退回了这个月的红包，附言：不怪你。怪我自己。）', '（他没拉黑你。他只是，再也没主动说过话。）'],
+        replies: ['（片刻后）', '（你把红包退了回去。他没领，原路退回，附言：不怪你。怪我自己。）', '（他没拉黑你。他只是，再也没主动说过话。）'],
       },
       {
         text: '（不回。关掉对话框。）',
