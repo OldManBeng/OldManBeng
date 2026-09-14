@@ -1242,9 +1242,6 @@ function ProfileOverlay({ onClose }: { onClose: () => void }) {
           >
             切换常用手机
           </button>
-          <p className="muted small">
-            另一部手机：暖色的、素颜的、妈和他在的那部。那边的聊天不耗体力，钱不带代价字幕。
-          </p>
         </div>
 
         <h4>头像（{PERSONA_MAP[state.personaId].name}的十款穿搭）</h4>

@@ -1961,3 +1961,19 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   margin-left: 6px;
   white-space: nowrap;
 }
+
+/* 暗线叙事气泡：无联系人的"她读到的消息"——居中、安静、像通报栏里揭下来的一页 */
+.cbubble-narrator {
+  margin: 10px auto;
+  max-width: 86%;
+  padding: 10px 12px;
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+  border-radius: 4px;
+  font-size: var(--fs-3);
+  line-height: 1.75;
+  color: var(--label);
+  opacity: 0.92;
+}
+/* 剧情卡上的系统消息标 */
+.cec-sys-mark { font-size: 30px; line-height: 36px; width: 36px; text-align: center; }

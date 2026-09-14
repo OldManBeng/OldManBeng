@@ -35,6 +35,7 @@ import {
   MOM_GIFT_FIRST_DAY, BF_PACKET_FIRST_DAY, BF_OMEN_DAY,
   XIAOMAN_BIRTHDAY_DAY, freshComfortState,
 } from '../../data/comfort';
+import { STORY_BEATS } from '../../data/comfort-story';
 import type { GameState } from '../../types/game';
 
 function fresh(seed = 7): GameState {
@@ -378,6 +379,102 @@ describe('1.1.0 嘘寒问暖与生日：家人常来，外人看心情', () => {
     expect(s.money).toBe(money0 + 200);
     const all = s.log.filter((l) => l.kind === 'comfort').map((l) => l.details + (l.line ?? '')).join();
     expect(all).toContain('农历小满');
+  });
+});
+
+describe('1.1.x 暗线《家的账本》：故事不改结局，只交代来路', () => {
+  it('D9 账本 beat 必然落在常用手机上：听完开一场妈的聊天，选项影响家庭关系', () => {
+    let s = fresh(71);
+    s.day = 9;
+    s.comfort = { ...freshComfortState() };
+    runComfortMorning(s);
+    const card = s.comfort.incoming.find((m) => m.kind === 'story' && m.beatId === 'd9_mom_ledger');
+    expect(card).toBeDefined();
+    s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: card!.id, accept: true });
+    expect(s.comfort.chat?.contactId).toBe('mother');
+    expect(s.comfort.chat!.transcript.some((m) => m.text.includes('红皮本子'))).toBe(true);
+    const family0 = s.comfort.family;
+    s = dispatch(s, { type: 'comfort_pick', optionIndex: 0 });
+    expect(s.comfort.family).toBe(family0 + 5);
+    const all = s.log.filter((l) => l.kind === 'comfort').map((l) => l.details + (l.line ?? '')).join();
+    expect(all).toContain('八百块是谁擦出来的');
+  });
+
+  it('剧情卡不过期、不占事件上限：挂两天还在，听完才走', () => {
+    let s = fresh(73);
+    s.day = 2;
+    s.comfort = { ...freshComfortState() };
+    runComfortMorning(s);
+    expect(s.comfort.incoming.some((m) => m.beatId === 'd2_mom_eight_hundred')).toBe(true);
+    // 第二天没听 → 还在（普通卡早被撤下了）
+    s.day = 3;
+    runComfortMorning(s);
+    expect(s.comfort.incoming.some((m) => m.beatId === 'd2_mom_eight_hundred')).toBe(true);
+    // 听完 → 走，且不再来
+    const card = s.comfort.incoming.find((m) => m.beatId === 'd2_mom_eight_hundred')!;
+    s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: card.id, accept: true });
+    expect(s.comfort.incoming.some((m) => m.beatId === 'd2_mom_eight_hundred')).toBe(false);
+    s.day = 4;
+    runComfortMorning(s);
+    expect(s.comfort.incoming.some((m) => m.beatId === 'd2_mom_eight_hundred')).toBe(false);
+  });
+
+  it('阿凯崩坏（纵容线）：D28 失联被抓，兰姨的五千与你的 52 块都进案卷', () => {
+    let s = fresh(75);
+    s.day = 28;
+    s.comfort = { ...freshComfortState() };
+    runComfortMorning(s);
+    const card = s.comfort.incoming.find((m) => m.kind === 'story' && m.beatId === 'd28_kai_taken');
+    expect(card).toBeDefined();
+    expect(card!.lines[0]).toContain('失联');
+    s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: card!.id, accept: true });
+    expect(s.comfort.bfState).toBe('arrested');
+    expect(s.comfort.blockedByBf).toBe(true);
+    // sys 叙事卡：直接归档成一条"她读到的消息"
+    const sysArchive = s.comfort.archives.find((a) => a.contactId === 'sys');
+    expect(sysArchive).toBeDefined();
+    expect(sysArchive!.transcript.some((m) => m.text.includes('案卷第9页'))).toBe(true);
+    const all = s.log.filter((l) => l.kind === 'comfort').map((l) => l.details + (l.line ?? '')).join();
+    expect(all).toContain('法没绕开他，也没冤枉他');
+  });
+
+  it('阿凯崩坏（分手线）：D28 的通报是别人家的案子报到了他头上', () => {
+    let s = fresh(77);
+    s.comfort = { ...freshComfortState(), bfState: 'broken_up', blockedByBf: true };
+    s.day = 28;
+    runComfortMorning(s);
+    const card = s.comfort.incoming.find((m) => m.kind === 'story' && m.beatId === 'd28_kai_arrest_news');
+    expect(card).toBeDefined();
+    s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: card!.id, accept: true });
+    expect(s.comfort.bfState).toBe('broken_up'); // 分手线不翻成 arrested——他是先走的
+    expect(s.comfort.archives.some((a) => a.contactId === 'sys')).toBe(true);
+  });
+
+  it('D26 催收 beat：妈把"去派出所说清楚"说在责备前面（法在情前）', () => {
+    let s = fresh(79);
+    s.day = 26;
+    s.comfort = { ...freshComfortState() };
+    runComfortMorning(s);
+    const card = s.comfort.incoming.find((m) => m.kind === 'story' && m.beatId === 'd26_mom_crackdown');
+    expect(card).toBeDefined();
+    s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: card!.id, accept: true });
+    expect(s.comfort.chat!.transcript.some((m) => m.text.includes('穷可以，脏不行'))).toBe(true);
+  });
+
+  it('暗线全库台词零重复（与事件池、生日池同口径）', () => {
+    const seen = new Set<string>();
+    const dupes: string[] = [];
+    const put = (t: string) => {
+      const k = t.replace(/\s/g, '');
+      if (k && seen.has(k)) dupes.push(t);
+      seen.add(k);
+    };
+    for (const beat of STORY_BEATS) {
+      for (const l of beat.lines) l.split('｜').forEach(put);
+      for (const o of beat.options ?? []) { put(o.text); o.reply.split('｜').forEach(put); }
+    }
+    expect(dupes).toEqual([]);
+    expect(STORY_BEATS.length).toBeGreaterThanOrEqual(10);
   });
 });
 

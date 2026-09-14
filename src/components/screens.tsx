@@ -175,10 +175,6 @@ export function NewGameScreen({ onStart }: { onStart: (name: string, personaId: 
         通讯录里躺着五个人：深夜的司机、上午的老师、凌晨的老板、网吧的阿豪、画图纸的陈工。
         同时崩的越多，钱来得越快——穿帮也来得越快。
       </p>
-      <p className="muted small">
-        工作手机之外，你还有一部常用手机：妈、过世的爸、和阿凯都住在那部里。
-        那边的聊天不耗体力，可那边的钱，一笔有一笔的来路；想切过去，去「变更人设」后面按「切换常用手机」。
-      </p>
     </div>
   );
 }

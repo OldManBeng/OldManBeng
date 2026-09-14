@@ -9,15 +9,15 @@
 /** 舒适圈联系人（父亲在通讯录置灰，不参与聊天）。 */
 export type ComfortContactId = 'mother' | 'boyfriend';
 
-/** 舒适圈事件卡类型。mom_talk/bf_talk：嘘寒问暖的纯聊天卡（不涉钱，回 = 开一场免费聊天）。 */
-export type ComfortIncomingKind = 'mom_gift' | 'bf_packet' | 'bf_demand' | 'mom_talk' | 'bf_talk';
+/** 舒适圈事件卡类型。mom_talk/bf_talk：嘘寒问暖的纯聊天卡；story：暗线剧情卡（只能"听完"，是故事不是选择）。 */
+export type ComfortIncomingKind = 'mom_gift' | 'bf_packet' | 'bf_demand' | 'mom_talk' | 'bf_talk' | 'story';
 
-/** 挂在常用手机「今天」页的待处理事件（妈的生活费/男友红包/男友要钱/嘘寒问暖）。 */
+/** 挂在常用手机「今天」页的待处理事件（妈的生活费/男友红包/男友要钱/嘘寒问暖/暗线剧情）。 */
 export interface ComfortIncoming {
   id: string;
   kind: ComfortIncomingKind;
   day: number;
-  /** 红包/要钱的金额（聊天卡为 0）。 */
+  /** 红包/要钱的金额（聊天卡/剧情卡为 0）。 */
   amount: number;
   /** 对方的话（每段一条语音，气泡显示语音条 + 文字）。 */
   lines: string[];
@@ -27,11 +27,14 @@ export interface ComfortIncoming {
   packId?: string;
   /** 生日卡（农历小满这天的一次性事件）。 */
   tone?: 'birthday';
+  /** 暗线剧情卡：对应的 beat id（comfort-story.ts）。 */
+  beatId?: string;
 }
 
-/** 舒适圈聊天气泡。voiceSecs：语音条显示秒数（纯显示效果，游戏无真实语音）。 */
+/** 舒适圈聊天气泡。voiceSecs：语音条显示秒数（纯显示效果，游戏无真实语音）。
+ *  narrator：无联系人的叙事气泡（暗线里"她读到的消息"）。 */
 export interface ComfortMessage {
-  speaker: 'me' | 'them' | 'sys';
+  speaker: 'me' | 'them' | 'sys' | 'narrator';
   text: string;
   stamp?: string;
   /** 显示为微信式语音条「某某语音 xx″」；有此字段的气泡先画语音条、文字在下。 */
@@ -70,9 +73,9 @@ export interface ComfortChat {
   closingNote: string | null;
 }
 
-/** 聊天归档（容量封顶）。 */
+/** 聊天归档（容量封顶）。sys = 无联系人的叙事记录（暗线的"她读到的消息"）。 */
 export interface ComfortArchive {
-  contactId: ComfortContactId;
+  contactId: ComfortContactId | 'sys';
   day: number;
   transcript: ComfortMessage[];
 }
@@ -91,8 +94,8 @@ export interface ComfortMoment {
   comments: { by: ComfortContactId | 'me'; text: string }[];
 }
 
-/** 男友线状态：normal → （要钱不给的连锁）→ broken_up（分手+拉黑）。 */
-export type BfState = 'normal' | 'broken_up';
+/** 男友线状态：normal → （要钱不给的连锁）→ broken_up（分手+拉黑）→/或→ arrested（D28 崩坏结局：因诈骗"阿姨"们被带走）。 */
+export type BfState = 'normal' | 'broken_up' | 'arrested';
 
 /** 舒适圈运行时状态——挂在 GameState.comfort 下，随主存档一起序列化。 */
 export interface ComfortState {
@@ -121,6 +124,8 @@ export interface ComfortState {
   incoming: ComfortIncoming[];
   /** 进行中的聊天。 */
   chat: ComfortChat | null;
+  /** 暗线剧情：已派发过的 beat id（一次性的故事只讲一遍）。 */
+  storyDone: string[];
   /** 聊天归档（最新在后）。 */
   archives: ComfortArchive[];
   /** 每人最近用过的话术套（去重窗口）。 */

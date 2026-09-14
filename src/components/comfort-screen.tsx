@@ -16,7 +16,7 @@ import { Ico } from './icons';
 import { playMessage, playSend, playMoney, playTab, playBlocked, playPost, playSocial } from '../utils/sound';
 import { COMFORT_CONTACTS, FATHER_MEMORIAL, XIAOMAN } from '../data/comfort';
 import { MIRROR_LINES, WALLET_CONTRAST } from '../data/comfort-contrast';
-import { BF_PACKET_MAX, MOM_GIFT_MAX } from '../data/comfort';
+import { STORY_BEATS, STORY_OPEN_LABEL } from '../data/comfort-story';
 import type { ComfortContactId, ComfortMessage } from '../types/comfort';
 
 type ComfortTab = 'today' | 'contacts' | 'moments' | 'history' | 'wallet';
@@ -78,6 +78,11 @@ function VoiceBubble({ m, name, who }: { m: ComfortMessage; name?: string; who?:
         {m.label && <div className="cbubble-sys-label">{m.label}</div>}
         <div>{m.text}</div>
       </div>
+    );
+  }
+  if (m.speaker === 'narrator') {
+    return (
+      <div className="cbubble-narrator">{m.text}</div>
     );
   }
   return (
@@ -191,7 +196,7 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
 
   return (
     <section className="comfort-today">
-      {/* 素颜的小满 */}
+      {/* 素颜的她——名字就是全部说明，别的话让故事自己讲 */}
       <div className="persona-row">
         <ComfortAvatar who="xiaoman" size={44} />
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -200,14 +205,11 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
             {/* 切回工作手机——入口跟人设行走（与主线「变更人设」旁的切机入口同款风格） */}
             <button
               className="persona-change-btn"
-              title="崩老头的那部手机——冷色的，聊天耗体力"
               onClick={() => { playTab(); store.dispatch({ type: 'switch_phone' }); }}
             >
               切回工作手机
             </button>
           </div>
-          <div className="persona-bio muted small">{XIAOMAN.plainNote}{XIAOMAN.birthNote}</div>
-          <div className="muted small">这里的聊天不耗体力——这边的人，不收你的表演费。</div>
         </div>
       </div>
 
@@ -218,31 +220,48 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
         </div>
       )}
 
-      {/* 事件卡：妈的生活费 / 阿凯的红包 / 阿凯要钱 / 嘘寒问暖 */}
+      {/* 事件卡：妈的生活费 / 阿凯的红包 / 阿凯要钱 / 嘘寒问暖 / 暗线剧情 */}
       {c.incoming.map((m) => {
+        const beat = m.kind === 'story' ? STORY_BEATS.find((b) => b.id === m.beatId) : undefined;
+        const storyFrom = beat?.from ?? 'sys';
+        const isStory = m.kind === 'story';
         const isTalk = m.kind === 'mom_talk' || m.kind === 'bf_talk';
         const isMom = m.kind === 'mom_gift' || m.kind === 'mom_talk';
         const isDemand = m.kind === 'bf_demand';
         const contactId: ComfortContactId = isMom ? 'mother' : 'boyfriend';
-        const tag = m.tone === 'birthday' ? ' · 生日'
+        const tag = isStory ? ' · ' + (storyFrom === 'sys' ? '消息' : '语音')
+          : m.tone === 'birthday' ? ' · 生日'
           : isTalk ? ' · 语音'
           : m.kind === 'bf_packet' ? ' · 红包'
           : isDemand ? ' · 要钱' : ' · 转账';
+        const storyName = !isStory ? nameOf(contactId)
+          : storyFrom === 'mother' ? '妈'
+          : storyFrom === 'boyfriend' ? nameOf('boyfriend') : '消息';
         const chatOpen = c.chat !== null;
         return (
           <div key={m.id} className={`comfort-event-card ${m.kind}`}>
             <div className="cec-head">
-              <ComfortAvatar who={isMom ? 'mother' : 'boyfriend'} size={36} />
+              {isStory && storyFrom === 'sys'
+                ? <span className="cec-sys-mark">📨</span>
+                : <ComfortAvatar who={isMom ? 'mother' : 'boyfriend'} size={36} />}
               <div>
-                <div className="cec-name">{nameOf(contactId)}{tag}</div>
+                <div className="cec-name">{storyName}{tag}</div>
                 <div className="muted small">{m.note}</div>
               </div>
             </div>
             {m.lines.map((l, i) => (
-              <VoiceBubble key={i} m={{ speaker: 'them', text: l, voiceSecs: Math.min(58, Math.max(2, Math.ceil(l.length / 4))) }} name={nameOf(contactId)} who={isMom ? 'mother' : 'boyfriend'} />
+              <VoiceBubble key={i} m={{ speaker: 'them', text: l, voiceSecs: Math.min(58, Math.max(2, Math.ceil(l.length / 4))) }} name={storyName} who={isStory && storyFrom !== 'sys' ? (storyFrom as ComfortContactId) : isMom ? 'mother' : 'boyfriend'} />
             ))}
             <div className="cec-actions">
-              {isTalk ? (
+              {isStory ? (
+                <button
+                  className="btn small primary"
+                  disabled={chatOpen}
+                  onClick={() => { playMessage(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: true }); }}
+                >
+                  {chatOpen ? '（先回完手头这场）' : STORY_OPEN_LABEL[storyFrom]}
+                </button>
+              ) : isTalk ? (
                 <>
                   <button
                     className="btn small primary"
@@ -290,13 +309,14 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
         <h3>家人</h3>
         {(['mother', 'boyfriend'] as ComfortContactId[]).map((id) => {
           const def = COMFORT_CONTACTS[id];
-          const gone = id === 'boyfriend' && (c.blockedByBf || c.bfState === 'broken_up');
+          const gone = id === 'boyfriend' && (c.blockedByBf || c.bfState !== 'normal');
+          const goneText = c.bfState === 'arrested' ? '（他的头像再也没有亮过。）' : '（他把你删了。）';
           return (
             <div key={id} className={`comfort-contact-row ${gone ? 'gone' : ''}`}>
               <ComfortAvatar who={id === 'mother' ? 'mother' : 'boyfriend'} size={40} />
               <div className="ccr-body">
                 <div className="ccr-name">{def.handle}</div>
-                <div className="muted small">{gone ? '（他把你删了。）' : def.signature}</div>
+                <div className="muted small">{gone ? goneText : def.signature}</div>
               </div>
               {!gone && (
                 <button className="btn small primary" onClick={() => { playMessage(); store.dispatch({ type: 'comfort_open_chat', contactId: id }); }}>
@@ -306,7 +326,6 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
             </div>
           );
         })}
-        <p className="muted small">跟家人聊天不要钱（精力）——可你一天里留给这部手机的时间，总是最少。</p>
       </div>
 
       <div className="event-feed">
@@ -331,7 +350,8 @@ function ComfortContacts() {
   const { state } = useGame();
   const c = state.comfort;
   const [dadOpen, setDadOpen] = useState(false);
-  const bfGone = c.blockedByBf || c.bfState === 'broken_up';
+  const bfGone = c.blockedByBf || c.bfState !== 'normal';
+  const bfGoneTag = c.bfState === 'arrested' ? ' · 被带走了' : ' · 已拉黑';
 
   return (
     <section className="comfort-contacts">
@@ -360,11 +380,12 @@ function ComfortContacts() {
       <div className={`comfort-contact-row ${bfGone ? 'gone' : ''}`}>
         <ComfortAvatar who="boyfriend" size={44} />
         <div className="ccr-body">
-          <div className="ccr-name">{COMFORT_CONTACTS.boyfriend.handle}（{COMFORT_CONTACTS.boyfriend.name} · {COMFORT_CONTACTS.boyfriend.age}岁）{bfGone ? ' · 已拉黑' : ''}</div>
+          <div className="ccr-name">{COMFORT_CONTACTS.boyfriend.handle}（{COMFORT_CONTACTS.boyfriend.name} · {COMFORT_CONTACTS.boyfriend.age}岁）{bfGone ? bfGoneTag : ''}</div>
           <div className="muted small">{bfGone ? '（长期离线）' : COMFORT_CONTACTS.boyfriend.signature}</div>
           <div className="comfort-contact-bio">{COMFORT_CONTACTS.boyfriend.bio}</div>
           {!bfGone && <div className="muted small">感情 {Math.round(c.love)} · 给过你 {formatMoney(c.bfGiven)} · 从你这儿拿走 {formatMoney(c.bfTaken)}</div>}
-          {bfGone && <div className="comfort-contact-bio muted">他卷走了活命钱里剩下的每一块，连同他游戏里那个"满姐"的聊天记录。你被他拉黑了——常用手机里，这行灰色的名字删不删，你还没想好。</div>}
+          {bfGone && c.bfState === 'broken_up' && <div className="comfort-contact-bio muted">他卷走了活命钱里剩下的每一块，连同他游戏里那个"满姐"的聊天记录。你被他拉黑了——常用手机里，这行灰色的名字删不删，你还没想好。</div>}
+          {bfGone && c.bfState === 'arrested' && <div className="comfort-contact-bio muted">警情通报里没有他的名字，只有那件灰卫衣。兰姨的五万成了"彩礼"，你转他的每一笔都躺在案卷第 9 页。妈听说了，只说了一句：早看出来了，就没敢说。</div>}
         </div>
       </div>
       <p className="muted small">爸的名字一直置着灰。妈说，留着吧，就当这个号还在等他上线。</p>
@@ -445,7 +466,6 @@ function ComfortMoments() {
           );
         })}
       </div>
-      <p className="muted small">常用手机的朋友圈没有穿帮风险——这边的人本来就都认识彼此。妈一条条看，男友抢第一个赞。</p>
     </section>
   );
 }
@@ -455,7 +475,7 @@ function ComfortHistory() {
   const { state } = useGame();
   const c = state.comfort;
   const [openIdx, setOpenIdx] = useState<number | null>(null);
-  const nameOf = (id: ComfortContactId) => COMFORT_CONTACTS[id].handle;
+  const nameOf = (id: ComfortContactId | 'sys') => (id === 'sys' ? '消息' : COMFORT_CONTACTS[id].handle);
   return (
     <section className="comfort-history">
       <h3>聊天记录</h3>
@@ -473,7 +493,7 @@ function ComfortHistory() {
               {openIdx === realIdx && (
                 <div className="history-transcript">
                   {a.transcript.map((m, j) => (
-                    <VoiceBubble key={j} m={m} name={nameOf(a.contactId)} who={a.contactId} />
+                    <VoiceBubble key={j} m={m} name={nameOf(a.contactId)} who={a.contactId === 'sys' ? undefined : a.contactId} />
                   ))}
                 </div>
               )}
@@ -514,10 +534,6 @@ function ComfortWallet() {
           </div>
         ))}
       </div>
-      <p className="muted small">
-        妈的一次生活费 {formatMoney(MOM_GIFT_MAX)} 封顶，是她在别人家厨房跪四个钟头换的；
-        阿凯的红包最多 {formatMoney(BF_PACKET_MAX)}，是哪个阿姨的晚安换的——他没说，你也没问。
-      </p>
     </section>
   );
 }
@@ -538,7 +554,6 @@ function ComfortChatView() {
         <ComfortAvatar who={chat.contactId === 'mother' ? 'mother' : 'boyfriend'} size={36} />
         <div>
           <div className="target-name">{name}</div>
-          <div className="muted small">{chat.contactId === 'mother' ? `家庭 ${Math.round(c.family)} · 免费（不耗精力）` : `感情 ${Math.round(c.love)} · 免费（不耗精力）`}</div>
         </div>
       </header>
       <div className="chat-stream" ref={streamRef}>

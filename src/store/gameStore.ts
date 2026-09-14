@@ -85,6 +85,7 @@ function mergeComfort(saved: GameState['comfort'] | undefined): GameState['comfo
     ...saved,
     momTalk: saved.momTalk ?? base.momTalk,
     bfTalk: saved.bfTalk ?? base.bfTalk,
+    storyDone: saved.storyDone ?? base.storyDone,
   };
 }
 

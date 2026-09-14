@@ -44,6 +44,7 @@ import {
   MOM_MONEY_TAKE_CONTRAST, MOM_MONEY_REFUSE_CONTRAST, BF_PACKET_CONTRAST,
   BF_DEMAND_CONTRAST, BF_BREAKUP_CONTRAST, MIRROR_LINES,
 } from '../data/comfort-contrast';
+import { STORY_BEATS, type ComfortStoryBeat } from '../data/comfort-story';
 import { clamp } from './chat';
 
 /** 按天取模取一行（对比旁白/镜像行不耗 RNG）。 */
@@ -91,10 +92,31 @@ function pickPackId(state: GameState, contactId: ComfortContactId, salt: number)
 export function runComfortMorning(state: GameState): void {
   const c = state.comfort;
   // 过期清理：事件卡放两天没处理就撤下（妈会重发，男友的火气攒着）。
-  c.incoming = c.incoming.filter((m) => state.day - m.day <= 1);
+  // 暗线剧情卡不过期——信不会被收回，故事不会因为你忙就散场。
+  c.incoming = c.incoming.filter((m) => m.kind === 'story' || state.day - m.day <= 1);
 
   // 分手后的世界安静了：只留妈的事件链。
   const bfAlive = c.bfState === 'normal' && !c.blockedByBf;
+
+  // 暗线剧情（日历锚定，一次性）：把明线没交代的交代清楚——这笔债从哪个家里长出来。
+  // 剧情卡不受事件卡上限约束，故事不能被别的消息挤掉。
+  for (const beat of STORY_BEATS) {
+    if (beat.day !== state.day || c.storyDone.includes(beat.id)) continue;
+    const when = beat.when ?? 'any';
+    if (when === 'bf_normal' && !bfAlive) continue;
+    if (when === 'bf_gone' && bfAlive) continue;
+    c.storyDone.push(beat.id);
+    const opener = beat.lines[0].split('｜')[0];
+    c.incoming.push({
+      id: `story_${beat.id}`,
+      kind: 'story',
+      day: state.day,
+      amount: 0,
+      lines: [opener.length > 30 ? `${opener.slice(0, 30)}……` : opener],
+      note: beat.note,
+      beatId: beat.id,
+    });
+  }
 
   // 父亲忌日：一天只有一次的置灰头像会"亮"一下。
   if (state.day === FATHER_MEMORIAL.memorialDay) {
@@ -318,9 +340,38 @@ export function resolveComfortIncoming(state: GameState, incomingId: string, acc
   if (idx < 0) return;
   const inc = c.incoming[idx];
   // 嘘寒问暖卡：一场聊天没完不能"回"下一场——卡片保留，回完手头这场再说。
-  if ((inc.kind === 'mom_talk' || inc.kind === 'bf_talk') && c.chat) return;
+  if ((inc.kind === 'mom_talk' || inc.kind === 'bf_talk' || inc.kind === 'story') && c.chat) return;
   c.incoming.splice(idx, 1);
   const rng = derivedComfortRng(state, 233);
+
+  // 暗线剧情卡：只能听完，没有"划掉"——这是她的家，不是选择题。
+  if (inc.kind === 'story') {
+    const beat = STORY_BEATS.find((b) => b.id === inc.beatId);
+    if (!beat) return;
+    if (beat.from === 'sys') {
+      // 无联系人的叙事消息：不成聊天，直接归档成一条她读过的记录。
+      const rngS = derivedComfortRng(state, 431);
+      const transcript = [];
+      for (const l of beat.lines) {
+        for (const seg of l.split('｜')) {
+          const t = seg.trim();
+          if (t) transcript.push({ speaker: 'narrator' as const, text: t, stamp: dayStamp(rngS) });
+        }
+      }
+      c.archives.push({ contactId: 'sys', day: state.day, transcript });
+      if (c.archives.length > COMFORT_ARCHIVE_CAP) {
+        c.archives.splice(0, c.archives.length - COMFORT_ARCHIVE_CAP);
+      }
+    } else {
+      openStoryChat(state, beat);
+    }
+    if (beat.narration) clog(state, beat.narration);
+    if (beat.effect === 'kai_arrested') {
+      c.bfState = 'arrested';
+      c.blockedByBf = true;
+    }
+    return;
+  }
 
   if (inc.kind === 'mom_talk') {
     if (accept) {
@@ -527,6 +578,32 @@ export function pickComfortOption(state: GameState, optionIndex: number): void {
   c.chat.awaiting = 'closed';
   c.chat.closingNote = contactId === 'mother' ? '妈放下手机去忙了。' : '他去打游戏了。';
   // 分手后他的日常聊天入口关闭（已在 UI 侧挡住，这里兜底）。
+}
+
+/** 暗线剧情聊天：话术来自 beat 本体（不在常规池里），听完即收束。 */
+export function openStoryChat(state: GameState, beat: ComfortStoryBeat): void {
+  const c = state.comfort;
+  if (c.chat) return;
+  const rng = derivedComfortRng(state, 401);
+  const transcript = [];
+  transcript.push({
+    speaker: 'sys' as const,
+    text: `和 ${beat.from === 'mother' ? '妈' : '阿凯'} 的对话`,
+    stamp: dayStamp(rng),
+  });
+  for (const l of beat.lines) {
+    for (const seg of l.split('｜')) {
+      const t = seg.trim();
+      if (t) transcript.push({ speaker: 'them' as const, text: t, voiceSecs: voiceSecs(t), stamp: dayStamp(rng) });
+    }
+  }
+  c.chat = {
+    contactId: beat.from as 'mother' | 'boyfriend',
+    transcript,
+    pending: beat.options ?? [],
+    awaiting: beat.options?.length ? 'player' : 'closed',
+    closingNote: beat.options?.length ? null : '（这段语音到这里就完了。）',
+  };
 }
 
 /** 结束当前聊天（归档）。 */

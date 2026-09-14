@@ -166,6 +166,7 @@ export function freshComfortState(): ComfortState {
     bfTaken: 0,
     incoming: [],
     chat: null,
+    storyDone: [],
     archives: [],
     recentPacks: { mother: [], boyfriend: [] },
     moments: [],
