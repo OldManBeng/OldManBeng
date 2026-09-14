@@ -1882,6 +1882,9 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       // 纯视图切换：工作手机 ↔ 常用手机。时间共用同一条轴线，他不看你后台，
       // 妈和男友也不看你后台——两个世界互不可见，只有你两头都在。
       s.comfort.active = !s.comfort.active;
+      // 翻转计数：每次切机 +1，驱动两侧屏幕重挂载并重放"翻面"动画
+      // （人设的翻转、角色的翻转、命运的翻转）。
+      s.comfort.flipTick = (s.comfort.flipTick ?? 0) + 1;
       // 切机旁白走对比池（温情 vs 算计——按天轮换，不耗 RNG）。
       const contrast = s.comfort.active ? SWITCH_TO_COMFORT : SWITCH_TO_WORK;
       log(s, 'comfort', '你按下了电源键。', contrast[s.day % contrast.length]);

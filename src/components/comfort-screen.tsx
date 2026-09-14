@@ -8,7 +8,7 @@
  * 叙事锚点：家人的温情关怀 vs 工作手机的冷漠算计——
  * 镜像行、对照旁白、钱包的两本账，全部落在界面上。
  */
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../store/gameStore';
 import { formatMoney } from '../utils/format';
 import { ComfortAvatar, ComfortSceneRender } from './comfort-art';
@@ -117,7 +117,7 @@ export function ComfortScreen() {
   const policeToday = c.policeDay === state.day;
 
   return (
-    <div className="screen main-screen app-shell comfort-theme">
+    <div className="screen main-screen app-shell comfort-theme phone-flip-in phone-flip-r" key={`comfort-flip-${c.flipTick}`}>
       <header className="hud">
         <div className="hud-left">
           <span className="day-chip">第 {state.day}/{state.daysLimit} 天</span>
@@ -202,9 +202,9 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="persona-line">
             {state.playerName || XIAOMAN.name} · 常用手机
-            {/* 切回工作手机——入口跟人设行走（与主线「变更人设」旁的切机入口同款风格） */}
+            {/* 切回工作手机——入口跟人设行走，描边胶囊与工作手机侧「切换常用手机」同款框 */}
             <button
-              className="persona-change-btn"
+              className="persona-change-btn comfort-switch-chip"
               onClick={() => { playTab(); store.dispatch({ type: 'switch_phone' }); }}
             >
               切回工作手机
@@ -546,7 +546,10 @@ function ComfortChatView() {
   const chat = c.chat!;
   const name = chat.contactId === 'mother' ? '妈' : COMFORT_CONTACTS.boyfriend.handle;
   const streamRef = useRef<HTMLDivElement>(null);
-  streamRef.current?.scrollTo({ top: streamRef.current.scrollHeight });
+  // 新气泡到达 → 平滑贴底（微信式：旧消息向上滚，最新的永远可见）。
+  useEffect(() => {
+    streamRef.current?.scrollTo({ top: streamRef.current.scrollHeight, behavior: 'smooth' });
+  }, [chat.transcript.length]);
 
   return (
     <section className="chat-panel comfort-chat">

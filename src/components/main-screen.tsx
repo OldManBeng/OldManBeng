@@ -291,7 +291,10 @@ export function MainScreen() {
         : '深夜';
 
   return (
-    <div className={`screen main-screen app-shell ${phaseCls} ${state.dayPhase === 'chat' ? 'chat-mode' : ''}`}>
+    <div
+      key={`work-flip-${state.comfort.flipTick}`}
+      className={`screen main-screen app-shell ${phaseCls} ${state.dayPhase === 'chat' ? 'chat-mode' : ''} phone-flip-in phone-flip-l`}
+    >
       <header className="hud">
         <div className="hud-left">
           <span className="day-chip">第 {state.day}/{state.daysLimit} 天</span>
@@ -428,10 +431,17 @@ function TodayPanel({ phaseLabel, onOpenProfile }: { phaseLabel: string; onOpenP
                 <OldManAvatar target={def} state={t} size={40} />
                 <div className="incoming-body">
                   <div className="incoming-head">{def.handle ?? def.name} · {m.reason === 'selfie' ? '因为你的新照片' : m.reason === 'wallet_open' ? '他发工资了' : m.reason === 'his_life' ? '他今天有事想跟你说' : '就是想你了'}</div>
-                  {/* v4.3.3 修：opener 里的 ｜ 是连发分隔——按段拆行，不再露出分隔符。 */}
-                  {m.opener.split('｜').map((seg, si) => seg.trim() && (
-                    <div key={si} className="incoming-msg">{seg.trim()}</div>
-                  ))}
+                  {/* v4.3.3 修：opener 里的 ｜ 是连发分隔——按段拆行，不再露出分隔符。
+                      v1.1.x：段内 [语音 xx"] 标记升级为语音条（声波动效）。 */}
+                  {m.opener.split('｜').map((seg, si) => {
+                    const t = seg.trim();
+                    if (!t) return null;
+                    return (
+                      <div key={si} className="incoming-msg">
+                        {t.includes('[语音') ? <VoiceText text={t} /> : t}
+                      </div>
+                    );
+                  })}
                 </div>
                 <div className="incoming-actions">
                   <button className="btn primary small" onClick={() => store.dispatch({ type: 'accept_incoming', targetId: m.targetId })}>回他</button>
@@ -539,7 +549,7 @@ function PlanPanel() {
   return (
     <div className={`plan-panel ${open ? 'open' : ''} ${state.todayPlan ? 'chosen' : ''}`}>
       <button
-        className="plan-bar-toggle"
+        className={`plan-bar-toggle ${state.todayPlan ? '' : 'plan-bar-todo'}`}
         aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
@@ -547,7 +557,12 @@ function PlanPanel() {
         <span className="plan-bar-label">
           {chosen
             ? <>今天的计划 · <strong>{chosen.name}</strong> <span className="plan-note">已定，明天可换</span></>
-            : <span className="muted">今天的计划还没定 · 点开挑一个，今晚在哪看这个</span>}
+            : (
+              <span className="plan-todo-text">
+                <strong>今天的计划还没定<span className="plan-todo-dot" /></strong>
+                <span className="plan-todo-hint">点开挑一个，今晚在哪看这个</span>
+              </span>
+            )}
         </span>
         <span className="plan-bar-caret" aria-hidden><Ico name={open ? 'chev-up' : 'chev-down'} size={14} /></span>
       </button>
@@ -1010,6 +1025,42 @@ function archetypeLabel(a: string): string {
   return map[a] ?? '';
 }
 
+/** 话术文本里的 [语音 xx"] 标记 → 微信式语音条（声波动效与舒适圈同源）。
+ *  兼容三种口径：[语音 59"] / 无闭合的 [语音 59"｜ / 区间 [语音 6"-14"]。 */
+const VOICE_RE = /\[语音\s*(\d+)(?:"\s*-\s*(\d+))?"?\]?/g;
+function parseVoiceSegments(text: string): { kind: 'text' | 'voice'; value: string }[] {
+  const segs: { kind: 'text' | 'voice'; value: string }[] = [];
+  let last = 0;
+  let match: RegExpExecArray | null;
+  VOICE_RE.lastIndex = 0;
+  while ((match = VOICE_RE.exec(text)) !== null) {
+    if (match.index > last) segs.push({ kind: 'text', value: text.slice(last, match.index) });
+    segs.push({ kind: 'voice', value: match[2] ? `${match[1]}-${match[2]}` : match[1] });
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) segs.push({ kind: 'text', value: text.slice(last) });
+  return segs;
+}
+
+/** 含语音标记的文本渲染：标记处画语音条（动画），其余按原文。 */
+function VoiceText({ text }: { text: string }) {
+  return (
+    <>
+      {parseVoiceSegments(text).map((seg, i) =>
+        seg.kind === 'voice' ? (
+          <div key={i} className="voice-bar">
+            <span className="voice-tri" />
+            <span className="voice-wave"><i /><i /><i /><i /><i /></span>
+            <span className="voice-secs">{seg.value}″</span>
+          </div>
+        ) : (
+          <div key={i}>{seg.value}</div>
+        ),
+      )}
+    </>
+  );
+}
+
 function ChatView() {
   const store = useGame();
   const { state } = store;
@@ -1094,12 +1145,14 @@ function ChatView() {
           const isTyping = typingBubble === m && i === visible.length - 1;
           const text = isTyping ? m.text.slice(0, typed) : m.text;
           const narrator = m.speaker === 'narrator' || (m.speaker === 'target' && /^（[^）]*）$/.test(m.text) && !m.photoId);
+          // 语音标记（[语音 59"]）整体即时到达——语音不是打出来的，跳过打字机
+          const hasVoice = m.text.includes('[语音');
           return (
             <div key={i} className={`bubble ${m.speaker} ${m.label ? 'packet' : ''} ${narrator ? 'narrator' : ''} ${isTyping ? 'typing' : ''}`}>
               {m.label && <div className="packet-label">{m.label}</div>}
               <div className="bubble-text">
-                {text}
-                {isTyping && <span className="type-caret" />}
+                {hasVoice ? <VoiceText text={m.text} /> : text}
+                {isTyping && !hasVoice && <span className="type-caret" />}
               </div>
               {m.photoId && !isTyping && (
                 <div className="bubble-photo">

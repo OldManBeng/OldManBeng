@@ -172,5 +172,6 @@ export function freshComfortState(): ComfortState {
     moments: [],
     unseenMoments: 0,
     policeDay: 0,
+    flipTick: 0,
   };
 }

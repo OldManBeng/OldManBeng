@@ -135,4 +135,6 @@ export interface ComfortState {
   unseenMoments: number;
   /** 警察上门的那一天（当天精力清零——录口供，游戏进程被打断）。 */
   policeDay: number;
+  /** 切机翻转计数：每次 switch_phone +1（驱动翻面动画重放，随存档序列化）。 */
+  flipTick: number;
 }
