@@ -12,6 +12,7 @@ import { useRef, useState } from 'react';
 import { useGame } from '../store/gameStore';
 import { formatMoney } from '../utils/format';
 import { ComfortAvatar, ComfortSceneRender } from './comfort-art';
+import { Ico } from './icons';
 import { playMessage, playSend, playMoney, playTab, playBlocked, playPost, playSocial } from '../utils/sound';
 import { COMFORT_CONTACTS, FATHER_MEMORIAL, XIAOMAN } from '../data/comfort';
 import { MIRROR_LINES, WALLET_CONTRAST } from '../data/comfort-contrast';
@@ -20,10 +21,57 @@ import type { ComfortContactId, ComfortMessage } from '../types/comfort';
 
 type ComfortTab = 'today' | 'contacts' | 'moments' | 'history' | 'wallet';
 
+/** 舒适圈导航图标——与主线 NavIcon 同源口径：fill:none / stroke:currentColor / 1.6 / 圆头圆角。 */
+function ComfortNavIcon({ name }: { name: ComfortTab }) {
+  const s = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  switch (name) {
+    case 'today': // 日出——温情的那部手机，一天从暖光开始
+      return (
+        <svg viewBox="0 0 20 20" {...s}>
+          <path d="M 4 14.5 Q 6.8 11.8 10 11.8 Q 13.2 11.8 16 14.5" />
+          <path d="M 2.5 14.5 L 17.5 14.5 M 10 11.8 L 10 9.2" />
+          <path d="M 5.6 7.4 L 6.8 8.6 M 14.4 7.4 L 13.2 8.6 M 3.2 11 L 4.8 11.8 M 16.8 11 L 15.2 11.8" />
+        </svg>
+      );
+    case 'contacts': // 通讯录——两个挨着的头像位（妈和阿凯，爸在置灰位）
+      return (
+        <svg viewBox="0 0 20 20" {...s}>
+          <circle cx="6.8" cy="6.4" r="3" />
+          <path d="M 1.8 16.4 Q 2.6 11.4 6.8 11.4 Q 8.4 11.4 9.5 12.1" />
+          <circle cx="13.6" cy="7.4" r="2.5" />
+          <path d="M 11.5 16.4 Q 12.2 12.4 13.6 12.4 Q 15 12.4 15.7 16.4" />
+        </svg>
+      );
+    case 'moments': // 朋友圈——同主线花瓣风（镜头光圈 8 翅），暖色语境换相机快门
+      return (
+        <svg viewBox="0 0 20 20" {...s}>
+          <circle cx="10" cy="10" r="2.1" />
+          <path d="M 10 3.2 Q 11.6 6.4 10 8 M 16.8 10 Q 13.6 11.6 12 10 M 10 16.8 Q 8.4 13.6 10 12 M 3.2 10 Q 6.4 8.4 8 10 M 14.8 5.2 Q 12.7 7.3 11.5 8.5 M 14.8 14.8 Q 12.7 12.7 11.5 11.5 M 5.2 14.8 Q 7.3 12.7 8.5 11.5 M 5.2 5.2 Q 7.3 7.3 8.5 8.5" />
+        </svg>
+      );
+    case 'history': // 聊天记录——话机式对话泡（语音条所在的那部）
+      return (
+        <svg viewBox="0 0 20 20" {...s}>
+          <path d="M 3.5 8.6 Q 3.5 4.8 10 4.8 Q 16.5 4.8 16.5 8.6 Q 16.5 12.4 10 12.4 Q 8.9 12.4 7.8 12.2 L 5 14.4 L 5.5 12 Q 3.5 10.9 3.5 8.6 Z" />
+          <circle cx="7.1" cy="8.6" r="0.5" fill="currentColor" stroke="none" />
+          <circle cx="10" cy="8.6" r="0.5" fill="currentColor" stroke="none" />
+          <circle cx="12.9" cy="8.6" r="0.5" fill="currentColor" stroke="none" />
+        </svg>
+      );
+    case 'wallet': // 钱包——同主线卡式（two-card 插角），温情里的两本账
+      return (
+        <svg viewBox="0 0 20 20" {...s}>
+          <rect x="3" y="5.4" width="14" height="10.4" rx="2" />
+          <path d="M 3 8.2 L 17 8.2 M 13.2 12.2 L 14.8 12.2" />
+        </svg>
+      );
+  }
+}
+
 const REL_LABEL = (v: number) => (v >= 75 ? '很亲' : v >= 50 ? '还行' : v >= 30 ? '有点淡了' : '快凉透了');
 
 /** 微信式语音条 + 下方真文字——熟人全靠语音，文字是玩家可见的译文。 */
-function VoiceBubble({ m, name }: { m: ComfortMessage; name?: string }) {
+function VoiceBubble({ m, name, who }: { m: ComfortMessage; name?: string; who?: 'mother' | 'boyfriend' | 'xiaoman' | 'father' }) {
   if (m.speaker === 'sys') {
     return (
       <div className="cbubble-sys">
@@ -34,7 +82,7 @@ function VoiceBubble({ m, name }: { m: ComfortMessage; name?: string }) {
   }
   return (
     <div className={`cbubble-row ${m.speaker}`}>
-      {m.speaker === 'them' && <span className="cbubble-ava">{(name ?? '他')[0]}</span>}
+      {m.speaker === 'them' && (who ? <span className="cbubble-ava"><ComfortAvatar who={who} size={30} /></span> : <span className="cbubble-ava">{(name ?? '他')[0]}</span>)}
       <div className={`cbubble ${m.speaker}`}>
         {m.voiceSecs !== undefined && (
           <div className="voice-bar" title="语音消息（点不出声音——这只是一部游戏里的手机）">
@@ -72,10 +120,7 @@ export function ComfortScreen() {
         </div>
         <div className="hud-right">
           <span className="money">活命钱 {formatMoney(state.money)}</span>
-          <span className="goal">债 {formatMoney(Math.max(0, state.goal - state.stats.totalEarned))}</span>
-          <button className="btn small comfort-switch-btn" onClick={() => { playTab(); store.dispatch({ type: 'switch_phone' }); }}>
-            切回工作手机
-          </button>
+          <span className="goal">债 {formatMoney(Math.max(0, state.goal - state.stats.totalEarned))}<i className="hud-sub">（两机共用）</i></span>
         </div>
       </header>
 
@@ -112,21 +157,21 @@ export function ComfortScreen() {
 
           <nav className="module-nav">
             <button className={tab === 'today' ? 'nav-btn on' : 'nav-btn'} onClick={() => switchTab('today')}>
-              <span className="nav-ico">☀</span>今天
+              <span className="nav-ico"><ComfortNavIcon name="today" /></span>今天
               {c.incoming.length > 0 && <span className="nav-badge">{c.incoming.length}</span>}
             </button>
             <button className={tab === 'contacts' ? 'nav-btn on' : 'nav-btn'} onClick={() => switchTab('contacts')}>
-              <span className="nav-ico">☺</span>通讯录
+              <span className="nav-ico"><ComfortNavIcon name="contacts" /></span>通讯录
             </button>
             <button className={tab === 'moments' ? 'nav-btn on' : 'nav-btn'} onClick={() => switchTab('moments')}>
-              <span className="nav-ico">❀</span>朋友圈
+              <span className="nav-ico"><ComfortNavIcon name="moments" /></span>朋友圈
               {c.unseenMoments > 0 && <span className="nav-badge">{c.unseenMoments}</span>}
             </button>
             <button className={tab === 'history' ? 'nav-btn on' : 'nav-btn'} onClick={() => switchTab('history')}>
-              <span className="nav-ico">✉</span>聊天记录
+              <span className="nav-ico"><ComfortNavIcon name="history" /></span>聊天记录
             </button>
             <button className={tab === 'wallet' ? 'nav-btn on' : 'nav-btn'} onClick={() => switchTab('wallet')}>
-              <span className="nav-ico">¥</span>钱包
+              <span className="nav-ico"><ComfortNavIcon name="wallet" /></span>钱包
             </button>
           </nav>
         </>
@@ -152,8 +197,16 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="persona-line">
             {state.playerName || XIAOMAN.name} · 常用手机
+            {/* 切回工作手机——入口跟人设行走（与主线「变更人设」旁的切机入口同款风格） */}
+            <button
+              className="persona-change-btn"
+              title="崩老头的那部手机——冷色的，聊天耗体力"
+              onClick={() => { playTab(); store.dispatch({ type: 'switch_phone' }); }}
+            >
+              切回工作手机
+            </button>
           </div>
-          <div className="persona-bio muted small">{XIAOMAN.plainNote}</div>
+          <div className="persona-bio muted small">{XIAOMAN.plainNote}{XIAOMAN.birthNote}</div>
           <div className="muted small">这里的聊天不耗体力——这边的人，不收你的表演费。</div>
         </div>
       </div>
@@ -165,25 +218,44 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
         </div>
       )}
 
-      {/* 事件卡：妈的生活费 / 阿凯的红包 / 阿凯要钱 */}
+      {/* 事件卡：妈的生活费 / 阿凯的红包 / 阿凯要钱 / 嘘寒问暖 */}
       {c.incoming.map((m) => {
-        const isMom = m.kind === 'mom_gift';
+        const isTalk = m.kind === 'mom_talk' || m.kind === 'bf_talk';
+        const isMom = m.kind === 'mom_gift' || m.kind === 'mom_talk';
         const isDemand = m.kind === 'bf_demand';
         const contactId: ComfortContactId = isMom ? 'mother' : 'boyfriend';
+        const tag = m.tone === 'birthday' ? ' · 生日'
+          : isTalk ? ' · 语音'
+          : m.kind === 'bf_packet' ? ' · 红包'
+          : isDemand ? ' · 要钱' : ' · 转账';
+        const chatOpen = c.chat !== null;
         return (
           <div key={m.id} className={`comfort-event-card ${m.kind}`}>
             <div className="cec-head">
               <ComfortAvatar who={isMom ? 'mother' : 'boyfriend'} size={36} />
               <div>
-                <div className="cec-name">{nameOf(contactId)}{m.kind === 'bf_packet' ? ' · 红包' : isDemand ? ' · 要钱' : ' · 转账'}</div>
+                <div className="cec-name">{nameOf(contactId)}{tag}</div>
                 <div className="muted small">{m.note}</div>
               </div>
             </div>
             {m.lines.map((l, i) => (
-              <VoiceBubble key={i} m={{ speaker: 'them', text: l, voiceSecs: Math.min(58, Math.max(2, Math.ceil(l.length / 4))) }} name={nameOf(contactId)} />
+              <VoiceBubble key={i} m={{ speaker: 'them', text: l, voiceSecs: Math.min(58, Math.max(2, Math.ceil(l.length / 4))) }} name={nameOf(contactId)} who={isMom ? 'mother' : 'boyfriend'} />
             ))}
             <div className="cec-actions">
-              {isDemand ? (
+              {isTalk ? (
+                <>
+                  <button
+                    className="btn small primary"
+                    disabled={chatOpen}
+                    onClick={() => { playMessage(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: true }); }}
+                  >
+                    {chatOpen ? '（先回完手头这场）' : `回${isMom ? '她' : '他'}（免费聊天）`}
+                  </button>
+                  <button className="btn small muted-btn" onClick={() => { playBlocked(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: false }); }}>
+                    先不回（{isMom ? '她会等到很晚' : '他马上追问'}）
+                  </button>
+                </>
+              ) : isDemand ? (
                 <>
                   <button className="btn small primary" onClick={() => { playMoney(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: true }); }}>
                     给他 {formatMoney(m.amount)}（活命钱扣，不够记债）
@@ -198,7 +270,7 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
                     收下（+{formatMoney(m.amount)}，进活命钱）
                   </button>
                   <button className="btn small muted-btn" onClick={() => { playBlocked(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: false }); }}>
-                    不要（{isMom ? '她会念叨你倔' : '他觉得你有别人了'}）
+                    不要（{isMom ? (m.tone === 'birthday' ? '她把红包原路收回' : '她会念叨你倔') : '他觉得你有别人了'}）
                   </button>
                 </>
               )}
@@ -310,7 +382,7 @@ function ComfortMoments() {
   return (
     <section className="comfort-moments">
       <h3>朋友圈</h3>
-      <div className="moment-poster collapsed">
+      <div className="moment-poster">
         {postedToday ? (
           <p className="muted small">今天发过了。妈已经点过赞了。</p>
         ) : (
@@ -349,7 +421,7 @@ function ComfortMoments() {
               </div>
               <div className="moment-photo">{m.photoId && <ComfortSceneRender photoId={m.photoId} />}</div>
               <div className="moment-caption">{m.text}</div>
-              {m.likes.length > 0 && <div className="moment-likes">♥ {m.likes.map((l) => nameOf(l)).join('、')}</div>}
+              {m.likes.length > 0 && <div className="moment-likes"><Ico name="heart" size={12} /> {m.likes.map((l) => nameOf(l)).join('、')}</div>}
               {m.comments.length > 0 && (
                 <div className="moment-comments">
                   {m.comments.map((cm, i) => (
@@ -401,7 +473,7 @@ function ComfortHistory() {
               {openIdx === realIdx && (
                 <div className="history-transcript">
                   {a.transcript.map((m, j) => (
-                    <VoiceBubble key={j} m={m} name={nameOf(a.contactId)} />
+                    <VoiceBubble key={j} m={m} name={nameOf(a.contactId)} who={a.contactId} />
                   ))}
                 </div>
               )}
@@ -471,7 +543,7 @@ function ComfortChatView() {
       </header>
       <div className="chat-stream" ref={streamRef}>
         {chat.transcript.map((m, i) => (
-          <VoiceBubble key={i} m={m} name={name} />
+          <VoiceBubble key={i} m={m} name={name} who={chat.contactId} />
         ))}
       </div>
       {chat.awaiting === 'player' && (

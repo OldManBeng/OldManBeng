@@ -29,3 +29,5 @@ __pycache__/
 .cdp-*/
 
 null
+# 舒适圈 raw 中间图（1.1.0）：1024 原图不入库，web 入库的是 public/comfort/ 成品
+pytools/avatar_raw/comfort_raw/

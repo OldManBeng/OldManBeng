@@ -115,11 +115,14 @@ export function TitleScreen() {
         >
           新的一晚
         </button>
+        <button className="btn small" onClick={() => { const v = !musicMuted; setMusicMuted(v); setMM(v); }}>
+          <Ico name={musicMuted ? 'spk-off' : 'spk-on'} size={14} /> {musicMuted ? '音乐关' : '音乐开'}
+        </button>
         <button className="btn small" onClick={() => { const v = !muted; setMuted(v); setM(v); }}>
           <Ico name={muted ? 'spk-off' : 'spk-on'} size={14} /> {muted ? '音效关' : '音效开'}
         </button>
-        <button className="btn small" onClick={() => { const v = !musicMuted; setMusicMuted(v); setMM(v); }}>
-          <Ico name={musicMuted ? 'spk-off' : 'spk-on'} size={14} /> {musicMuted ? '音乐关' : '音乐开'}
+        <button className="btn small" onClick={() => window.open('https://flask.fun', '_blank', 'noopener')}>
+          回到官网
         </button>
       </div>
       <div className="content-warning">
@@ -172,6 +175,10 @@ export function NewGameScreen({ onStart }: { onStart: (name: string, personaId: 
         通讯录里躺着五个人：深夜的司机、上午的老师、凌晨的老板、网吧的阿豪、画图纸的陈工。
         同时崩的越多，钱来得越快——穿帮也来得越快。
       </p>
+      <p className="muted small">
+        工作手机之外，你还有一部常用手机：妈、过世的爸、和阿凯都住在那部里。
+        那边的聊天不耗体力，可那边的钱，一笔有一笔的来路；想切过去，去「变更人设」后面按「切换常用手机」。
+      </p>
     </div>
   );
 }
@@ -193,9 +200,10 @@ const PROLOGUE_PAGES: { title: string; body: string[] }[] = [
   {
     title: '序章 · 二',
     body: [
-      '她今年二十四。县城出来的，大专毕业，在这座城市做着一份四千块的工作。',
-      '工资六号发，房租一号交，中间的日子靠花呗。半年前母亲住院，她在手机上点了几下，点了三万块出来。',
-      '网贷的短信比任何人都准时。这个月的账单是三千，她的余额是三百五。',
+      '她叫小满——农历小满那天出生，妈说那天麦子正好灌浆。她今年二十四，县城出来的，大专毕业，在这座城市做着一份四千块的工作。',
+      '家里还有妈。爸五年前走在跑长途的路上，妈失业了大半年，如今在一家家政公司做保洁，一户一户地擦别人家的窗。她隔三差五发来语音，问的还是那几句：吃了没，冷不冷，钱够不够花。',
+      '出租屋里还住着一个人：同居男友阿凯。不上班，自称灵活就业，主业是打游戏——在游戏里扮成温柔的年轻男人，哄中老年女性刷礼物，圈里管这叫「崩阿姨」。他管那叫生意，对小满甜言蜜语，对房租熟视无睹。',
+      '半年前母亲住院，她在手机上点了几下，点了三万块出来。网贷的短信比任何人都准时。这个月的账单是三千，她的余额是三百五。',
       '她不是天生干这个的。她的第一份工作是幼儿园保育员，孩子哭了她会跟着掉眼泪。',
       '只是数字不认眼泪。三千块的月供，四千块的工资，房租一扣，这道算术题怎么算都算不平。',
     ],
@@ -206,6 +214,7 @@ const PROLOGUE_PAGES: { title: string; body: string[] }[] = [
       '她学得很快。什么年纪的老头，几点在线，吃哪一套话——比上班学的任何东西都快。',
       '通讯录里躺着五个「哥哥」：深夜收车的司机，上午练字的老师，凌晨在车库抽烟的老板，网吧守夜的阿豪，画图纸的陈工。',
       '每个深夜，她切换身份，走进不同人的孤独。他们要的不是那种事——他们要的是有人问一句「今天累不累」。',
+      '她有两部手机。一部做生意，一部过日子。日子那一部里，妈问她「吃了吗」；生意那一部里，她问别人「吃了吗」。同一句话，一句后面跟着饭，一句后面跟着账。',
       '红包以各种名目流动：话费、束脩、生日的五百二、「给闺女买件外套」。',
       '同时崩的越多，钱来得越快。穿帮，也来得越快。',
     ],

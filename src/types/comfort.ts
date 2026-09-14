@@ -9,20 +9,24 @@
 /** 舒适圈联系人（父亲在通讯录置灰，不参与聊天）。 */
 export type ComfortContactId = 'mother' | 'boyfriend';
 
-/** 舒适圈事件卡类型。 */
-export type ComfortIncomingKind = 'mom_gift' | 'bf_packet' | 'bf_demand';
+/** 舒适圈事件卡类型。mom_talk/bf_talk：嘘寒问暖的纯聊天卡（不涉钱，回 = 开一场免费聊天）。 */
+export type ComfortIncomingKind = 'mom_gift' | 'bf_packet' | 'bf_demand' | 'mom_talk' | 'bf_talk';
 
-/** 挂在常用手机「今天」页的待处理事件（妈的生活费/男友红包/男友要钱）。 */
+/** 挂在常用手机「今天」页的待处理事件（妈的生活费/男友红包/男友要钱/嘘寒问暖）。 */
 export interface ComfortIncoming {
   id: string;
   kind: ComfortIncomingKind;
   day: number;
-  /** 红包/要钱的金额。 */
+  /** 红包/要钱的金额（聊天卡为 0）。 */
   amount: number;
   /** 对方的话（每段一条语音，气泡显示语音条 + 文字）。 */
   lines: string[];
   /** 红包备注 / 事件的补充说明。 */
   note?: string;
+  /** 聊天卡：接受后原样开场的这套话术（保证上下文连贯）。 */
+  packId?: string;
+  /** 生日卡（农历小满这天的一次性事件）。 */
+  tone?: 'birthday';
 }
 
 /** 舒适圈聊天气泡。voiceSecs：语音条显示秒数（纯显示效果，游戏无真实语音）。 */
@@ -101,10 +105,12 @@ export interface ComfortState {
   bfState: BfState;
   /** 分手后男友把她拉黑（通讯录置灰、事件停发）。 */
   blockedByBf: boolean;
-  /** 男友的生活费/红包/要钱——各线冷却与计数。 */
+  /** 男友的生活费/红包/要钱/嘘寒问暖——各线冷却与计数。 */
   momGift: { lastDay: number; count: number };
   bfPacket: { lastDay: number; count: number };
   bfDemand: { lastDay: number; count: number; refuses: number };
+  momTalk: { lastDay: number; count: number };
+  bfTalk: { lastDay: number; count: number };
   /** 累计从妈那里收过/推掉的钱（钱包页展示）。 */
   momGiven: number;
   momRefused: number;

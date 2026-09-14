@@ -20,8 +20,12 @@ import {
   BF_BREAKUP_REFUSES, BF_BREAKUP_LOVE, BF_REVENGE_REPORT_CHANCE, BF_REPORT_RISK, BF_POLICE_CHANCE,
   BF_DEMAND_LOVE_GIVE, BF_DEMAND_LOVE_REFUSE, BF_PACKET_LOVE_TAKE, BF_PACKET_LOVE_REFUSE,
   MOM_GIFT_FAMILY_TAKE, MOM_GIFT_FAMILY_REFUSE,
-  BF_OMEN_DAY, BF_OMEN_PACK, COMFORT_INCOMING_CAP, COMFORT_MOMENTS_CAP,
+  BF_OMEN_DAY, BF_OMEN_GRACE, BF_OMEN_PACK, COMFORT_INCOMING_CAP, COMFORT_MOMENTS_CAP,
   COMFORT_ARCHIVE_CAP, FATHER_MEMORIAL,
+  MOM_TALK_FIRST_DAY, MOM_TALK_GAP_MIN, MOM_TALK_GAP_MAX, MOM_TALK_FAMILY_FLOOR,
+  BF_TALK_FIRST_DAY, BF_TALK_GAP_MIN, BF_TALK_GAP_MAX, BF_TALK_LOVE_FLOOR,
+  TALK_IGNORE_FAMILY, TALK_IGNORE_LOVE,
+  XIAOMAN_BIRTHDAY_DAY, XIAOMAN_BIRTHDAY_GIFT, XIAOMAN_BIRTHDAY_PACKET, BF_BIRTHDAY_REMEMBER_LOVE,
 } from '../data/comfort';
 import {
   MOTHER_PACKS, BOYFRIEND_PACKS, BF_OMEN_PACK as BF_OMEN_DATA,
@@ -29,6 +33,9 @@ import {
   BF_PACKET_LINES, BF_PACKET_TAKEN, BF_PACKET_REFUSED,
   BF_DEMAND_LINES, BF_DEMAND_GIVEN, BF_DEMAND_REFUSED_THREAT,
   BF_BREAKUP_LINES, BF_REPORT_LINES, BF_POLICE_NARRATION, COMFORT_AMBIENT_LINES,
+  MOM_BIRTHDAY_LINES, MOM_BIRTHDAY_TAKEN, MOM_BIRTHDAY_REFUSED,
+  BF_BIRTHDAY_REMEMBER_LINES, BF_BIRTHDAY_TAKEN, BF_BIRTHDAY_REFUSED,
+  BF_BIRTHDAY_REMEMBER_LOG, BF_BIRTHDAY_FORGOT_LOG,
 } from '../data/comfort-packs';
 import {
   INSPIRE_POSTS, FAMILY_POSTS, LOVE_POSTS, MOM_COMMENTS, BF_COMMENTS, OTHER_POSTS,
@@ -70,6 +77,16 @@ export function packFor(contactId: ComfortContactId, id: string): ComfortPack | 
   return pools[contactId].find((p) => p.id === id) ?? null;
 }
 
+/** 给嘘寒问暖卡抽一套话术 id（走去重窗口，保证回卡开场的就是卡上那句）。 */
+function pickPackId(state: GameState, contactId: ComfortContactId, salt: number): string {
+  const pools: Record<ComfortContactId, ComfortPack[]> = { mother: MOTHER_PACKS, boyfriend: BOYFRIEND_PACKS };
+  const all = pools[contactId];
+  const fresh = all.filter((p) => !state.comfort.recentPacks[contactId].includes(p.id));
+  const rng = derivedComfortRng(state, salt);
+  const pool = fresh.length ? fresh : all;
+  return pool[rng.int(0, pool.length - 1)].id;
+}
+
 /** 每天早晨：舒适圈事件派发（runMorning 末尾调用）。 */
 export function runComfortMorning(state: GameState): void {
   const c = state.comfort;
@@ -94,6 +111,40 @@ export function runComfortMorning(state: GameState): void {
   {
     const rng = derivedComfortRng(state, 59);
     if (rng.chance(0.24)) clog(state, byDay(MIRROR_LINES, state.day, 3));
+  }
+
+  // 小满生日（农历小满，一次性）：妈一定记得；阿凯看感情。这一天把"家"和"他"称出斤两。
+  if (state.day === XIAOMAN_BIRTHDAY_DAY && !state.flags.xiaoman_birthday_done) {
+    state.flags.xiaoman_birthday_done = true;
+    if (c.incoming.length < COMFORT_INCOMING_CAP && !c.incoming.some((m) => m.tone === 'birthday' && m.kind === 'mom_gift')) {
+      c.incoming.push({
+        id: `mom_birthday_${state.day}`,
+        kind: 'mom_gift',
+        day: state.day,
+        amount: XIAOMAN_BIRTHDAY_GIFT,
+        lines: [...MOM_BIRTHDAY_LINES],
+        note: `生日红包 ${XIAOMAN_BIRTHDAY_GIFT} 元`,
+        tone: 'birthday',
+      });
+    }
+    if (bfAlive) {
+      if (c.love >= BF_BIRTHDAY_REMEMBER_LOVE) {
+        clog(state, `常用手机 · ${BF_BIRTHDAY_REMEMBER_LOG[state.day % BF_BIRTHDAY_REMEMBER_LOG.length]}`);
+        if (c.incoming.length < COMFORT_INCOMING_CAP && !c.incoming.some((m) => m.kind === 'bf_packet')) {
+          c.incoming.push({
+            id: `bf_birthday_${state.day}`,
+            kind: 'bf_packet',
+            day: state.day,
+            amount: XIAOMAN_BIRTHDAY_PACKET,
+            lines: [...BF_BIRTHDAY_REMEMBER_LINES],
+            note: `红包 ${XIAOMAN_BIRTHDAY_PACKET} 元`,
+            tone: 'birthday',
+          });
+        }
+      } else {
+        clog(state, `常用手机 · ${BF_BIRTHDAY_FORGOT_LOG[state.day % BF_BIRTHDAY_FORGOT_LOG.length]}`);
+      }
+    }
   }
 
   if (state.day >= MOM_GIFT_FIRST_DAY && c.family >= MOM_GIFT_FAMILY_FLOOR) {
@@ -155,8 +206,56 @@ export function runComfortMorning(state: GameState): void {
     }
   }
 
-  // 第 14 天伏笔：他那句说漏嘴的"真心话"（一次性）。
-  if (bfAlive && state.day === BF_OMEN_DAY && !state.flags.bf_omen_done) {
+  // 妈的嘘寒问暖（纯聊天卡）：她的关心比她的转账勤——这才是"经常关心"的本义。
+  if (state.day >= MOM_TALK_FIRST_DAY && c.family >= MOM_TALK_FAMILY_FLOOR) {
+    if (c.momTalk.lastDay === 0 || state.day - c.momTalk.lastDay >= MOM_TALK_GAP_MIN) {
+      const rng = derivedComfortRng(state, 251);
+      const due = c.momTalk.lastDay === 0 || state.day - c.momTalk.lastDay >= MOM_TALK_GAP_MAX || rng.chance(0.6);
+      if (due && c.incoming.length < COMFORT_INCOMING_CAP && !c.incoming.some((m) => m.kind === 'mom_talk')) {
+        const packId = pickPackId(state, 'mother', 257);
+        const pack = packFor('mother', packId)!;
+        c.momTalk.lastDay = state.day;
+        c.momTalk.count += 1;
+        c.incoming.push({
+          id: `mom_talk_${state.day}`,
+          kind: 'mom_talk',
+          day: state.day,
+          amount: 0,
+          lines: [pack.lines[0]],
+          packId,
+          note: '发来一条语音，等你回',
+        });
+      }
+    }
+  }
+
+  // 阿凯的甜言蜜语（纯聊天卡）：恋爱脑的燃料——他在的时候，这套东西管用。
+  if (bfAlive && state.day >= BF_TALK_FIRST_DAY && c.love >= BF_TALK_LOVE_FLOOR) {
+    if (c.bfTalk.lastDay === 0 || state.day - c.bfTalk.lastDay >= BF_TALK_GAP_MIN) {
+      const rng = derivedComfortRng(state, 277);
+      const due = c.bfTalk.lastDay === 0 || state.day - c.bfTalk.lastDay >= BF_TALK_GAP_MAX || rng.chance(0.5);
+      if (due && c.incoming.length < COMFORT_INCOMING_CAP && !c.incoming.some((m) => m.kind === 'bf_talk')) {
+        const packId = pickPackId(state, 'boyfriend', 281);
+        const pack = packFor('boyfriend', packId)!;
+        c.bfTalk.lastDay = state.day;
+        c.bfTalk.count += 1;
+        c.incoming.push({
+          id: `bf_talk_${state.day}`,
+          kind: 'bf_talk',
+          day: state.day,
+          amount: 0,
+          lines: [pack.lines[0]],
+          packId,
+          note: '发来几条语音，喊你听他打游戏',
+        });
+      }
+    }
+  }
+
+  // 第 14 天伏笔：他那句说漏嘴的"真心话"（一次性）。当天聊天没空档就顺延——
+  // 这句话不会丢，只会在你忙完的那天，原样砸过来。
+  if (bfAlive && !state.flags.bf_omen_done && !c.chat
+    && state.day >= BF_OMEN_DAY && state.day <= BF_OMEN_DAY + BF_OMEN_GRACE) {
     state.flags.bf_omen_done = true;
     openComfortChat(state, 'boyfriend', BF_OMEN_PACK);
     clog(state, '常用手机 · 阿凯深夜发来一段很长的语音，说了一句他不该说的话。');
@@ -212,30 +311,67 @@ function archiveIncoming(
   }
 }
 
-/** 事件卡：要/不要（妈的生活费、男友红包）、给/不给（男友要钱）。 */
+/** 事件卡：要/不要（妈的生活费、男友红包）、给/不给（男友要钱）、回/不回（嘘寒问暖）。 */
 export function resolveComfortIncoming(state: GameState, incomingId: string, accept: boolean): void {
   const c = state.comfort;
   const idx = c.incoming.findIndex((m) => m.id === incomingId);
   if (idx < 0) return;
   const inc = c.incoming[idx];
+  // 嘘寒问暖卡：一场聊天没完不能"回"下一场——卡片保留，回完手头这场再说。
+  if ((inc.kind === 'mom_talk' || inc.kind === 'bf_talk') && c.chat) return;
   c.incoming.splice(idx, 1);
   const rng = derivedComfortRng(state, 233);
+
+  if (inc.kind === 'mom_talk') {
+    if (accept) {
+      openComfortChat(state, 'mother', inc.packId);
+      clog(state, '妈发来一条长语音，问你最近吃得好不好。你点了回去。');
+    } else {
+      c.family = clamp(c.family + TALK_IGNORE_FAMILY, 0, 100);
+      clog(state, '妈的语音你没回。晚上十一点，她换了个说法重新发来：「睡了没？」');
+    }
+    return;
+  }
+
+  if (inc.kind === 'bf_talk') {
+    if (accept) {
+      openComfortChat(state, 'boyfriend', inc.packId);
+      clog(state, '阿凯喊你听他的游戏战况。你戴着耳机，一条条听完了。');
+    } else {
+      c.love = clamp(c.love + TALK_IGNORE_LOVE, 0, 100);
+      clog(state, '阿凯的语音你没回。他的下一句马上就到：「忙什么呢？」');
+    }
+    return;
+  }
 
   if (inc.kind === 'mom_gift') {
     c.momGift.lastDay = state.day;
     c.momGift.count += 1;
+    const birthday = inc.tone === 'birthday';
     if (accept) {
       state.money += inc.amount;
       c.momGiven += inc.amount;
       c.family = clamp(c.family + MOM_GIFT_FAMILY_TAKE, 0, 100);
-      state.ledger.push({ day: state.day, amount: inc.amount, note: `妈的生活费（${inc.note ?? '转账'}）`, kind: 'family' });
-      clog(state, `妈转来了 ${inc.amount} 元生活费。你收了。`, byDay(MOM_MONEY_TAKE_CONTRAST, state.day, 1));
-      archiveIncoming(state, 'mother', inc.lines, '收下了，谢谢妈。', [MOM_GIFT_TAKEN[rng.int(0, MOM_GIFT_TAKEN.length - 1)]], `转账 +${inc.amount} 元`);
+      state.ledger.push({ day: state.day, amount: inc.amount, note: birthday ? `妈的生日红包（农历小满）` : `妈的生活费（${inc.note ?? '转账'}）`, kind: 'family' });
+      clog(state, birthday
+        ? `妈的生日红包，${inc.amount} 元。农历小满——这个日子，全世界只有她记得。`
+        : `妈转来了 ${inc.amount} 元生活费。你收了。`, byDay(MOM_MONEY_TAKE_CONTRAST, state.day, 1));
+      archiveIncoming(state, 'mother', inc.lines, birthday ? '妈……我收到了。谢谢你。' : '收下了，谢谢妈。', [birthday
+        ? MOM_BIRTHDAY_TAKEN[rng.int(0, MOM_BIRTHDAY_TAKEN.length - 1)]
+        : MOM_GIFT_TAKEN[rng.int(0, MOM_GIFT_TAKEN.length - 1)]], `转账 +${inc.amount} 元`);
     } else {
       c.momRefused += inc.amount;
       c.family = clamp(c.family + MOM_GIFT_FAMILY_REFUSE, 0, 100);
-      clog(state, `妈要给你转 ${inc.amount} 元，你没要。她说你是跟你爸一个倔脾气。`, byDay(MOM_MONEY_REFUSE_CONTRAST, state.day, 2));
-      archiveIncoming(state, 'mother', inc.lines, '妈我不要，你留着。', [MOM_GIFT_REFUSED[rng.int(0, MOM_GIFT_REFUSED.length - 1)]]);
+      clog(state, birthday
+        ? `妈给你包的 ${inc.amount} 元生日红包，你没要。她把那笔钱原路收了回去，像收回一句没说出口的话。`
+        : `妈要给你转 ${inc.amount} 元，你没要。她说你是跟你爸一个倔脾气。`, byDay(MOM_MONEY_REFUSE_CONTRAST, state.day, 2));
+      archiveIncoming(state, 'mother', inc.lines, birthday ? '妈，生日红包我也不要，你留着。' : '妈我不要，你留着。', [birthday
+        ? MOM_BIRTHDAY_REFUSED[rng.int(0, MOM_BIRTHDAY_REFUSED.length - 1)]
+        : MOM_GIFT_REFUSED[rng.int(0, MOM_GIFT_REFUSED.length - 1)]]);
+    }
+    // 家庭关系跌破冰点：妈不再主动打钱——得有一行字告诉玩家为什么安静了。
+    if (!birthday && c.family < MOM_GIFT_FAMILY_FLOOR) {
+      clog(state, '这个月剩下的日子，妈没再提转账的事。她在语音里说：闺女长大了，有本事了。这句话你听不出是夸还是疼。');
     }
     return;
   }
@@ -243,18 +379,29 @@ export function resolveComfortIncoming(state: GameState, incomingId: string, acc
   if (inc.kind === 'bf_packet') {
     c.bfPacket.lastDay = state.day;
     c.bfPacket.count += 1;
+    const birthday = inc.tone === 'birthday';
     if (accept) {
       state.money += inc.amount;
       c.bfGiven += inc.amount;
       c.love = clamp(c.love + BF_PACKET_LOVE_TAKE, 0, 100);
-      state.ledger.push({ day: state.day, amount: inc.amount, note: `阿凯的红包（崩阿姨分你的一半）`, kind: 'family' });
-      clog(state, `阿凯把他"崩阿姨"的钱分了你一半：${inc.amount} 元。你收了。`, byDay(BF_PACKET_CONTRAST, state.day, 5));
-      archiveIncoming(state, 'boyfriend', inc.lines, '哈哈收下了，凯老板大气！', [BF_PACKET_TAKEN[rng.int(0, BF_PACKET_TAKEN.length - 1)]], `红包 +${inc.amount} 元`);
+      state.ledger.push({ day: state.day, amount: inc.amount, note: birthday ? `阿凯的生日红包（${inc.amount} 元）` : `阿凯的红包（崩阿姨分你的一半）`, kind: 'family' });
+      clog(state, birthday
+        ? `阿凯的生日红包：${inc.amount} 元。他还记得。你收了——恋爱脑收下的从来不是钱，是"他还记得"这四个字。`
+        : `阿凯把他"崩阿姨"的钱分了你一半：${inc.amount} 元。你收了。`, byDay(BF_PACKET_CONTRAST, state.day, 5));
+      archiveIncoming(state, 'boyfriend', inc.lines, birthday ? '哈哈你居然记得，谢谢宝。' : '哈哈收下了，凯老板大气！', [birthday
+        ? BF_BIRTHDAY_TAKEN[rng.int(0, BF_BIRTHDAY_TAKEN.length - 1)]
+        : BF_PACKET_TAKEN[rng.int(0, BF_PACKET_TAKEN.length - 1)]], `红包 +${inc.amount} 元`);
     } else {
       c.bfRefused += inc.amount;
       c.love = clamp(c.love + BF_PACKET_LOVE_REFUSE, 0, 100);
-      clog(state, `阿凯给你发了 ${inc.amount} 元红包，你没要。他觉得你在外面有人了。`, BF_PACKET_REFUSED[rng.int(0, BF_PACKET_REFUSED.length - 1)]);
-      archiveIncoming(state, 'boyfriend', inc.lines, '不用了，你自己留着吧。', [BF_PACKET_REFUSED[rng.int(0, BF_PACKET_REFUSED.length - 1)]]);
+      clog(state, birthday
+        ? `他发的 ${inc.amount} 元生日红包，你没要。他来了句"你这人真没劲"，然后去上号了。`
+        : `阿凯给你发了 ${inc.amount} 元红包，你没要。他觉得你在外面有人了。`, birthday
+        ? BF_BIRTHDAY_REFUSED[0]
+        : BF_PACKET_REFUSED[rng.int(0, BF_PACKET_REFUSED.length - 1)]);
+      archiveIncoming(state, 'boyfriend', inc.lines, birthday ? '不用了，你留着上分吧。' : '不用了，你自己留着吧。', [birthday
+        ? BF_BIRTHDAY_REFUSED[0]
+        : BF_PACKET_REFUSED[rng.int(0, BF_PACKET_REFUSED.length - 1)]]);
     }
     return;
   }

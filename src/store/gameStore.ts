@@ -71,7 +71,20 @@ export function migrate(saved: GameState): GameState {
     bioAudience: saved.bioAudience ?? [],
     bioAudienceDay: saved.bioAudienceDay ?? 0,
     // 1.1.0：舒适圈（旧档没有 → 全新常用手机；关系从初值起步，事件从明天起照常来）。
-    comfort: saved.comfort ?? freshComfortState(),
+    // 中途加过字段的过渡档（缺 momTalk/bfTalk 等）也补齐，避免 undefined.lastDay。
+    comfort: mergeComfort(saved.comfort),
+  };
+}
+
+/** 舒适圈迁移：整体缺 → 全新；局部缺（旧开发档）→ 缺的字段用默认值补。 */
+function mergeComfort(saved: GameState['comfort'] | undefined): GameState['comfort'] {
+  const base = freshComfortState();
+  if (!saved) return base;
+  return {
+    ...base,
+    ...saved,
+    momTalk: saved.momTalk ?? base.momTalk,
+    bfTalk: saved.bfTalk ?? base.bfTalk,
   };
 }
 

@@ -1787,8 +1787,10 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 .comfort-theme .nav-btn { color: var(--muted); }
 .comfort-theme .nav-btn.on { color: var(--accent-deep); }
 .comfort-theme .day-chip { background: var(--fill); color: var(--text); }
-.comfort-theme .money { color: var(--accent-deep); }
-.comfort-theme .goal { color: var(--muted); }
+/* HUD 两列制对齐主线口径：活命钱 --fs-6 / 债 --fs-3（同一套字阶，颜色走暖色变量） */
+.comfort-theme .money { color: var(--accent-deep); font-size: var(--fs-6); }
+.comfort-theme .goal { color: var(--muted); font-size: var(--fs-3); }
+.comfort-theme .hud-sub { color: var(--faint); }
 .comfort-theme .log-entry { background: var(--surface); border: 1px solid var(--line-soft); }
 .comfort-theme .log-line { color: var(--muted); font-family: var(--font-kai); }
 
@@ -1801,7 +1803,7 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   border-radius: 999px;
   white-space: nowrap;
 }
-.comfort-switch-btn { white-space: nowrap; }
+/* 切机入口已并入人设行（persona-change-btn 同款）——旧按钮类退役。 */
 
 /* 关系条（暖色的「风险条」——量的是亲情，不是穿帮） */
 .comfort-rel-strip {
@@ -1884,12 +1886,15 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 /* 微信式语音条（纯显示效果——游戏里没有真的语音） */
 .cbubble-row { display: flex; align-items: flex-start; gap: 8px; margin: 8px 0; }
 .cbubble-row.me { justify-content: flex-end; }
+/* 语音气泡头像：真 PNG（404 落 SVG 兜底）——与主线 OldManAvatar 同链路；
+   圆形裁切，父级 span 只当容器（保留旧字母底色给无头像的兜底）。 */
 .cbubble-ava {
-  width: 30px; height: 30px; border-radius: 6px; flex: none;
-  background: var(--accent); color: #fff;
+  width: 30px; height: 30px; border-radius: 50%; flex: none; overflow: hidden;
+  background: var(--fill); color: var(--text);
   display: inline-flex; align-items: center; justify-content: center;
   font-size: var(--fs-4);
 }
+.cbubble-ava img, .cbubble-ava svg { display: block; width: 100%; height: 100%; }
 .cbubble {
   max-width: 78%;
   border-radius: var(--r-list);
@@ -1947,3 +1952,12 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 }
 .comfort-nudge { margin: 8px 0; }
 .comfort-theme .stats-row { color: var(--muted); }
+
+/* 1.1.0 常驻切机入口：「变更人设」旁边的第二部手机——描边暖色 chip，一眼可见。 */
+.comfort-switch-chip {
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 2px 10px;
+  margin-left: 6px;
+  white-space: nowrap;
+}

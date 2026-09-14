@@ -155,11 +155,15 @@ def generate_one(server: str, workflow: dict, key: str, is_avatar: bool) -> str:
         patch_avatar(workflow, key)
     else:
         patch_scene(workflow, key)
-    image_paths = queue_prompt(server, workflow)
-    history = wait_for_history(server, image_paths)
-    raw_files = collect_images(server, history)
-    raw_path = os.path.join(RAW_DIR, os.path.basename(raw_files[0]))
-    download_image(server, raw_files[0], raw_path)
+    # 与 generate_avatars.py 同一套调用口径：client_id 提交 → history 轮询 → 下载原始图。
+    client_id = f"py-comfort-{key}-{os.getpid()}"
+    prompt_id = queue_prompt(server, workflow, client_id)
+    history = wait_for_history(server, prompt_id)
+    images = collect_images(history)
+    if not images:
+        print(f"{key}: 任务完成但没有输出图片")
+        sys.exit(1)
+    raw_path = download_image(server, images[0], RAW_DIR, prompt_id)
     return save_avatar(raw_path, key) if is_avatar else save_scene(raw_path, key)
 
 

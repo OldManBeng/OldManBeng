@@ -11,6 +11,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { createInitialState, dispatch } from '../../engine/state-machine';
+import { runComfortMorning } from '../../engine/comfort';
 import { migrate } from '../../store/gameStore';
 import { MOTHER_PACKS, BOYFRIEND_PACKS, BF_OMEN_PACK } from '../../data/comfort-packs';
 import {
@@ -18,6 +19,9 @@ import {
   BF_PACKET_LINES, BF_PACKET_TAKEN, BF_PACKET_REFUSED,
   BF_DEMAND_LINES, BF_DEMAND_GIVEN, BF_DEMAND_REFUSED_THREAT,
   BF_BREAKUP_LINES, BF_REPORT_LINES, BF_POLICE_NARRATION, COMFORT_AMBIENT_LINES,
+  MOM_BIRTHDAY_LINES, MOM_BIRTHDAY_TAKEN, MOM_BIRTHDAY_REFUSED,
+  BF_BIRTHDAY_REMEMBER_LINES, BF_BIRTHDAY_TAKEN, BF_BIRTHDAY_REFUSED,
+  BF_BIRTHDAY_REMEMBER_LOG, BF_BIRTHDAY_FORGOT_LOG,
 } from '../../data/comfort-packs';
 import {
   INSPIRE_POSTS, FAMILY_POSTS, LOVE_POSTS, MOM_COMMENTS, BF_COMMENTS, OTHER_POSTS, COMFORT_SCENES,
@@ -29,6 +33,7 @@ import {
 import {
   BF_DEMAND_FIRST_DAY, BF_DEMAND_GAP_COLD, BF_BREAKUP_REFUSES,
   MOM_GIFT_FIRST_DAY, BF_PACKET_FIRST_DAY, BF_OMEN_DAY,
+  XIAOMAN_BIRTHDAY_DAY, freshComfortState,
 } from '../../data/comfort';
 import type { GameState } from '../../types/game';
 
@@ -82,6 +87,9 @@ describe('1.1.0 话术库：人设与红线', () => {
       ...BF_PACKET_LINES, ...BF_PACKET_TAKEN, ...BF_PACKET_REFUSED,
       ...BF_DEMAND_LINES.flat(), ...BF_DEMAND_GIVEN, ...BF_DEMAND_REFUSED_THREAT,
       ...BF_BREAKUP_LINES, ...BF_REPORT_LINES, ...BF_POLICE_NARRATION, ...COMFORT_AMBIENT_LINES,
+      ...MOM_BIRTHDAY_LINES, ...MOM_BIRTHDAY_TAKEN, ...MOM_BIRTHDAY_REFUSED,
+      ...BF_BIRTHDAY_REMEMBER_LINES, ...BF_BIRTHDAY_TAKEN, ...BF_BIRTHDAY_REFUSED,
+      ...BF_BIRTHDAY_REMEMBER_LOG, ...BF_BIRTHDAY_FORGOT_LOG,
     ].forEach(put);
     expect(dupes).toEqual([]);
   });
@@ -286,6 +294,90 @@ describe('1.1.0 聊天：不耗体力 / 去重 / 伏笔', () => {
     expect(s.flags.bf_omen_done).toBe(true);
     expect(s.comfort.chat?.contactId).toBe('boyfriend');
     expect(s.comfort.chat!.transcript.some((m) => m.text.includes('拒了'))).toBe(true);
+  });
+
+  it('伏笔顺延：第 14 天有聊天在开就不丢，聊天空出来后补上（宽限 3 天）', () => {
+    const s = fresh(67);
+    s.day = BF_OMEN_DAY;
+    s.comfort = { ...s.comfort, chat: { contactId: 'mother', transcript: [], pending: [], awaiting: 'player', closingNote: null } };
+    runComfortMorning(s);
+    expect(s.flags.bf_omen_done).toBeUndefined(); // 没触发，也没丢
+    s.comfort = { ...s.comfort, chat: null };
+    s.day = BF_OMEN_DAY + 1;
+    runComfortMorning(s);
+    expect(s.flags.bf_omen_done).toBe(true);
+    expect(s.comfort.chat?.contactId).toBe('boyfriend');
+  });
+});
+
+describe('1.1.0 嘘寒问暖与生日：家人常来，外人看心情', () => {
+  /** 手工挂一张嘘寒问暖卡（绕开 rng 掷骰）。 */
+  function withTalk(s: GameState, id: string, kind: 'mom_talk' | 'bf_talk', packId: string, firstLine: string): GameState {
+    const next = { ...s, comfort: { ...s.comfort, incoming: [...s.comfort.incoming] } };
+    next.comfort.incoming.push({ id, kind, day: next.day, amount: 0, lines: [firstLine], packId });
+    return next;
+  }
+
+  it('妈的嘘寒问暖：回 = 免费开一场那套话术的聊天（开场白就是卡上那句）；不回 = 家庭关系-2', () => {
+    let s = fresh(51);
+    const pack = MOTHER_PACKS[0];
+    const opener = pack.lines[0].split('｜')[0];
+    s = withTalk(s, 'mom_talk_test', 'mom_talk', pack.id, opener);
+    const e0 = s.energy;
+    s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: 'mom_talk_test', accept: true });
+    expect(s.comfort.chat).not.toBeNull();
+    expect(s.comfort.chat!.contactId).toBe('mother');
+    expect(s.comfort.chat!.transcript.some((m) => m.speaker === 'them' && m.text === opener)).toBe(true);
+    expect(s.energy).toBe(e0); // 免费
+    expect(s.comfort.incoming.some((m) => m.id === 'mom_talk_test')).toBe(false);
+
+    let s2 = fresh(51);
+    const f0 = s2.comfort.family;
+    s2 = withTalk(s2, 'mom_talk_test', 'mom_talk', MOTHER_PACKS[1].id, '（测试）');
+    s2 = dispatch(s2, { type: 'comfort_resolve_incoming', incomingId: 'mom_talk_test', accept: false });
+    expect(s2.comfort.family).toBe(f0 - 2);
+    expect(s2.comfort.chat).toBeNull();
+  });
+
+  it('嘘寒问暖卡在一场聊天没完时不能回（卡片保留不丢）', () => {
+    let s = fresh(53);
+    s = dispatch(s, { type: 'comfort_open_chat', contactId: 'mother' });
+    s = withTalk(s, 'mom_talk_test', 'mom_talk', MOTHER_PACKS[2].id, '（测试）');
+    const snap = JSON.stringify(s);
+    s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: 'mom_talk_test', accept: true });
+    expect(JSON.stringify(s)).toBe(snap);
+  });
+
+  it('农历小满生日（第 21 天）：妈的生日红包必到；感情好的阿凯记得，感情凉的忘了', () => {
+    const warm = fresh(61);
+    warm.day = XIAOMAN_BIRTHDAY_DAY;
+    warm.comfort = { ...freshComfortState(), love: 80 };
+    runComfortMorning(warm);
+    expect(warm.flags.xiaoman_birthday_done).toBe(true);
+    expect(warm.comfort.incoming.some((m) => m.kind === 'mom_gift' && m.tone === 'birthday')).toBe(true);
+    const warmLogs = warm.log.filter((l) => l.kind === 'comfort').map((l) => l.details + (l.line ?? '')).join();
+    expect(warmLogs).toContain('居然记得');
+
+    const cold = fresh(63);
+    cold.day = XIAOMAN_BIRTHDAY_DAY;
+    cold.comfort = { ...freshComfortState(), love: 40 };
+    runComfortMorning(cold);
+    const coldLogs = cold.log.filter((l) => l.kind === 'comfort').map((l) => l.details + (l.line ?? '')).join();
+    expect(coldLogs).toContain('他忘了');
+  });
+
+  it('生日红包结算：收 → 进活命钱（口径与普通生活费一致）', () => {
+    let s = fresh(65);
+    s.day = XIAOMAN_BIRTHDAY_DAY;
+    s.comfort = { ...freshComfortState() };
+    runComfortMorning(s);
+    const card = s.comfort.incoming.find((m) => m.kind === 'mom_gift' && m.tone === 'birthday');
+    expect(card).toBeDefined();
+    const money0 = s.money;
+    s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: card!.id, accept: true });
+    expect(s.money).toBe(money0 + 200);
+    const all = s.log.filter((l) => l.kind === 'comfort').map((l) => l.details + (l.line ?? '')).join();
+    expect(all).toContain('农历小满');
   });
 });
 

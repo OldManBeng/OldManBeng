@@ -30,7 +30,7 @@ export const COMFORT_CONTACTS: Record<'mother' | 'boyfriend', ComfortContact> = 
   boyfriend: {
     id: 'boyfriend',
     name: '阿凯',
-    handle: '凯凯👩‍❤️‍👨',
+    handle: '凯凯',
     age: 27,
     avatarKey: 'boyfriend',
     signature: '代练接单 · 私聊 · 带上分',
@@ -57,6 +57,9 @@ export const XIAOMAN = {
   name: '小满',
   avatarKey: 'xiaoman' as const,
   plainNote: '素颜的她：马尾，眼镜，皮肤一般。化妆后是小美——工作手机里的那十张脸，都不是她。',
+  birthNote: '农历小满那天出生——妈说，那天麦子正好灌浆。',
+  /** 生日落在游戏第 21 天（农历小满节气的日子）。 */
+  birthdayDay: 21,
 };
 
 /** ---- 舒适圈平衡常量 ---- */
@@ -109,9 +112,32 @@ export const BF_PACKET_LOVE_REFUSE = -8;
 export const MOM_GIFT_FAMILY_TAKE = 4;
 export const MOM_GIFT_FAMILY_REFUSE = -6;
 
-/** 一次性剧情锚：第 14 天男友深夜的"真心话"（分手伏笔的种子）。 */
+/** 一次性剧情锚：第 14 天男友深夜的"真心话"（分手伏笔的种子）。
+ *  当天聊天没空档就顺延（最多等 3 天），不丢。 */
 export const BF_OMEN_DAY = 14;
+export const BF_OMEN_GRACE = 3;
 export const BF_OMEN_PACK = 'bf_omen';
+
+/** ---- 嘘寒问暖（纯聊天卡）：关心比转账勤——这才是"经常关心"的本义 ----
+ *  妈每 2-3 天总有一句"吃了没"；阿凯每 3-5 天一句甜言蜜语。
+ *  回 = 原样开一场那套话术的免费聊天；不回 = 关系小扣（消息是要还的）。 */
+export const MOM_TALK_FIRST_DAY = 2;
+export const MOM_TALK_GAP_MIN = 2;
+export const MOM_TALK_GAP_MAX = 3;
+export const MOM_TALK_FAMILY_FLOOR = 15;
+export const BF_TALK_FIRST_DAY = 2;
+export const BF_TALK_GAP_MIN = 3;
+export const BF_TALK_GAP_MAX = 5;
+export const BF_TALK_LOVE_FLOOR = 25;
+export const TALK_IGNORE_FAMILY = -2;
+export const TALK_IGNORE_LOVE = -2;
+
+/** 小满生日（农历小满，第 21 天）：妈一定记得；阿凯看感情——这一天把"家"和"他"称出斤两。 */
+export const XIAOMAN_BIRTHDAY_DAY = XIAOMAN.birthdayDay;
+export const XIAOMAN_BIRTHDAY_GIFT = 200;
+export const XIAOMAN_BIRTHDAY_PACKET = 21;
+/** 感情 ≥ 此值，阿凯才记得你生日。 */
+export const BF_BIRTHDAY_REMEMBER_LOVE = 55;
 
 /** 舒适圈聊天归档容量（防存档膨胀）。 */
 export const COMFORT_ARCHIVE_CAP = 40;
@@ -131,6 +157,8 @@ export function freshComfortState(): ComfortState {
     momGift: { lastDay: 0, count: 0 },
     bfPacket: { lastDay: 0, count: 0 },
     bfDemand: { lastDay: 0, count: 0, refuses: 0 },
+    momTalk: { lastDay: 0, count: 0 },
+    bfTalk: { lastDay: 0, count: 0 },
     momGiven: 0,
     momRefused: 0,
     bfGiven: 0,

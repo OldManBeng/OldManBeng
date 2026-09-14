@@ -240,8 +240,6 @@ type ModuleTab = 'today' | 'contacts' | 'moments' | 'history' | 'wallet';
 export function MainScreen() {
   const store = useGame();
   const { state } = store;
-  // 1.1.0 常用手机：舒适圈激活时整套界面换暖色——同一根时间轴，另一部手机。
-  if (state.comfort.active) return <ComfortScreen />;
   const risk = riskLabel(state.riskLevel);
   const [tab, setTab] = useState<ModuleTab>('today');
   const [showLog, setShowLog] = useState(false);
@@ -268,6 +266,9 @@ export function MainScreen() {
       if (e.kind === 'gatha') playBell();              // 偈语/晨钟——仪式感
     }
   }, [state.log]);
+  // 1.1.0 常用手机：舒适圈激活时整套界面换暖色——同一根时间轴，另一部手机。
+  // （早退必须放在全部 hooks 之后——hooks 数量不能在两次渲染间变化。）
+  if (state.comfort.active) return <ComfortScreen />;
   // 聊天中强制回"今天"，聊天是全屏体验。
   const activeTab: ModuleTab = state.dayPhase === 'chat' ? 'today' : tab;
   // v3.0 昼夜氛围：白天掺暖光，深夜更沉，聊天跟随对象时区。
@@ -389,6 +390,14 @@ function TodayPanel({ phaseLabel, onOpenProfile }: { phaseLabel: string; onOpenP
             {state.playerName} · 人设「{persona.name}」
             {/* v4.11 变更人设：入口跟着人设行走（底部导航不再占一格） */}
             <button className="persona-change-btn" onClick={onOpenProfile}>变更人设</button>
+            {/* 1.1.0 常驻入口：第二部手机——不用翻浮层，人设行上直接切 */}
+            <button
+              className="persona-change-btn comfort-switch-chip"
+              title="妈和阿凯在的那部手机——暖色的，聊天不耗体力"
+              onClick={() => { playMessage(); store.dispatch({ type: 'switch_phone' }); }}
+            >
+              切换常用手机{state.comfort.incoming.length > 0 ? ` (${state.comfort.incoming.length})` : ''}
+            </button>
           </div>
           <div className="persona-bio muted small">“{bioTextOf(state.profile.bioId)}”</div>
           <div className="bars" style={{ margin: '5px 0 3px' }}>
