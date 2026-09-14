@@ -16,6 +16,7 @@ import { SHOP_ITEMS } from '../data/items';
 import { WORLD_BEAT_BY_DAY, interpolateBeat } from '../data/life-events';
 import { PLAYER_BIOS } from '../data/player-bios';
 import type { PlayerProfile } from '../types/game';
+import { ComfortScreen } from './comfort-screen';
 
 /** 打字机入场：每个气泡先露一个字，再逐字打完（收到新气泡时也走这个）。 */
 function firstChunk(text: string): number {
@@ -239,6 +240,8 @@ type ModuleTab = 'today' | 'contacts' | 'moments' | 'history' | 'wallet';
 export function MainScreen() {
   const store = useGame();
   const { state } = store;
+  // 1.1.0 常用手机：舒适圈激活时整套界面换暖色——同一根时间轴，另一部手机。
+  if (state.comfort.active) return <ComfortScreen />;
   const risk = riskLabel(state.riskLevel);
   const [tab, setTab] = useState<ModuleTab>('today');
   const [showLog, setShowLog] = useState(false);
@@ -395,6 +398,13 @@ function TodayPanel({ phaseLabel, onOpenProfile }: { phaseLabel: string; onOpenP
           {state.industryCourse && <div className="industry-badge">代聊群运行中 · 话术共用 · 判决书线已激活</div>}
         </div>
       </div>
+
+      {/* 1.1.0 常用手机提醒：妈/阿凯来找你了——温情在另一部手机上等着 */}
+      {(state.comfort.incoming.length > 0 || state.comfort.chat) && (
+        <button className="btn small wide comfort-nudge" onClick={() => { playMessage(); store.dispatch({ type: 'switch_phone' }); }}>
+          常用手机 · {state.comfort.incoming.length > 0 ? `${state.comfort.incoming.length} 条新消息（妈/阿凯）` : '有一场没聊完的天'}
+        </button>
+      )}
 
       {/* 他来找你——回应/装没看见 */}
       {state.incoming.length > 0 && (
@@ -1214,6 +1224,19 @@ function ProfileOverlay({ onClose }: { onClose: () => void }) {
           ))}
         </div>
         <p className="muted small">换的是演法——已经认识你的人不会重置，他只是觉得你今天说话的味道不一样了。</p>
+
+        {/* 1.1.0 切换常用手机：变更人设之后的第二部手机——舒适圈入口 */}
+        <div className="comfort-entry">
+          <button
+            className="btn wide comfort-entry-btn"
+            onClick={() => { playPersonaSwitch(); store.dispatch({ type: 'switch_phone' }); }}
+          >
+            切换常用手机
+          </button>
+          <p className="muted small">
+            另一部手机：暖色的、素颜的、妈和他在的那部。那边的聊天不耗体力，钱不带代价字幕。
+          </p>
+        </div>
 
         <h4>头像（{PERSONA_MAP[state.personaId].name}的十款穿搭）</h4>
       <div className="choice-grid avatars">

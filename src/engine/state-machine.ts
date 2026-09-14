@@ -66,6 +66,12 @@ import {
 } from '../data/direct-ask';
 import { INCIDENTS, incidentsAvailable } from '../data/incidents';
 import type { IncidentDef, IncidentOption } from '../data/incidents';
+import { freshComfortState } from '../data/comfort';
+import { SWITCH_TO_COMFORT, SWITCH_TO_WORK } from '../data/comfort-contrast';
+import {
+  runComfortMorning, resolveComfortIncoming, openComfortChat, pickComfortOption, endComfortChat,
+  postComfortMoment, reactComfortMoment,
+} from './comfort';
 
 export const TARGET_MAP: Record<string, Target> = Object.fromEntries(TARGETS.map((t) => [t.id, t]));
 /** v2.0：含老头库的全量映射。 */
@@ -454,6 +460,7 @@ export function createInitialState(): GameState {
     selfieAudience: [],
     bioAudience: [],
     bioAudienceDay: 0,
+    comfort: freshComfortState(),
   };
 }
 
@@ -881,6 +888,9 @@ function runMorning(state: GameState) {
   state.energy = state.day <= ENERGY_EARLY_DAYS
     ? Math.round(state.energyMax * ENERGY_EARLY_FACTOR)
     : state.energyMax;
+
+  // 1.1.0 舒适圈：常用手机的早晨——妈/男友的事件卡派发（独立随机流，不耗主种子）。
+  runComfortMorning(state);
 }
 
 /** Score the ending from run shape.
@@ -953,6 +963,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       s.selfieAudience = [];
       s.bioAudience = [];
       s.bioAudienceDay = 0;
+      s.comfort = freshComfortState();
       s.energyMax = ENERGY_MAX;
       s.money = START_MONEY;
       s.riskLevel = 0;
@@ -1863,6 +1874,56 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       s.phase = 'main';
       s.dayPhase = 'morning';
       s.daysLimit = s.day + 10;
+      return s;
+    }
+
+    // ---- 1.1.0 舒适圈（常用手机）----
+    case 'switch_phone': {
+      // 纯视图切换：工作手机 ↔ 常用手机。时间共用同一条轴线，他不看你后台，
+      // 妈和男友也不看你后台——两个世界互不可见，只有你两头都在。
+      s.comfort.active = !s.comfort.active;
+      // 切机旁白走对比池（温情 vs 算计——按天轮换，不耗 RNG）。
+      const contrast = s.comfort.active ? SWITCH_TO_COMFORT : SWITCH_TO_WORK;
+      log(s, 'comfort', '你按下了电源键。', contrast[s.day % contrast.length]);
+      if (s.comfort.active) s.comfort.unseenMoments = 0;
+      return s;
+    }
+
+    case 'comfort_open_chat': {
+      // 熟人聊天不耗体力——那是她的生活，不是生意。
+      if (s.comfort.chat) return s;
+      if (action.contactId === 'boyfriend' && s.comfort.blockedByBf) return s;
+      openComfortChat(s, action.contactId);
+      return s;
+    }
+
+    case 'comfort_pick': {
+      pickComfortOption(s, action.optionIndex);
+      return s;
+    }
+
+    case 'comfort_end_chat': {
+      endComfortChat(s);
+      return s;
+    }
+
+    case 'comfort_resolve_incoming': {
+      resolveComfortIncoming(s, action.incomingId, action.accept);
+      return s;
+    }
+
+    case 'comfort_post_moment': {
+      postComfortMoment(s, action.kind);
+      return s;
+    }
+
+    case 'comfort_react_moment': {
+      reactComfortMoment(s, action.momentId, action.kind);
+      return s;
+    }
+
+    case 'comfort_view_moments': {
+      s.comfort.unseenMoments = 0;
       return s;
     }
 

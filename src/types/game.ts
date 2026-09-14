@@ -1,6 +1,7 @@
 import type { TargetState } from './target';
 import type { PersonaId } from './persona';
 import type { ChatMessage } from './chat';
+import type { ComfortState } from './comfort';
 
 /** App-level screens. */
 export type GamePhase = 'title' | 'newGame' | 'main' | 'ended';
@@ -8,9 +9,7 @@ export type GamePhase = 'title' | 'newGame' | 'main' | 'ended';
 /** Phases inside one game day (morning bills → night roster → chat session). */
 export type DayPhase = 'morning' | 'night' | 'chat';
 
-/** Why she is doing this — sets goal and tone. M1: debt only, others reserved. */
-export type Motive = 'debt' | 'family_illness' | 'escape_town';
-
+/** 舒适圈（常用手机）事件——两个手机共用一条时间轴，日志也共账。 */
 export type EventKind =
   | 'day'
   | 'plan'
@@ -25,7 +24,11 @@ export type EventKind =
   | 'flag'
   | 'life'
   | 'beat'
-  | 'incident';
+  | 'incident'
+  | 'comfort';
+
+/** Why she is doing this — sets goal and tone. M1: debt only, others reserved. */
+export type Motive = 'debt' | 'family_illness' | 'escape_town';
 
 export interface EventLogEntry {
   day: number;
@@ -114,7 +117,7 @@ export interface LedgerEntry {
   day: number;
   amount: number;
   note: string;
-  kind: 'bill' | 'packet' | 'gift' | 'course' | 'event' | 'plan' | 'shop';
+  kind: 'bill' | 'packet' | 'gift' | 'course' | 'event' | 'plan' | 'shop' | 'family';
 }
 
 /** 聊天记录归档——end_chat 时整场对话存档。 */
@@ -224,6 +227,8 @@ export interface GameState {
   /** v4.5：观众圈是哪天抽的（换签 4 天内有效——过了窗口还没来，
    *  就是没注意到，不再拿"刚换的吧"这句旧话说事）。 */
   bioAudienceDay: number;
+  /** 1.1.0 舒适圈：常用手机——小满的另一个世界（妈/男友/活命钱/家庭账）。 */
+  comfort: import('./comfort').ComfortState;
 }
 
 export type GameAction =
@@ -261,4 +266,20 @@ export type GameAction =
   /** v4.2 突发事件决策——今天的事件选了哪个选项（只能选一次，过夜落锤）。 */
   | { type: 'resolve_incident'; optionIndex: number }
   /** v4.11 变更人设——白天随时可换（话术/被动/剧情分岔即刻切换；他不看你后台）。 */
-  | { type: 'set_persona'; personaId: PersonaId };;
+  | { type: 'set_persona'; personaId: PersonaId }
+  /** 1.1.0 切换常用手机——工作手机（崩老头）↔ 常用手机（舒适圈）。纯视图切换。 */
+  | { type: 'switch_phone' }
+  /** 舒适圈：主动找妈/男友聊天（不耗体力）。 */
+  | { type: 'comfort_open_chat'; contactId: 'mother' | 'boyfriend' }
+  /** 舒适圈：选一个回复（对方回应 + 关系变化）。 */
+  | { type: 'comfort_pick'; optionIndex: number }
+  /** 舒适圈：结束当前聊天（归档）。 */
+  | { type: 'comfort_end_chat' }
+  /** 舒适圈：处理事件卡——要/不要（妈生活费、男友红包）、给/不给（男友要钱）。 */
+  | { type: 'comfort_resolve_incoming'; incomingId: string; accept: boolean }
+  /** 舒适圈：发一条朋友圈（励志/晒家/晒恩爱，每天一条）。 */
+  | { type: 'comfort_post_moment'; kind: 'inspire' | 'family' | 'love' }
+  /** 舒适圈：给妈/男友的动态点赞/评论（关系+微调）。 */
+  | { type: 'comfort_react_moment'; momentId: string; kind: 'like' | 'comment' }
+  /** 舒适圈：打开朋友圈模块（清红点）。 */
+  | { type: 'comfort_view_moments' };;

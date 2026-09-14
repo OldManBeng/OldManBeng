@@ -1747,3 +1747,203 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   text-align: center;
   letter-spacing: 1px;
 }
+/* ===========================================================================
+   1.1.0 舒适圈（常用手机）：暖色主题覆盖 + 语音条 + 舒适圈组件
+   ======================================================================== */
+.comfort-theme {
+  --page: #FAF3E7;
+  --surface: #FFFDF8;
+  --surface-2: #F5E9D6;
+  --panel: var(--surface);
+  --panel-2: var(--surface-2);
+  --panel-glass: color-mix(in srgb, var(--surface) 86%, transparent);
+  --panel-glass-lite: color-mix(in srgb, var(--surface-2) 66%, transparent);
+  --fill: rgba(180, 140, 80, 0.16);
+  --hover: rgba(180, 140, 80, 0.10);
+  --hover-strong: rgba(180, 140, 80, 0.20);
+  --label: #43331F;
+  --text: #43331F;
+  --muted: rgba(95, 72, 42, 0.62);
+  --faint: rgba(95, 72, 42, 0.42);
+  --sep: rgba(125, 98, 60, 0.28);
+  --line: var(--sep);
+  --line-soft: rgba(125, 98, 60, 0.18);
+  --accent: #D97B29;
+  --accent-deep: #A95A12;
+  --warm: #B67A1E;
+  --bub-target: #FFFFFF;
+  --bub-ink: #43331F;
+  --bub-green: #F5D08C;
+  --bub-green-ink: #5A3E10;
+  background:
+    radial-gradient(120% 55% at 50% -6%, #FFEFD6 0%, rgba(255, 239, 214, 0) 55%),
+    linear-gradient(180deg, #FBF1DF 0%, #F6E7CE 240px),
+    #FAF3E7;
+  color: var(--text);
+}
+
+.comfort-theme .hud { background: var(--panel-glass); border-bottom: 1px solid var(--line-soft); }
+.comfort-theme .module-nav { background: var(--panel-glass); border-top: 1px solid var(--line-soft); }
+.comfort-theme .nav-btn { color: var(--muted); }
+.comfort-theme .nav-btn.on { color: var(--accent-deep); }
+.comfort-theme .day-chip { background: var(--fill); color: var(--text); }
+.comfort-theme .money { color: var(--accent-deep); }
+.comfort-theme .goal { color: var(--muted); }
+.comfort-theme .log-entry { background: var(--surface); border: 1px solid var(--line-soft); }
+.comfort-theme .log-line { color: var(--muted); font-family: var(--font-kai); }
+
+.comfort-phone-tag {
+  font-size: var(--fs-1);
+  color: var(--accent-deep);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.comfort-switch-btn { white-space: nowrap; }
+
+/* 关系条（暖色的「风险条」——量的是亲情，不是穿帮） */
+.comfort-rel-strip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 12px;
+  font-size: var(--fs-1);
+  color: var(--muted);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+.comfort-rel-strip .comfort-rel-meter {
+  flex: 1; max-width: 90px; height: 4px; border-radius: 999px;
+  background: var(--fill); overflow: hidden; display: inline-block;
+}
+.comfort-rel-strip .comfort-rel-meter i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+.comfort-rel-strip .comfort-rel-meter.love i { background: #D95A6A; }
+.comfort-rel-broken { color: var(--muted); text-decoration: line-through; }
+
+/* 素颜小满行 / 警察卡 */
+.comfort-police-card {
+  margin: 10px 0; padding: 12px 14px;
+  background: var(--surface); border: 1px solid var(--sep); border-left: 3px solid #8a6d3b;
+  border-radius: var(--r-md);
+}
+
+/* 事件卡（妈的生活费 / 阿凯红包 / 阿凯要钱） */
+.comfort-event-card {
+  margin: 10px 0; padding: 12px 14px;
+  background: var(--surface); border: 1px solid var(--line-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--r-md);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.comfort-event-card.bf_demand { border-left-color: #C0392B; }
+.comfort-event-card .cec-head { display: flex; align-items: center; gap: 10px; }
+.comfort-event-card .cec-name { font-weight: 600; font-size: var(--fs-4); }
+.comfort-event-card .cec-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* 镜像行：两台手机的对照（温情 vs 算计的落点） */
+.comfort-mirror {
+  margin: 12px 0; padding: 12px 14px;
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border: 1px dashed color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: var(--r-md);
+  font-family: var(--font-kai);
+  font-size: var(--fs-4);
+  line-height: var(--lh-loose);
+  color: var(--text);
+}
+.comfort-mirror-tag {
+  font-size: var(--fs-0);
+  letter-spacing: var(--ls-wide);
+  color: var(--accent-deep);
+  margin-bottom: 6px;
+  font-family: var(--font-sans);
+}
+
+/* 熟人速聊 / 通讯录 */
+.comfort-quick-chat h3 { margin: 14px 0 8px; }
+.comfort-contact-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; margin: 8px 0;
+  background: var(--surface); border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+}
+.comfort-contact-row .ccr-body { flex: 1; min-width: 0; }
+.comfort-contact-row .ccr-name { font-weight: 600; font-size: var(--fs-5); }
+.comfort-contact-row.father { opacity: 0.55; cursor: pointer; filter: grayscale(1); }
+.comfort-contact-row.gone { opacity: 0.55; filter: grayscale(1); }
+.comfort-contact-row.gone .ccr-name { text-decoration: line-through; }
+.comfort-contact-bio {
+  font-size: var(--fs-2); color: var(--muted);
+  margin-top: 5px; line-height: var(--lh-body);
+}
+.comfort-father-bio {
+  margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line-soft);
+  font-size: var(--fs-3); color: var(--text); line-height: var(--lh-loose);
+  font-family: var(--font-kai);
+}
+
+/* 微信式语音条（纯显示效果——游戏里没有真的语音） */
+.cbubble-row { display: flex; align-items: flex-start; gap: 8px; margin: 8px 0; }
+.cbubble-row.me { justify-content: flex-end; }
+.cbubble-ava {
+  width: 30px; height: 30px; border-radius: 6px; flex: none;
+  background: var(--accent); color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: var(--fs-4);
+}
+.cbubble {
+  max-width: 78%;
+  border-radius: var(--r-list);
+  padding: 8px 11px;
+  font-size: var(--fs-4);
+  line-height: var(--lh-body);
+  animation: cbubble-in 220ms var(--ease-out);
+}
+.cbubble.them { background: var(--bub-target); color: var(--bub-ink); border: 1px solid var(--line-soft); }
+.cbubble.me { background: var(--bub-green); color: var(--bub-green-ink); }
+@keyframes cbubble-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.voice-bar {
+  display: flex; align-items: center; gap: 7px;
+  min-width: 92px;
+  padding: 3px 2px 6px;
+  margin-bottom: 4px;
+  border-bottom: 1px dashed color-mix(in srgb, currentColor 22%, transparent);
+}
+.voice-tri {
+  width: 0; height: 0; flex: none;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-left: 9px solid currentColor;
+  opacity: 0.85;
+}
+.voice-wave { display: inline-flex; align-items: center; gap: 2.5px; flex: 1; }
+.voice-wave i {
+  width: 2.5px; border-radius: 2px; background: currentColor; opacity: 0.55;
+  height: 8px;
+}
+.voice-wave i:nth-child(1) { height: 6px; } .voice-wave i:nth-child(2) { height: 11px; }
+.voice-wave i:nth-child(3) { height: 15px; } .voice-wave i:nth-child(4) { height: 9px; }
+.voice-wave i:nth-child(5) { height: 6px; }
+.voice-secs { font-size: var(--fs-1); opacity: 0.7; font-variant-numeric: tabular-nums; }
+.cbubble-sys {
+  align-self: center; text-align: center;
+  font-size: var(--fs-1); color: var(--muted);
+  margin: 10px 0; max-width: 85%;
+}
+.cbubble-sys-label {
+  display: inline-block; margin-bottom: 3px;
+  font-weight: 600; color: var(--accent-deep);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  padding: 2px 10px; border-radius: 999px;
+}
+.comfort-chat { background: linear-gradient(180deg, #FBF1DF 0%, #F6E7CE 100%); }
+
+/* 工作手机上的「常用手机」入口（人设浮层 + 今天页提醒） */
+.comfort-entry { margin: 14px 0 4px; }
+.comfort-entry-btn {
+  background: linear-gradient(135deg, #F5D08C, #E8853B);
+  color: #5A3E10;
+  border: none;
+  font-weight: 600;
+}
+.comfort-nudge { margin: 8px 0; }
+.comfort-theme .stats-row { color: var(--muted); }

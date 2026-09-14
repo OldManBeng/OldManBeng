@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { GameAction, GameState } from '../types/game';
 import { createInitialState, defaultProfile, dispatch } from '../engine/state-machine';
 import { ALL_TARGETS } from '../data/target-library';
+import { freshComfortState } from '../data/comfort';
 import type { TargetState } from '../types/target';
 
 const SAVE_KEY = 'beng_save_v1';
@@ -69,6 +70,8 @@ export function migrate(saved: GameState): GameState {
     selfieAudience: saved.selfieAudience ?? [],
     bioAudience: saved.bioAudience ?? [],
     bioAudienceDay: saved.bioAudienceDay ?? 0,
+    // 1.1.0：舒适圈（旧档没有 → 全新常用手机；关系从初值起步，事件从明天起照常来）。
+    comfort: saved.comfort ?? freshComfortState(),
   };
 }
 
