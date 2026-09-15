@@ -105,7 +105,7 @@ export const BF_PACKET_FIRST_DAY = 2;
 /** 感情低于此值：他连红包都懒得发了。 */
 export const BF_PACKET_LOVE_FLOOR = 25;
 
-/** 男友要钱：200-600，从活命钱扣，扣不动的部分记到债上。 */
+/** 【已被台词定额取代】旧随机区间，保留仅为兼容外部引用。 */
 export const BF_DEMAND_MIN = 200;
 export const BF_DEMAND_MAX = 600;
 export const BF_DEMAND_GAP = 5;

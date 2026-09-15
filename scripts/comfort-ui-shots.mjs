@@ -65,7 +65,7 @@ const save = JSON.stringify({
   moments: [], unseenMoments: 0, inventory: {}, briefingDay: 0,
   pendingBeat: '', beatResolved: false, pinnedTargets: [], pendingIncident: '', incidentResolved: false,
   selfieAudience: [], bioAudience: [], bioAudienceDay: 0,
-  comfort: { active: true, family: 74, love: 88, minutes: 30, blockedByBf: false, bfState: 'normal', datesMet: { wu: 8, chen: 10 }, momGiven: 460, bfGiven: 160, bfTaken: 260 },
+  comfort: { active: true, family: 74, love: 88, minutes: 30, blockedByBf: false, bfState: 'normal', datesMet: { wu: 8, chen: 10 }, momGiven: 460, bfGiven: 160, bfTaken: 260, pending: 'inc_cm_blackout' },
 });
 
 await send('Page.navigate', { url: BASE });

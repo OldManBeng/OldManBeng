@@ -556,7 +556,13 @@ function PlanPanel() {
         <span className="plan-bar-ico"><Ico name={PLAN_ICONS[state.todayPlan] ?? 'pin'} size={18} /></span>
         <span className="plan-bar-label">
           {chosen
-            ? <>今天的计划 · <strong>{chosen.name}</strong> <span className="plan-note">已定，明天可换</span></>
+            ? (
+              // 已定态与待办态同款两行排版：主文案 15px 白字——旧单行 12px 灰字看不清
+              <span className="plan-todo-text">
+                <strong>今天的计划 · {chosen.name}</strong>
+                <span className="plan-todo-hint">已定，明天可换——点开可以改</span>
+              </span>
+            )
             : (
               <span className="plan-todo-text">
                 <strong>今天的计划还没定<span className="plan-todo-dot" /></strong>

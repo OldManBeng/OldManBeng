@@ -1183,19 +1183,29 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 /* ---- 未定态：待办空槽（v1.1.x）----
    虚线描边 + 金底纹 = "这个格子等着你填"的通用空态语言；
    两行排版：主文案 14px 打头，提示语降为 12px 陪衬；
-   图标换成灯笼金圆底徽章，轻呼吸把视线接过来。 */
-.plan-bar-toggle.plan-bar-todo {
+   图标换成灯笼金圆底徽章，轻呼吸把视线接过来。
+   已定态（.chosen）沿用同一套两行排版与实线边框——选完的计划不该缩回 12px 灰字。 */
+.plan-bar-toggle.plan-bar-todo,
+.plan-panel.chosen .plan-bar-toggle {
   height: auto;
   min-height: var(--touch);
   padding: 10px 14px;
-  background: color-mix(in srgb, var(--warm) 7%, var(--surface));
-  border: 1px dashed color-mix(in srgb, var(--warm) 55%, transparent);
   border-radius: var(--r-md);
 }
+.plan-bar-toggle.plan-bar-todo {
+  background: color-mix(in srgb, var(--warm) 7%, var(--surface));
+  border: 1px dashed color-mix(in srgb, var(--warm) 55%, transparent);
+}
+.plan-panel.chosen .plan-bar-toggle {
+  background: color-mix(in srgb, var(--warm) 4%, var(--surface));
+  border: 1px solid var(--line);
+}
 .plan-bar-toggle.plan-bar-todo:hover { background: color-mix(in srgb, var(--warm) 12%, var(--surface)); }
+.plan-panel.chosen .plan-bar-toggle:hover { background: color-mix(in srgb, var(--warm) 8%, var(--surface)); }
 .plan-todo-text { display: flex; flex-direction: column; gap: 2px; }
 /* 待办两行结构要撑开 label——旧单行规则（20px 定高 + nowrap + 裁切）必须解除 */
-.plan-bar-toggle.plan-bar-todo .plan-bar-label {
+.plan-bar-toggle.plan-bar-todo .plan-bar-label,
+.plan-panel.chosen .plan-bar-toggle .plan-bar-label {
   height: auto; line-height: normal;
   overflow: visible; white-space: normal; text-overflow: clip;
 }
@@ -1218,6 +1228,12 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   background: color-mix(in srgb, var(--warm) 14%, transparent);
   border-radius: 999px; padding: 7px;
   animation: plan-ico-breathe 2.4s ease-in-out infinite;
+}
+/* 已定态的图标徽章：同款金底，不呼吸（呼吸是"等你"的语义，已定不需要） */
+.plan-panel.chosen .plan-bar-ico {
+  color: var(--warm);
+  background: color-mix(in srgb, var(--warm) 14%, transparent);
+  border-radius: 999px; padding: 7px;
 }
 @keyframes plan-ico-breathe {
   0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--warm) 0%, transparent); }
@@ -1938,7 +1954,8 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   --label: var(--c-n7);
   --text: var(--c-n7);
   --muted: var(--c-n6);
-  --faint: rgba(95, 72, 42, 0.55);
+  /* 次级文字：n5 兜底（12px 功能文字的 AA 下限 4.77）——旧的 55% 透明棕合成后只有 ~2.2:1 */
+  --faint: var(--c-n5);
   --sep: var(--c-line);
   --line: var(--c-line);
   --line-soft: rgba(125, 98, 60, 0.18);
@@ -1977,7 +1994,7 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 /* HUD 两列制对齐主线口径：活命钱 --fs-6 / 债 --fs-3（同一套字阶，颜色走暖色变量） */
 .comfort-theme .money { color: var(--accent-deep); font-size: var(--fs-6); }
 .comfort-theme .goal { color: var(--muted); font-size: var(--fs-3); }
-.comfort-theme .hud-sub { color: var(--faint); }
+.comfort-theme .hud-sub { color: var(--c-n6); }
 .comfort-theme .log-entry { background: var(--surface); border: 1px solid var(--line-soft); }
 .comfort-theme .log-line { color: var(--muted); font-family: var(--font-kai); }
 
@@ -2300,7 +2317,9 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
    ======================================================================== */
 
 /* 今日时间条：与工作手机精力条同构，色走暖主题主色 */
-.comfort-theme .bar.minutes span { background: color-mix(in srgb, var(--c-accent) 55%, transparent); }
+.comfort-theme .bar.minutes span { background: color-mix(in srgb, var(--c-accent) 40%, transparent); }
+/* 条上的文字要跨「已填充/未填充」两种底：深棕 n7 + 填充降到 40%，两段都在 AA 上 */
+.comfort-theme .bar.minutes { color: var(--c-n7); font-weight: 600; }
 /* 时间条的刻度：40′ 分四段——「每场 10′」画在条上，文字不必再说一遍 */
 .comfort-theme .bar.minutes.bar-ticks::after {
   content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
@@ -2441,8 +2460,24 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   line-height: 1.7;
   color: var(--c-n6);
 }
+/* 突发事件的决策按钮：继承的浅底药丸在暖纸卡面上会隐形——
+   白卡 + 主色描边 + 深字。等权决策（二/三选一），不用实心主按钮标唯一路径。 */
+.comfort-theme .beat-opt {
+  background: var(--c-n0);
+  border: 1px solid var(--c-accent);
+  color: var(--c-n7);
+  font-weight: 600;
+}
+.comfort-theme .beat-opt:hover {
+  background: color-mix(in srgb, var(--c-accent) 8%, var(--c-n0));
+  border-color: var(--c-accent);
+}
+/* 评论作者名与条目引文：浅底上用加重橙（accent 在 fill 底上略低于 AA） */
+.comfort-theme .mc-author { color: var(--c-accent-strong); }
 /* 事件卡脚注经文：小一号、斜体感，像顺手抄在便签上 */
 .comfort-incident-verse {
+
+
   margin-top: 8px;
   padding-top: 8px;
   border-top: 1px dashed var(--c-n4);

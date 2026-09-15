@@ -228,7 +228,7 @@ export const COMFORT_INCIDENTS: ComfortIncident[] = [
       {
         text: '点进去，先取三千周转',
         after: '到账很快，快得没有仪式感。三千块躺在余额里，窟窿也跟着厚了三千——你借来的不是钱，是把下个月的自己先卖了。',
-        fx: { money: 3000, goal: 3000, love: 2 },
+        fx: { money: 3000, goal: 3000 },
       },
       {
         text: '转发给曼曼，问「靠谱吗」',

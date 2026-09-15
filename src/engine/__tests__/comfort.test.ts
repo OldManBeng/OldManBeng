@@ -896,7 +896,7 @@ describe('1.1.x 舒适圈突发事件：日子不是一条直线', () => {
     s = dispatch(s, { type: 'comfort_resolve_incident', optionIndex: 1 });
     expect(s.money).toBe(m0 + 3000);
     expect(s.goal).toBe(g0 + 3000);
-    expect(s.comfort.love).toBe(love0 + 2);
+    expect(s.comfort.love).toBe(love0); // 借钱不动感情账（2026-09 审查修复）
     expect(s.comfort.pending).toBe('');
     const led = s.ledger.filter((l) => l.day === s.day);
     expect(led.some((l) => l.amount === 3000)).toBe(true);

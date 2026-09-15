@@ -387,7 +387,7 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
       {policeToday && (
         <div className="comfort-police-card">
           <strong>今天你在派出所录了一天口供。</strong>
-          <p className="muted small">民警说，金额不大，先登记备案；再来一次，就不是登记了。工作手机躺在兜里，一夜没敢开机。</p>
+          <p className="muted small">民警的话不多：再来一次，就不是登记了。你把工作手机在兜里攥了一夜，没敢开机。</p>
         </div>
       )}
 

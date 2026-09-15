@@ -16,7 +16,7 @@ import { makeRng } from '../utils/random';
 import {
   MOM_GIFT_MIN, MOM_GIFT_MAX, MOM_GIFT_GAP_MIN, MOM_GIFT_GAP_MAX, MOM_GIFT_FIRST_DAY, MOM_GIFT_FAMILY_FLOOR,
   BF_PACKET_MIN, BF_PACKET_MAX, BF_PACKET_GAP_MIN, BF_PACKET_GAP_MAX, BF_PACKET_FIRST_DAY, BF_PACKET_LOVE_FLOOR,
-  BF_DEMAND_MIN, BF_DEMAND_MAX, BF_DEMAND_GAP, BF_DEMAND_GAP_COLD, BF_DEMAND_COLD_LOVE, BF_DEMAND_FIRST_DAY,
+  BF_DEMAND_GAP, BF_DEMAND_GAP_COLD, BF_DEMAND_COLD_LOVE, BF_DEMAND_FIRST_DAY,
   BF_BREAKUP_REFUSES, BF_BREAKUP_LOVE, BF_REVENGE_REPORT_CHANCE, BF_REPORT_RISK, BF_POLICE_CHANCE,
   BF_DEMAND_LOVE_GIVE, BF_DEMAND_LOVE_REFUSE, BF_PACKET_LOVE_TAKE, BF_PACKET_LOVE_REFUSE,
   MOM_GIFT_FAMILY_TAKE, MOM_GIFT_FAMILY_REFUSE,
@@ -36,7 +36,7 @@ import {
   MOTHER_PACKS, BOYFRIEND_PACKS, AUNTIE_PACKS, BESTIE_PACKS, QUARREL_PACKS, BF_OMEN_PACK as BF_OMEN_DATA,
   MOM_GIFT_LINES, MOM_GIFT_TAKEN, MOM_GIFT_REFUSED,
   BF_PACKET_LINES, BF_PACKET_TAKEN, BF_PACKET_REFUSED,
-  BF_DEMAND_LINES, BF_DEMAND_GIVEN, BF_DEMAND_REFUSED_THREAT,
+  BF_DEMAND_LINES, BF_DEMAND_AMOUNTS, BF_DEMAND_GIVEN, BF_DEMAND_REFUSED_THREAT,
   BF_BREAKUP_LINES, BF_REPORT_LINES, BF_POLICE_NARRATION, COMFORT_AMBIENT_LINES,
   MOM_BIRTHDAY_LINES, MOM_BIRTHDAY_TAKEN, MOM_BIRTHDAY_REFUSED,
   BF_BIRTHDAY_REMEMBER_LINES, BF_BIRTHDAY_TAKEN, BF_BIRTHDAY_REFUSED,
@@ -268,13 +268,15 @@ export function runComfortMorning(state: GameState): void {
       const rng = derivedComfortRng(state, 131);
       const due = state.day - (c.bfDemand.lastDay || 0) >= gap + 2 || rng.chance(0.3);
       if (due && capRoom() && !c.incoming.some((m) => m.kind === 'bf_demand') && claim('boyfriend')) {
-        const amount = rng.int(BF_DEMAND_MIN, BF_DEMAND_MAX);
+        // 台词定金额：第 i 套话术开口 BF_DEMAND_AMOUNTS[i]——语音说八百，账单就是八百
+        const di = rng.int(0, BF_DEMAND_LINES.length - 1);
+        const amount = BF_DEMAND_AMOUNTS[di];
         c.incoming.push({
           id: `bf_demand_${state.day}`,
           kind: 'bf_demand',
           day: state.day,
           amount,
-          lines: BF_DEMAND_LINES[rng.int(0, BF_DEMAND_LINES.length - 1)],
+          lines: BF_DEMAND_LINES[di],
           note: `要 ${amount} 元`,
         });
       }
