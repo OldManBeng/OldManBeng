@@ -2296,33 +2296,33 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   border: 1px solid var(--c-line);
   border-radius: var(--c-r-lg);
   box-shadow: var(--c-shadow-2);
-  padding: 20px 18px 16px;
+  padding: var(--c-s-5) var(--c-s-4) 16px;
   animation: briefing-pop 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
 }
-.comfort-day-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.comfort-day-head { display: flex; align-items: baseline; gap: var(--c-s-2); margin-bottom: var(--c-s-2); }
 .comfort-day-num { font-size: var(--c-fs-display); font-weight: var(--c-w-display); color: var(--c-n7); font-family: var(--font-kai); letter-spacing: 1px; }
 .comfort-day-sub { font-size: var(--c-fs-caption); color: var(--c-n6); }
 .comfort-day-line { font-size: var(--c-fs-body); line-height: 1.8; color: var(--c-n6); margin: 0 0 12px; }
 .comfort-day-rule {
-  display: flex; flex-direction: column; gap: 10px;
-  margin: 0 0 12px; padding: 12px;
+  display: flex; flex-direction: column; gap: var(--c-s-2);
+  margin: 0 0 var(--c-s-5); padding: var(--c-s-3);
   border: 1px dashed var(--c-n4);
   border-radius: var(--c-r-md);
   background: color-mix(in srgb, var(--c-n2) 55%, transparent);
 }
-.comfort-day-rule-row { display: flex; gap: 10px; font-size: var(--c-fs-caption); line-height: 1.7; color: var(--c-n6); }
+.comfort-day-rule-row { display: flex; gap: var(--c-s-2); font-size: var(--c-fs-caption); line-height: 1.7; color: var(--c-n6); }
 .comfort-day-rule-row .briefing-ico { color: var(--c-accent-strong); flex: none; margin-top: 2px; }
 .comfort-day-rule-row b { color: var(--c-accent-strong); }
 /* 晨间简报的余额格与昨日回响行——结构同工作手机 briefing-*，配色走 --c-* 暖系 */
 .comfort-day-money {
   display: grid;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: var(--c-s-2);
+  margin-bottom: var(--c-s-4);
 }
 .comfort-day-money > div {
   background: var(--c-n2);
   border-radius: var(--c-r-sm);
-  padding: 8px 6px;
+  padding: var(--c-s-2) var(--c-s-3);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2333,12 +2333,12 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 .comfort-day-money strong .hud-sub { font-size: var(--c-fs-micro); font-style: normal; color: var(--c-n5); }
 .comfort-day-row {
   display: flex;
-  gap: 10px;
+  gap: var(--c-s-3);
   align-items: flex-start;
   background: var(--c-n2);
   border-radius: var(--c-r-md);
-  padding: 10px 12px;
-  margin-bottom: 10px;
+  padding: var(--c-s-3) var(--c-s-4);
+  margin-bottom: var(--c-s-3);
   animation: row-in 300ms var(--ease-out) both;
 }
 .comfort-day-row .briefing-ico { color: var(--c-accent-strong); flex: none; padding-top: 1px; }
@@ -2346,7 +2346,7 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 .comfort-day-row-label { font-size: var(--c-fs-micro); color: var(--c-n6); letter-spacing: 2px; }
 .comfort-day-row-text { font-size: var(--c-fs-caption); line-height: 1.7; color: var(--c-n6); }
 /* 突发事件行（v1.0.0 的「今天出事了」⚡ 同构）：独占一行，事件色压住回响的暖色 */
-.comfort-day-row-incident { background: color-mix(in srgb, var(--c-accent) 7%, transparent); border-radius: 10px; padding: 8px 10px; margin: 0 -10px; }
+.comfort-day-row-incident { background: color-mix(in srgb, var(--c-accent) 7%, transparent); border-radius: var(--c-r-sm); padding: var(--c-s-2) var(--c-s-3); margin: 0 calc(var(--c-s-3) * -1); }
 .comfort-day-row-incident .briefing-ico { color: var(--c-accent-strong); }
 .comfort-day-row-incident .comfort-day-row-label { color: var(--c-accent-strong); }
 .comfort-day-rule-label { font-size: var(--c-fs-micro); color: var(--c-n6); letter-spacing: 2px; margin-bottom: 2px; }
@@ -2364,8 +2364,8 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 /* ---------- 1.1.x 舒适圈 · 每日经文 + 突发事件卡 ---------- */
 /* 「开始今天」里的经文块：工作手机敲佛偈（金楷居中），常用手机读经文（左对齐，像案头的随手笔记） */
 .comfort-verse {
-  margin: 0 0 12px;
-  padding: 10px 12px;
+  margin: 0 0 var(--c-s-3);
+  padding: var(--c-s-3) var(--c-s-4);
   border-left: 3px solid var(--c-gold);
   border-radius: var(--c-r-sm);
   background: color-mix(in srgb, var(--c-n2) 62%, transparent);
@@ -2384,7 +2384,7 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   color: var(--c-accent-strong);
 }
 .comfort-verse-gloss {
-  margin-top: 6px;
+  margin-top: 4px;
   font-size: var(--c-fs-caption);
   line-height: 1.7;
   color: var(--c-n6);
