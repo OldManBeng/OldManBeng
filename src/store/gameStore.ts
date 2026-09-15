@@ -85,15 +85,19 @@ function mergeComfort(saved: GameState['comfort'] | undefined): GameState['comfo
     ...saved,
     momTalk: saved.momTalk ?? base.momTalk,
     bfTalk: saved.bfTalk ?? base.bfTalk,
+    bestieTalk: saved.bestieTalk ?? base.bestieTalk,
     storyDone: saved.storyDone ?? base.storyDone,
     flipTick: saved.flipTick ?? base.flipTick,
     auntie: saved.auntie ?? base.auntie,
     datesMet: saved.datesMet ?? base.datesMet,
     quarrel: saved.quarrel ?? base.quarrel,
+    minutes: saved.minutes ?? base.minutes,
+    dayAck: saved.dayAck ?? 0,
     recentPacks: {
       mother: saved.recentPacks?.mother ?? [],
       boyfriend: saved.recentPacks?.boyfriend ?? [],
       auntie: saved.recentPacks?.auntie ?? [],
+      bestie: saved.recentPacks?.bestie ?? [],
     },
   };
 }

@@ -2167,3 +2167,78 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 @media (prefers-reduced-motion: reduce) {
   .phone-flip-in, .phone-flip-in::after { animation: none; }
 }
+
+/* ===========================================================================
+   1.1.x 常用手机 · 日夜两段式 + 联系时间 + 「开始今天」
+   —— 只作用于 .comfort-theme；冷色主题（v1.0.0）不动。
+   语义：时间是这部手机真正的稀缺资源——40 分钟怎么花，就是把爱怎么分。
+   ======================================================================== */
+
+/* 今日时间条：与工作手机精力条同构，色走暖主题主色 */
+.comfort-theme .bar.minutes span { background: color-mix(in srgb, var(--c-accent) 55%, transparent); }
+
+/* 夜：靛蓝月色从顶部漫进来，再压一层薄暮（同 .screen-night 的手法，暖纸也过夜） */
+.comfort-theme.comfort-night::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(120% 52% at 50% -8%, rgba(99, 112, 160, 0.24), transparent 62%),
+    linear-gradient(180deg, rgba(40, 44, 68, 0.08) 0%, rgba(40, 44, 68, 0.24) 100%);
+}
+.comfort-theme.comfort-night .day-chip { background: rgba(60, 55, 88, 0.42); color: #F2ECDD; }
+.comfort-theme.comfort-night .comfort-phone-tag { color: #AAB2D6; }
+
+/* 「开始今天」弹窗：v3.1 DayBriefingModal 的暖色同构（第 1 天把规矩说一遍，此后只报时） */
+.comfort-day-overlay {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; align-items: center; justify-content: center;
+  padding: 18px;
+  background: rgba(58, 42, 20, 0.44);
+  backdrop-filter: blur(3px);
+  animation: briefing-in 0.25s ease both;
+}
+.comfort-day-card {
+  width: min(420px, 94vw);
+  max-height: 86vh; overflow-y: auto;
+  background: var(--c-n0);
+  border: 1px solid var(--c-line);
+  border-radius: var(--c-r-lg);
+  box-shadow: var(--c-shadow-2);
+  padding: 20px 18px 16px;
+  animation: briefing-pop 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+}
+.comfort-day-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.comfort-day-num { font-size: var(--c-fs-display); font-weight: var(--c-w-display); color: var(--c-n7); font-family: var(--font-kai); letter-spacing: 1px; }
+.comfort-day-sub { font-size: var(--c-fs-caption); color: var(--c-n5); }
+.comfort-day-line { font-size: var(--c-fs-body); line-height: 1.8; color: var(--c-n6); margin: 0 0 12px; }
+.comfort-day-rule {
+  display: flex; flex-direction: column; gap: 10px;
+  margin: 0 0 12px; padding: 12px;
+  border: 1px dashed var(--c-n4);
+  border-radius: var(--c-r-md);
+  background: color-mix(in srgb, var(--c-n2) 55%, transparent);
+}
+.comfort-day-rule-row { display: flex; gap: 10px; font-size: var(--c-fs-caption); line-height: 1.7; color: var(--c-n6); }
+.comfort-day-rule-row .briefing-ico { color: var(--c-accent-strong); flex: none; margin-top: 2px; }
+.comfort-day-rule-row b { color: var(--c-accent-strong); }
+.comfort-day-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.comfort-day-stats > div {
+  background: var(--c-n2);
+  border-radius: var(--c-r-sm);
+  padding: 8px 10px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.comfort-day-stats span { font-size: var(--c-fs-micro); color: var(--c-n5); }
+.comfort-day-stats strong { font-size: var(--c-fs-heading); color: var(--c-n7); }
+.comfort-day-stats strong .hud-sub { font-size: var(--c-fs-micro); font-style: normal; color: var(--c-n5); }
+
+/* 速聊行的作息禁用态：按钮本身就是提示（补觉中/睡了/没时间） */
+.comfort-theme .comfort-contact-row .btn:disabled {
+  background: transparent;
+  color: var(--c-n5);
+  border: 1px dashed var(--c-n4);
+  cursor: default;
+}

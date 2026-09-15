@@ -237,5 +237,6 @@ export const STORY_OPEN_LABEL: Record<ComfortContactId | 'sys', string> = {
   auntie: '听凤霞姨说',
   mother: '听妈说完',
   boyfriend: '点开他的语音',
+  bestie: '听曼曼说完',
   sys: '看这条消息',
 };

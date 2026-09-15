@@ -28,9 +28,11 @@ import {
   XIAOMAN_BIRTHDAY_DAY, XIAOMAN_BIRTHDAY_GIFT, XIAOMAN_BIRTHDAY_PACKET, BF_BIRTHDAY_REMEMBER_LOVE,
   AUNTIE_TALK_FIRST_DAY, AUNTIE_TALK_GAP_MIN, AUNTIE_TALK_GAP_MAX,
   DATE_INTRO_FAMILY, DATE_INTRO_LOVE, QUARREL_IGNORE_LOVE,
+  BESTIE_TALK_FIRST_DAY, BESTIE_TALK_GAP_MIN, BESTIE_TALK_GAP_MAX,
+  COMFORT_DAY_MINUTES, COMFORT_CHAT_MINUTES,
 } from '../data/comfort';
 import {
-  MOTHER_PACKS, BOYFRIEND_PACKS, AUNTIE_PACKS, QUARREL_PACKS, BF_OMEN_PACK as BF_OMEN_DATA,
+  MOTHER_PACKS, BOYFRIEND_PACKS, AUNTIE_PACKS, BESTIE_PACKS, QUARREL_PACKS, BF_OMEN_PACK as BF_OMEN_DATA,
   MOM_GIFT_LINES, MOM_GIFT_TAKEN, MOM_GIFT_REFUSED,
   BF_PACKET_LINES, BF_PACKET_TAKEN, BF_PACKET_REFUSED,
   BF_DEMAND_LINES, BF_DEMAND_GIVEN, BF_DEMAND_REFUSED_THREAT,
@@ -42,7 +44,7 @@ import {
 import { BLIND_DATES, BLIND_DATE_MAP, dateName } from '../data/comfort-dates';
 import {
   INSPIRE_POSTS, FAMILY_POSTS, LOVE_POSTS, MOM_COMMENTS, BF_COMMENTS, OTHER_POSTS,
-  AUNTIE_POSTS, AUNTIE_COMMENTS,
+  AUNTIE_POSTS, AUNTIE_COMMENTS, BESTIE_POSTS, BESTIE_COMMENTS,
 } from '../data/comfort-moments';
 import {
   MOM_MONEY_TAKE_CONTRAST, MOM_MONEY_REFUSE_CONTRAST, BF_PACKET_CONTRAST,
@@ -80,7 +82,7 @@ export function packFor(contactId: ComfortContactId, id: string): ComfortPack | 
   if (id === BF_OMEN_PACK) return BF_OMEN_DATA;
   if (id.startsWith('quarrel_')) return QUARREL_PACKS.find((p) => p.id === id) ?? null;
   const pools: Record<ComfortContactId, ComfortPack[]> = {
-    mother: MOTHER_PACKS, boyfriend: BOYFRIEND_PACKS, auntie: AUNTIE_PACKS,
+    mother: MOTHER_PACKS, boyfriend: BOYFRIEND_PACKS, auntie: AUNTIE_PACKS, bestie: BESTIE_PACKS,
   };
   return pools[contactId].find((p) => p.id === id) ?? null;
 }
@@ -88,7 +90,7 @@ export function packFor(contactId: ComfortContactId, id: string): ComfortPack | 
 /** 给嘘寒问暖卡抽一套话术 id（走去重窗口，保证回卡开场的就是卡上那句）。 */
 function pickPackId(state: GameState, contactId: ComfortContactId, salt: number): string {
   const pools: Record<ComfortContactId, ComfortPack[]> = {
-    mother: MOTHER_PACKS, boyfriend: BOYFRIEND_PACKS, auntie: AUNTIE_PACKS,
+    mother: MOTHER_PACKS, boyfriend: BOYFRIEND_PACKS, auntie: AUNTIE_PACKS, bestie: BESTIE_PACKS,
   };
   const all = pools[contactId];
   const fresh = all.filter((p) => !state.comfort.recentPacks[contactId].includes(p.id));
@@ -100,6 +102,8 @@ function pickPackId(state: GameState, contactId: ComfortContactId, salt: number)
 /** 每天早晨：舒适圈事件派发（runMorning 末尾调用）。 */
 export function runComfortMorning(state: GameState): void {
   const c = state.comfort;
+  // 新的一天：联系时间回满。忙，是这个家的常态——40 分钟是今天能匀给这部手机的全部。
+  c.minutes = COMFORT_DAY_MINUTES;
   // 过期清理：事件卡放两天没处理就撤下（妈会重发，男友的火气攒着）。
   // 暗线剧情卡不过期——信不会被收回，故事不会因为你忙就散场。
   // 过期的嘘寒问暖卡与"先不回"同代价：已读不回不是免费的，拖过去也一样。
@@ -112,6 +116,13 @@ export function runComfortMorning(state: GameState): void {
     if (m.kind === 'bf_talk') {
       c.love = clamp(c.love + TALK_IGNORE_LOVE, 0, 100);
       clog(state, '阿凯喊你听游戏战况的那几条语音还堆在列表里。他问你怎么老是「在忙」。');
+    }
+    if (m.kind === 'quarrel') {
+      c.love = clamp(c.love + QUARREL_IGNORE_LOVE, 0, 100);
+      clog(state, '阿凯那场火，你拖到它自己熄了。他没再提——那晚的键盘声响到了天亮。');
+    }
+    if (m.kind === 'bestie_talk') {
+      clog(state, '曼曼的语音你划掉了。她没问你怎么没回——她的下午茶，永远有下一个姐妹。');
     }
   }
   c.incoming = c.incoming.filter((m) => m.kind === 'story' || state.day - m.day <= 1);
@@ -287,10 +298,34 @@ export function runComfortMorning(state: GameState): void {
       kind: 'quarrel',
       day: state.day,
       amount: 0,
-      lines: [pack.lines[0]],
+      lines: [pack.lines[0].split("｜")[0]],
       packId: pack.id,
       note: '他发火了，语音一条接一条',
     });
+  }
+
+  // 曼曼的闲聊卡：她的语音大多在补货路上发出——嘴毒心热的姐妹，唠的都是钱和底气。
+  // 排在妈/阿凯的聊天卡之前：她最随口，不该被更"重要"的卡挤没。
+  if (state.day >= BESTIE_TALK_FIRST_DAY) {
+    if (c.bestieTalk.lastDay === 0 || state.day - c.bestieTalk.lastDay >= BESTIE_TALK_GAP_MIN) {
+      const rng = derivedComfortRng(state, 331);
+      const due = c.bestieTalk.lastDay === 0 || state.day - c.bestieTalk.lastDay >= BESTIE_TALK_GAP_MAX || rng.chance(0.5);
+      if (due && capRoom() && !c.incoming.some((m) => m.kind === 'bestie_talk')) {
+        const packId = pickPackId(state, 'bestie', 337);
+        const pack = packFor('bestie', packId)!;
+        c.bestieTalk.lastDay = state.day;
+        c.bestieTalk.count += 1;
+        c.incoming.push({
+          id: `bestie_talk_${state.day}`,
+          kind: 'bestie_talk',
+          day: state.day,
+          amount: 0,
+          lines: [pack.lines[0].split("｜")[0]],
+          packId,
+          note: '发来几条语音，背景音全是商场',
+        });
+      }
+    }
   }
 
   // 妈的嘘寒问暖（纯聊天卡）：她的关心比她的转账勤——这才是"经常关心"的本义。
@@ -308,7 +343,7 @@ export function runComfortMorning(state: GameState): void {
           kind: 'mom_talk',
           day: state.day,
           amount: 0,
-          lines: [pack.lines[0]],
+          lines: [pack.lines[0].split("｜")[0]],
           packId,
           note: '发来一条语音，等你回',
         });
@@ -331,7 +366,7 @@ export function runComfortMorning(state: GameState): void {
           kind: 'bf_talk',
           day: state.day,
           amount: 0,
-          lines: [pack.lines[0]],
+          lines: [pack.lines[0].split("｜")[0]],
           packId,
           note: '发来几条语音，喊你听他打游戏',
         });
@@ -372,6 +407,14 @@ export function runComfortMorning(state: GameState): void {
       const pick = AUNTIE_POSTS[state.day % AUNTIE_POSTS.length];
       if (!c.moments.some((m) => m.author === 'auntie' && m.text === pick.text)) {
         c.moments.push({ id: `auntie_${state.day}`, day: state.day, author: 'auntie', text: pick.text, photoId: pick.photoId, likes: [], comments: [] });
+        c.unseenMoments += 1;
+      }
+    }
+    // 曼曼的橱窗（更低频——她的朋友圈是人间富贵的样本间）。
+    if (rng.chance(0.16) && c.moments.length < COMFORT_MOMENTS_CAP) {
+      const pick = BESTIE_POSTS[state.day % BESTIE_POSTS.length];
+      if (!c.moments.some((m) => m.author === 'bestie' && m.text === pick.text)) {
+        c.moments.push({ id: `bestie_${state.day}`, day: state.day, author: 'bestie', text: pick.text, photoId: pick.photoId, likes: [], comments: [] });
         c.unseenMoments += 1;
       }
     }
@@ -429,7 +472,20 @@ export function resolveComfortIncoming(state: GameState, incomingId: string, acc
   const inc = c.incoming[idx];
   // 嘘寒问暖/介绍/吵架卡：一场聊天没完不能"回"下一场——卡片保留，回完手头这场再说。
   if ((inc.kind === 'mom_talk' || inc.kind === 'bf_talk' || inc.kind === 'story'
+    || inc.kind === 'bestie_talk'
     || inc.kind === 'auntie_intro' || inc.kind === 'quarrel') && c.chat) return;
+  // 作息门禁（只拦"接了要开口说话"的那半边）：别人只在白天说话，
+  // 阿凯作息日夜颠倒、只有夜里醒着；时间不足 10 分钟也开不了场。
+  // 剧情卡是"信"，转账卡是"钱"——都不开口，不受门禁。
+  const night = state.dayPhase === 'night';
+  const opensChat = accept && (inc.kind === 'mom_talk' || inc.kind === 'bf_talk'
+    || inc.kind === 'bestie_talk' || inc.kind === 'quarrel' || inc.kind === 'auntie_intro');
+  if (opensChat) {
+    const bfCard = inc.kind === 'bf_talk' || inc.kind === 'quarrel';
+    if (bfCard && !night) return;
+    if (!bfCard && night) return;
+    if (c.minutes < COMFORT_CHAT_MINUTES) return;
+  }
   c.incoming.splice(idx, 1);
   const rng = derivedComfortRng(state, 233);
 
@@ -468,6 +524,7 @@ export function resolveComfortIncoming(state: GameState, incomingId: string, acc
     const bfAlive = c.bfState === 'normal' && !c.blockedByBf;
     if (accept) {
       // 认识新候选人：妈的心愿 +（她那边已经报喜），阿凯那边 -（第二天引爆）。
+      c.minutes -= COMFORT_CHAT_MINUTES; // 见面首聊，占一场时间
       c.datesMet[date.id] = state.day;
       c.family = clamp(c.family + DATE_INTRO_FAMILY, 0, 100);
       if (bfAlive) {
@@ -486,6 +543,7 @@ export function resolveComfortIncoming(state: GameState, incomingId: string, acc
 
   if (inc.kind === 'quarrel') {
     if (accept) {
+      c.minutes -= COMFORT_CHAT_MINUTES;
       openComfortChat(state, 'boyfriend', inc.packId);
       clog(state, '阿凯的火气隔着屏幕都能烫手。你还是点了回去——这笔账早晚要算。');
     } else {
@@ -497,6 +555,7 @@ export function resolveComfortIncoming(state: GameState, incomingId: string, acc
 
   if (inc.kind === 'mom_talk') {
     if (accept) {
+      c.minutes -= COMFORT_CHAT_MINUTES;
       openComfortChat(state, 'mother', inc.packId);
       clog(state, '妈发来一条长语音，问你最近吃得好不好。你点了回去。');
     } else {
@@ -508,11 +567,23 @@ export function resolveComfortIncoming(state: GameState, incomingId: string, acc
 
   if (inc.kind === 'bf_talk') {
     if (accept) {
+      c.minutes -= COMFORT_CHAT_MINUTES;
       openComfortChat(state, 'boyfriend', inc.packId);
       clog(state, '阿凯喊你听他的游戏战况。你戴着耳机，一条条听完了。');
     } else {
       c.love = clamp(c.love + TALK_IGNORE_LOVE, 0, 100);
       clog(state, '阿凯的语音你没回。他的下一句马上就到：「忙什么呢？」');
+    }
+    return;
+  }
+
+  if (inc.kind === 'bestie_talk') {
+    if (accept) {
+      c.minutes -= COMFORT_CHAT_MINUTES;
+      openComfortChat(state, 'bestie', inc.packId);
+      clog(state, '曼曼的语音一条接一条，背景音全是商场的广播。你戴着耳机听完了，笑了一声。');
+    } else {
+      clog(state, '曼曼的语音你先放着。她不会问你怎么没回——她的下午茶，永远有下一个姐妹。');
     }
     return;
   }
@@ -650,7 +721,7 @@ export function openComfortChat(state: GameState, contactId: ComfortContactId, f
   const c = state.comfort;
   if (c.chat) return; // 一场没完不开下一场
   const pools: Record<ComfortContactId, ComfortPack[]> = {
-    mother: MOTHER_PACKS, boyfriend: BOYFRIEND_PACKS, auntie: AUNTIE_PACKS,
+    mother: MOTHER_PACKS, boyfriend: BOYFRIEND_PACKS, auntie: AUNTIE_PACKS, bestie: BESTIE_PACKS,
   };
   const all = pools[contactId];
   const recent = c.recentPacks[contactId];
@@ -667,7 +738,7 @@ export function openComfortChat(state: GameState, contactId: ComfortContactId, f
 
   const rng = derivedComfortRng(state, 353);
   const transcript = [];
-  const speakerName: Record<ComfortContactId, string> = { mother: '妈', boyfriend: '阿凯', auntie: '凤霞姨' };
+  const speakerName: Record<ComfortContactId, string> = { mother: '妈', boyfriend: '阿凯', auntie: '凤霞姨', bestie: '曼曼' };
   transcript.push({ speaker: 'sys' as const, text: `和 ${speakerName[contactId]} 的聊天`, stamp: dayStamp(rng) });
   for (const l of pack.lines) {
     for (const seg of l.split('｜')) {
@@ -703,6 +774,7 @@ export function pickComfortOption(state: GameState, optionIndex: number): void {
   c.chat.awaiting = 'closed';
   c.chat.closingNote = contactId === 'mother' ? '妈放下手机去忙了。'
     : contactId === 'auntie' ? '姨去跳舞了，回头聊。'
+    : contactId === 'bestie' ? '她那头还有下一场饭局，回头聊。'
     : '他去打游戏了。';
   // 分手后他的日常聊天入口关闭（已在 UI 侧挡住，这里兜底）。
 }
@@ -787,12 +859,15 @@ export function postComfortMoment(state: GameState, kind: 'inspire' | 'family' |
     comments: [],
   };
   // 妈必互动（她一条条看）；凤霞姨必评论（她把朋友圈当成了解小满的窗口）；
+  // 曼曼必来（毒舌是门面，撑腰是里子——她的评论按圈的类型分池）；
   // 最近认识的相亲对象按礼貌也会来点赞评论——他们的客气没有恶意，只是社交。
   post.likes.push('mother');
   post.comments.push({ by: 'mother', text: MOM_COMMENTS[kind][rng.int(0, MOM_COMMENTS[kind].length - 1)] });
   c.family = clamp(c.family + 1, 0, 100);
   post.likes.push('auntie');
   post.comments.push({ by: 'auntie', text: AUNTIE_COMMENTS[rng.int(0, AUNTIE_COMMENTS.length - 1)] });
+  post.likes.push('bestie');
+  post.comments.push({ by: 'bestie', text: BESTIE_COMMENTS[kind][rng.int(0, BESTIE_COMMENTS[kind].length - 1)] });
   const metIds = Object.keys(c.datesMet).sort((a, b) => c.datesMet[b] - c.datesMet[a]);
   const latest = metIds[0];
   const latestDate = latest ? BLIND_DATE_MAP[latest] : null;

@@ -7,17 +7,17 @@
  */
 
 /** 舒适圈联系人：父亲在通讯录置灰，不参与聊天。
- *  auntie = 红娘阿姨（受小满妈所托物色对象）。 */
-export type ComfortContactId = 'mother' | 'boyfriend' | 'auntie';
+ *  auntie = 红娘阿姨（受小满妈所托物色对象）；bestie = 闺蜜曼曼（拜金，嘴毒心热）。 */
+export type ComfortContactId = 'mother' | 'boyfriend' | 'auntie' | 'bestie';
 
 /** 聊天/归档的说话人 id：三位联系人 + 叙事位 sys + 相亲对象 bd:{id}。 */
 export type ComfortSpeakerId = ComfortContactId | 'sys' | `bd:${string}`;
 
-/** 舒适圈事件卡类型。mom_talk/bf_talk：嘘寒问暖的纯聊天卡；story：暗线剧情卡；
+/** 舒适圈事件卡类型。mom_talk/bf_talk/bestie_talk：嘘寒问暖的纯聊天卡；story：暗线剧情卡；
  *  auntie_intro：红娘介绍相亲对象；quarrel：阿凯因相亲炸毛。 */
 export type ComfortIncomingKind =
   | 'mom_gift' | 'bf_packet' | 'bf_demand'
-  | 'mom_talk' | 'bf_talk'
+  | 'mom_talk' | 'bf_talk' | 'bestie_talk'
   | 'auntie_intro' | 'quarrel'
   | 'story';
 
@@ -124,6 +124,8 @@ export interface ComfortState {
   bfDemand: { lastDay: number; count: number; refuses: number };
   momTalk: { lastDay: number; count: number };
   bfTalk: { lastDay: number; count: number };
+  /** 闺蜜的闲聊节奏（她的语音大多在补货路上的碎片时间发出）。 */
+  bestieTalk: { lastDay: number; count: number };
   /** 累计从妈那里收过/推掉的钱（钱包页展示）。 */
   momGiven: number;
   momRefused: number;
@@ -153,4 +155,9 @@ export interface ComfortState {
   datesMet: Record<string, number>;
   /** 阿凯因相亲炸毛：已吵架次数 + 待引爆（认识新对象后的第二天早晨）。 */
   quarrel: { count: number; pending: boolean };
+  /** 今日联系时间（分钟）：一天只有 40 分钟，每场对话 10 分钟——
+   *  忙，是这个家的常态：时间花给谁，就是爱给了谁。每个早晨重置。 */
+  minutes: number;
+  /** 已确认「开始今天」的天数：dayAck < day 时常用手机弹今日开场景。 */
+  dayAck: number;
 }

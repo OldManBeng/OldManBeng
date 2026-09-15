@@ -269,9 +269,11 @@ export type GameAction =
   | { type: 'set_persona'; personaId: PersonaId }
   /** 1.1.0 切换常用手机——工作手机（崩老头）↔ 常用手机（舒适圈）。纯视图切换。 */
   | { type: 'switch_phone' }
-  /** 舒适圈：主动找妈/男友聊天（不耗体力）。 */
-  | { type: 'comfort_open_chat'; contactId: 'mother' | 'boyfriend' | 'auntie' }
+  /** 舒适圈：主动找妈/男友/阿姨/闺蜜聊天（不耗体力，耗每日联系时间）。 */
+  | { type: 'comfort_open_chat'; contactId: 'mother' | 'boyfriend' | 'auntie' | 'bestie' }
   | { type: 'comfort_open_date_chat'; dateId: string }
+  /** 舒适圈：确认「开始今天」（常用手机版的 dismiss_briefing）。 */
+  | { type: 'comfort_ack_day' }
   /** 舒适圈：选一个回复（对方回应 + 关系变化）。 */
   | { type: 'comfort_pick'; optionIndex: number }
   /** 舒适圈：结束当前聊天（归档）。 */

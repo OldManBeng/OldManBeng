@@ -13,25 +13,24 @@ import { useGame } from '../store/gameStore';
 import { formatMoney } from '../utils/format';
 import { ComfortAvatar, ComfortSceneRender, type ComfortAvatarKey } from './comfort-art';
 import { Ico } from './icons';
-import { playMessage, playSend, playMoney, playTab, playBlocked, playPost, playSocial } from '../utils/sound';
-import { COMFORT_CONTACTS, FATHER_MEMORIAL, XIAOMAN } from '../data/comfort';
+import { playMessage, playSend, playMoney, playTab, playBlocked, playPost, playSocial, playMorning } from '../utils/sound';
+import { COMFORT_CONTACTS, COMFORT_DAY_MINUTES, COMFORT_CHAT_MINUTES, FATHER_MEMORIAL, XIAOMAN } from '../data/comfort';
 import { MIRROR_LINES, WALLET_CONTRAST } from '../data/comfort-contrast';
 import { STORY_BEATS, STORY_OPEN_LABEL } from '../data/comfort-story';
 import { BLIND_DATES, BLIND_DATE_MAP } from '../data/comfort-dates';
+import { COMFORT_MORNING_LINES } from '../data/comfort-packs';
 import type { ComfortContactId, ComfortMessage, ComfortSpeakerId } from '../types/comfort';
 
 /** 说话人显示名：联系人 / 叙事位 / 相亲对象统一入口。 */
 function speakerName(id: ComfortSpeakerId): string {
-  if (id === 'mother') return COMFORT_CONTACTS.mother.handle;
-  if (id === 'boyfriend') return COMFORT_CONTACTS.boyfriend.handle;
-  if (id === 'auntie') return COMFORT_CONTACTS.auntie.handle;
   if (id === 'sys') return '消息';
-  return BLIND_DATE_MAP[id.slice(3)]?.handle ?? id;
+  if (id.startsWith('bd:')) return BLIND_DATE_MAP[id.slice(3)]?.handle ?? id;
+  return COMFORT_CONTACTS[id as ComfortContactId].handle;
 }
 
 /** 说话人头像 key：bd:{id} 直接透传给 ComfortAvatar（PNG 优先，首字兜底）。 */
 function speakerAvatar(id: ComfortSpeakerId): ComfortAvatarKey | undefined {
-  if (id === 'mother' || id === 'boyfriend' || id === 'auntie') return id;
+  if (id === 'mother' || id === 'boyfriend' || id === 'auntie' || id === 'bestie') return id;
   if (id.startsWith('bd:')) return id as `bd:${string}`;
   return undefined;
 }
@@ -119,6 +118,44 @@ function VoiceBubble({ m, name, who }: { m: ComfortMessage; name?: string; who?:
   );
 }
 
+/** 「开始今天」：常用手机版的晨间简报（v1.0.0 的 DayBriefingModal 同构）。
+ *  晨线一句 + 今日时间与未读 + 第一天的规矩（规矩只教一遍，其余让故事自己讲）。 */
+function ComfortDayDialog() {
+  const store = useGame();
+  const { state } = store;
+  const c = state.comfort;
+  const morningLine = COMFORT_MORNING_LINES[(state.day - 1) % COMFORT_MORNING_LINES.length];
+  const firstDay = state.day === 1;
+  return (
+    <div className="comfort-day-overlay">
+      <div className="comfort-day-card">
+        <div className="comfort-day-head">
+          <span className="comfort-day-num">第 {state.day} 天</span>
+          <span className="comfort-day-sub">常用手机 · 睁眼</span>
+        </div>
+        <p className="comfort-day-line">{morningLine}</p>
+        {firstDay && (
+          <div className="comfort-day-rule">
+            <div className="comfort-day-rule-row"><span className="briefing-ico"><Ico name="clock" size={20} /></span>
+              <div>一天能匀给这部手机的时间只有 <b>40 分钟</b>。每一场对话，10 分钟——妈的、姨的、曼曼的、他的，都一样。时间花给谁，就是爱给了谁。</div>
+            </div>
+            <div className="comfort-day-rule-row"><span className="briefing-ico"><Ico name="hourglass" size={20} /></span>
+              <div>他白天睡觉，夜里活过来。这部手机上，<b>黑夜才是他的白天</b>。</div>
+            </div>
+          </div>
+        )}
+        <div className="comfort-day-stats">
+          <div><span>今日时间</span><strong>{c.minutes}′<i className="hud-sub">（一场 {COMFORT_CHAT_MINUTES}′）</i></strong></div>
+          <div><span>未读消息</span><strong>{c.incoming.length} 条</strong></div>
+        </div>
+        <button className="btn primary wide" onClick={() => { playMorning(); store.dispatch({ type: 'comfort_ack_day' }); }}>
+          开始今天
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function ComfortScreen() {
   const store = useGame();
   const { state } = store;
@@ -132,13 +169,16 @@ export function ComfortScreen() {
     scrollRef.current?.scrollTo({ top: 0 });
   };
   const policeToday = c.policeDay === state.day;
+  const night = state.dayPhase === 'night';
 
   return (
-    <div className="screen main-screen app-shell comfort-theme phone-flip-in phone-flip-r" key={`comfort-flip-${c.flipTick}`}>
+    <div className={`screen main-screen app-shell comfort-theme ${night ? 'comfort-night' : ''} phone-flip-in phone-flip-r`} key={`comfort-flip-${c.flipTick}`}>
+      {/* 「开始今天」：新的一天先过这道幕，才落进消息堆里 */}
+      {c.dayAck < state.day && <ComfortDayDialog />}
       <header className="hud">
         <div className="hud-left">
           <span className="day-chip">第 {state.day}/{state.daysLimit} 天</span>
-          <span className="comfort-phone-tag">常用手机 · 舒适圈</span>
+          <span className="comfort-phone-tag">常用手机 · 舒适圈{night ? ' · 夜' : ''}</span>
         </div>
         <div className="hud-right">
           <span className="money">活命钱 {formatMoney(state.money)}</span>
@@ -202,7 +242,8 @@ export function ComfortScreen() {
   );
 }
 
-/** 「今天」：事件卡（要/不要、给/不给）+ 镜像行 + 熟人速聊 + 舒适圈事件流。 */
+/** 「今天」：事件卡（要/不要、给/不给）+ 镜像行 + 熟人速聊 + 舒适圈事件流。
+ *  1.1.x 时间制：一天 40 分钟联系时间（每场 −10′）；两段式日夜——天黑了 → 进入明天。 */
 function ComfortToday({ policeToday }: { policeToday: boolean }) {
   const store = useGame();
   const { state } = store;
@@ -210,6 +251,15 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
   const mirror = MIRROR_LINES[state.day % MIRROR_LINES.length];
   const comfortLog = state.log.filter((l) => l.kind === 'comfort').slice(-8).reverse();
   const nameOf = (id: ComfortContactId) => COMFORT_CONTACTS[id].handle;
+  const night = state.dayPhase === 'night';
+  const timeLeft = c.minutes >= COMFORT_CHAT_MINUTES;
+  /** 这个人现在能不能开口说话：别人白天，阿凯夜里；时间不足谁也叫不醒。 */
+  const canTalk = (id: ComfortContactId) => (id === 'boyfriend' ? night : !night) && timeLeft;
+  const talkHint = (id: ComfortContactId) => {
+    if (canTalk(id)) return `一场 ${COMFORT_CHAT_MINUTES} 分钟`;
+    if (id === 'boyfriend') return night ? '今天的时间用完了' : '他这会儿在补觉——黑夜才是他的白天';
+    return !night ? `一场 ${COMFORT_CHAT_MINUTES} 分钟` : '这个点睡了，明天再聊';
+  };
 
   return (
     <section className="comfort-today">
@@ -227,6 +277,9 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
               切回工作手机
             </button>
           </div>
+          <div className="bars" style={{ margin: '5px 0 0' }}>
+            <div className="bar minutes"><span style={{ width: `${(c.minutes / COMFORT_DAY_MINUTES) * 100}%` }} />今日时间 {c.minutes}′（一场 {COMFORT_CHAT_MINUTES}′）</div>
+          </div>
         </div>
       </div>
 
@@ -242,7 +295,7 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
         const beat = m.kind === 'story' ? STORY_BEATS.find((b) => b.id === m.beatId) : undefined;
         const storyFrom = beat?.from ?? 'sys';
         const isStory = m.kind === 'story';
-        const isTalk = m.kind === 'mom_talk' || m.kind === 'bf_talk';
+        const isTalk = m.kind === 'mom_talk' || m.kind === 'bf_talk' || m.kind === 'bestie_talk';
         const isIntro = m.kind === 'auntie_intro';
         const isQuarrel = m.kind === 'quarrel';
         const isMom = m.kind === 'mom_gift' || m.kind === 'mom_talk';
@@ -250,8 +303,9 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
         // 每种卡的"说话人"：故事卡按 beat 来源，其余按卡的归属
         const speaker: ComfortSpeakerId = isStory
           ? (storyFrom as ComfortSpeakerId)
-          : isMom || m.kind === 'mom_talk' ? 'mother'
+          : isMom ? 'mother'
           : (m.kind === 'bf_packet' || m.kind === 'bf_demand' || m.kind === 'bf_talk' || isQuarrel) ? 'boyfriend'
+          : m.kind === 'bestie_talk' ? 'bestie'
           : 'auntie';
         const tag = isStory ? ' · ' + (storyFrom === 'sys' ? '消息' : '语音')
           : isIntro ? ' · 给你介绍个人'
@@ -262,6 +316,22 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
           : isDemand ? ' · 要钱' : ' · 转账';
         const storyName = speakerName(speaker);
         const chatOpen = c.chat !== null;
+        // 聊天卡的作息门禁：妈/曼曼白天，阿凯夜里；时间不足开不了场。
+        const talkIsBf = m.kind === 'bf_talk';
+        const talkAwake = (talkIsBf ? night : !night) && timeLeft;
+        const talkPronoun = m.kind === 'bf_talk' ? '他' : '她';
+        const talkBlockReason = chatOpen ? '（先回完手头这场）'
+          : (talkIsBf ? !night : night)
+            ? (talkIsBf ? '他白天在补觉（晚上再说）' : '她这个点睡了（明天再说）')
+            : '今天的时间用完了';
+        // 吵架卡：他只有夜里醒着。
+        const quarrelAwake = night && timeLeft;
+        const quarrelBlockReason = chatOpen ? '（先回完手头这场）'
+          : !night ? '他白天在补觉（晚上再说）' : '今天的时间用完了';
+        // 介绍卡：见面首聊是白天的事，也占一场时间。
+        const introAwake = !night && timeLeft;
+        const introBlockReason = chatOpen ? '（先回完手头这场）'
+          : night ? '明天白天再见了' : '今天没空见了';
         return (
           <div key={m.id} className={`comfort-event-card ${m.kind}`}>
             <div className="cec-head">
@@ -289,10 +359,11 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
                 <>
                   <button
                     className="btn small primary"
-                    disabled={chatOpen}
+                    disabled={!introAwake}
+                    title={introAwake ? `一场 ${COMFORT_CHAT_MINUTES} 分钟` : undefined}
                     onClick={() => { playMessage(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: true }); }}
                   >
-                    {chatOpen ? '（先回完手头这场）' : '见见（阿姨都安排好了）'}
+                    {introAwake ? '见见（-10′，阿姨都安排好了）' : introBlockReason}
                   </button>
                   <button className="btn small muted-btn" onClick={() => { playBlocked(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: false }); }}>
                     婉拒（姨有点可惜，还会再来）
@@ -302,10 +373,11 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
                 <>
                   <button
                     className="btn small primary"
-                    disabled={chatOpen}
+                    disabled={!quarrelAwake}
+                    title={quarrelAwake ? `一场 ${COMFORT_CHAT_MINUTES} 分钟` : undefined}
                     onClick={() => { playMessage(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: true }); }}
                   >
-                    {chatOpen ? '（先回完手头这场）' : '听他说完'}
+                    {quarrelAwake ? '听他说完（-10′）' : quarrelBlockReason}
                   </button>
                   <button className="btn small muted-btn" onClick={() => { playBlocked(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: false }); }}>
                     晾着他（感情更凉）
@@ -315,13 +387,14 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
                   <>
                     <button
                       className="btn small primary"
-                      disabled={chatOpen}
+                      disabled={!talkAwake}
+                      title={talkAwake ? `一场 ${COMFORT_CHAT_MINUTES} 分钟` : undefined}
                       onClick={() => { playMessage(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: true }); }}
                     >
-                      {chatOpen ? '（先回完手头这场）' : `回${isMom ? '她' : '他'}（免费聊天）`}
+                      {talkAwake ? `回${talkPronoun}（-10′）` : talkBlockReason}
                     </button>
                     <button className="btn small muted-btn" onClick={() => { playBlocked(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: false }); }}>
-                      先不回（{isMom ? '她会等到很晚' : '他马上追问'}）
+                      先不回（{isMom ? '她会等到很晚' : talkIsBf ? '他马上追问' : '她转头就忘了'}）
                     </button>
                   </>
                 ) : isDemand ? (
@@ -354,25 +427,53 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
         {mirror}
       </div>
 
-      {/* 熟人速聊（不耗体力） */}
+      {/* 熟人速聊：时间花给谁，就是爱给了谁 */}
       <div className="comfort-quick-chat">
         <h3>家人</h3>
-        {(['mother', 'boyfriend', 'auntie'] as ComfortContactId[]).map((id) => {
+        {(['mother', 'boyfriend'] as ComfortContactId[]).map((id) => {
           const def = COMFORT_CONTACTS[id];
           const gone = id === 'boyfriend' && (c.blockedByBf || c.bfState !== 'normal');
           const goneText = c.bfState === 'arrested' ? '（他的头像再也没有亮过。）' : '（他把你删了。）';
+          const awake = canTalk(id);
           return (
             <div key={id} className={`comfort-contact-row ${gone ? 'gone' : ''}`}>
               <ComfortAvatar who={id} size={40} />
               <div className="ccr-body">
                 <div className="ccr-name">{def.handle}</div>
-                <div className="muted small">{gone ? goneText : def.signature}</div>
+                <div className="muted small">{gone ? goneText : awake ? def.signature : talkHint(id)}</div>
               </div>
               {!gone && (
-                <button className="btn small primary" onClick={() => { playMessage(); store.dispatch({ type: 'comfort_open_chat', contactId: id }); }}>
-                  发消息
+                <button
+                  className="btn small primary"
+                  disabled={!awake}
+                  title={awake ? talkHint(id) : undefined}
+                  onClick={() => { playMessage(); store.dispatch({ type: 'comfort_open_chat', contactId: id }); }}
+                >
+                  {awake ? `发消息 -${COMFORT_CHAT_MINUTES}′` : talkHint(id)}
                 </button>
               )}
+            </div>
+          );
+        })}
+        <h3>身边人</h3>
+        {(['auntie', 'bestie'] as ComfortContactId[]).map((id) => {
+          const def = COMFORT_CONTACTS[id];
+          const awake = canTalk(id);
+          return (
+            <div key={id} className="comfort-contact-row">
+              <ComfortAvatar who={id} size={40} />
+              <div className="ccr-body">
+                <div className="ccr-name">{def.handle}</div>
+                <div className="muted small">{awake ? def.signature : talkHint(id)}</div>
+              </div>
+              <button
+                className="btn small primary"
+                disabled={!awake}
+                title={awake ? talkHint(id) : undefined}
+                onClick={() => { playMessage(); store.dispatch({ type: 'comfort_open_chat', contactId: id }); }}
+              >
+                {awake ? `发消息 -${COMFORT_CHAT_MINUTES}′` : talkHint(id)}
+              </button>
             </div>
           );
         })}
@@ -382,15 +483,20 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
             {Object.entries(c.datesMet).sort((a, b) => b[1] - a[1]).map(([id, metDay]) => {
               const date = BLIND_DATE_MAP[id];
               if (!date) return null;
+              const awake = !night && timeLeft;
               return (
                 <div key={id} className="comfort-contact-row">
                   <ComfortAvatar who={`bd:${id}` as ComfortAvatarKey} size={40} />
                   <div className="ccr-body">
                     <div className="ccr-name">{date.handle}</div>
-                    <div className="muted small">{date.job} · 第 {metDay} 天经凤霞姨认识</div>
+                    <div className="muted small">{awake ? `${date.job} · 第 ${metDay} 天经凤霞姨认识` : talkHint('mother')}</div>
                   </div>
-                  <button className="btn small primary" onClick={() => { playMessage(); store.dispatch({ type: 'comfort_open_date_chat', dateId: id }); }}>
-                    发消息
+                  <button
+                    className="btn small primary"
+                    disabled={!awake}
+                    onClick={() => { playMessage(); store.dispatch({ type: 'comfort_open_date_chat', dateId: id }); }}
+                  >
+                    {awake ? `发消息 -${COMFORT_CHAT_MINUTES}′` : talkHint('mother')}
                   </button>
                 </div>
               );
@@ -409,9 +515,21 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
         ))}
       </div>
 
-      <button className="btn wide" onClick={() => store.dispatch({ type: 'sleep' })}>
-        睡了（进入明天）
-      </button>
+      {/* 两段式日夜：天黑了 → 他的时间 → 进入明天 */}
+      {night ? (
+        <>
+          <p className="muted small center" style={{ margin: '2px 0 4px' }}>
+            {timeLeft ? `夜里还剩 ${c.minutes} 分钟——是他的时间，也是你的。` : '今天的时间用完了。明天再说。'}
+          </p>
+          <button className="btn wide" onClick={() => store.dispatch({ type: 'sleep' })}>
+            进入明天
+          </button>
+        </>
+      ) : (
+        <button className="btn primary wide" onClick={() => { playTab(); store.dispatch({ type: 'enter_night' }); }}>
+          天黑了
+        </button>
+      )}
     </section>
   );
 }
@@ -426,7 +544,7 @@ function ComfortContacts() {
 
   return (
     <section className="comfort-contacts">
-      <h3>通讯录（{3 + Object.keys(c.datesMet).length} 人）</h3>
+      <h3>通讯录（{4 + Object.keys(c.datesMet).length} 人）</h3>
       {/* 父亲：置灰 */}
       <div className="comfort-contact-row father" onClick={() => setDadOpen(!dadOpen)}>
         <ComfortAvatar who="father" size={44} />
@@ -455,6 +573,16 @@ function ComfortContacts() {
           <div className="muted small">{COMFORT_CONTACTS.auntie.signature}</div>
           <div className="comfort-contact-bio">{COMFORT_CONTACTS.auntie.bio}</div>
           <div className="muted small">介绍过 {c.auntie.count} 个 · 认识了 {Object.keys(c.datesMet).length} 个</div>
+        </div>
+      </div>
+      {/* 曼曼Lisa（闺蜜） */}
+      <div className="comfort-contact-row">
+        <ComfortAvatar who="bestie" size={44} />
+        <div className="ccr-body">
+          <div className="ccr-name">{COMFORT_CONTACTS.bestie.handle}（{COMFORT_CONTACTS.bestie.name} · {COMFORT_CONTACTS.bestie.age}岁）</div>
+          <div className="muted small">{COMFORT_CONTACTS.bestie.signature}</div>
+          <div className="comfort-contact-bio">{COMFORT_CONTACTS.bestie.bio}</div>
+          <div className="muted small">找你唠过 {c.bestieTalk.count} 回 · 劝分 {c.bestieTalk.count > 3 ? '（她自己都数不清了）' : '若干回'}</div>
         </div>
       </div>
       {/* 男友 */}

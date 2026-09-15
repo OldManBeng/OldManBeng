@@ -1,18 +1,17 @@
 /**
  * 舒适圈人物设定 + 平衡常量（第二阶段 1.1.0）。
  *
- * 常用手机里住着三个人：过世的父亲（置灰的纪念）、家政公司的妈、
- * 游手好闲的同居男友。小满在这里素颜。
+ * 常用手机里住着四个人：过世的父亲（置灰的纪念）、家政公司的妈、
+ * 游手好闲的同居男友、还有把日子过成橱窗的闺蜜曼曼。小满在这里素颜。
  */
 import type { ComfortContactId, ComfortState } from '../types/comfort';
 
-/** 父亲——几年前过世，通讯录置灰。他的存在是一行纪念日和一张旧照。 */
 export interface ComfortContact {
   id: ComfortContactId;
   name: string;
   handle: string;          // 微信昵称
   age: number;
-  avatarKey: 'mother' | 'boyfriend' | 'auntie';
+  avatarKey: 'mother' | 'boyfriend' | 'auntie' | 'bestie';
   signature: string;
   bio: string;
 }
@@ -44,6 +43,15 @@ export const COMFORT_CONTACTS: Record<ComfortContactId, ComfortContact> = {
     avatarKey: 'auntie',
     signature: '有合适的尽管找我 · 单身男女免费登记',
     bio: '妈在超市理货时的老姐妹，现在在社区居委会管登记，方圆三条街的单身男女她手里有半本花名册。受小满妈郑重所托：给满满物色一个"靠谱的"。她眼里靠谱的标准很朴素——有正经工作，下班回家，妈还健在。她不知道小满有个同居的阿凯。',
+  },
+  bestie: {
+    id: 'bestie',
+    name: '沈曼',
+    handle: '曼曼Lisa',
+    age: 25,
+    avatarKey: 'bestie',
+    signature: '男人的心长在哪 钱就花在哪 · 医美顾问',
+    bio: '小满的中专同学，现在在医美机构做咨询顾问，收入全靠提成。她把人生过成一场精准的投资：朋友圈是橱窗，恋爱是路演。她真心拿小满当姐妹——只是她的"为你好"，每一句都以购买力计价。她见过阿凯几面，劝分的次数她自己都数不清；她不知道他真正的"生意"是什么，只知道他连一支口红钱都要报销。',
   },
 };
 
@@ -158,6 +166,18 @@ export const DATE_INTRO_LOVE = -6;
 /** 阿凯吵架卡晾着不接的代价。 */
 export const QUARREL_IGNORE_LOVE = -8;
 
+/** ---- 曼曼（闺蜜）：嘴毒心热，全部人生观以购买力计价 ---- */
+export const BESTIE_TALK_FIRST_DAY = 3;
+export const BESTIE_TALK_GAP_MIN = 3;
+export const BESTIE_TALK_GAP_MAX = 5;
+
+/** ---- 一天的联系时间：小满忙得只有 40 分钟匀给这部手机 ----
+ *  每一场对话 10 分钟（妈/姨/曼曼/相亲对象/阿凯，一视同仁）。
+ *  别人只在白天有空；阿凯作息日夜颠倒，只有夜里醒着。
+ *  时间花给谁，就是爱给了谁——这是这部手机真正的稀缺资源。 */
+export const COMFORT_DAY_MINUTES = 40;
+export const COMFORT_CHAT_MINUTES = 10;
+
 /** 舒适圈聊天归档容量（防存档膨胀）。 */
 export const COMFORT_ARCHIVE_CAP = 40;
 /** 朋友圈容量。 */
@@ -178,6 +198,7 @@ export function freshComfortState(): ComfortState {
     bfDemand: { lastDay: 0, count: 0, refuses: 0 },
     momTalk: { lastDay: 0, count: 0 },
     bfTalk: { lastDay: 0, count: 0 },
+    bestieTalk: { lastDay: 0, count: 0 },
     momGiven: 0,
     momRefused: 0,
     bfGiven: 0,
@@ -187,7 +208,7 @@ export function freshComfortState(): ComfortState {
     chat: null,
     storyDone: [],
     archives: [],
-    recentPacks: { mother: [], boyfriend: [], auntie: [] },
+    recentPacks: { mother: [], boyfriend: [], auntie: [], bestie: [] },
     moments: [],
     unseenMoments: 0,
     policeDay: 0,
@@ -195,5 +216,7 @@ export function freshComfortState(): ComfortState {
     auntie: { lastDay: 0, count: 0 },
     datesMet: {},
     quarrel: { count: 0, pending: false },
+    minutes: COMFORT_DAY_MINUTES,
+    dayAck: 0,
   };
 }

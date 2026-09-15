@@ -34,11 +34,12 @@ import {
   BF_DEMAND_FIRST_DAY, BF_DEMAND_GAP_COLD, BF_BREAKUP_REFUSES,
   MOM_GIFT_FIRST_DAY, BF_PACKET_FIRST_DAY, BF_OMEN_DAY,
   XIAOMAN_BIRTHDAY_DAY, freshComfortState, AUNTIE_TALK_FIRST_DAY,
+  BESTIE_TALK_FIRST_DAY, COMFORT_DAY_MINUTES, COMFORT_CHAT_MINUTES, COMFORT_CONTACTS,
 } from '../../data/comfort';
 import { STORY_BEATS } from '../../data/comfort-story';
-import { AUNTIE_PACKS, QUARREL_PACKS } from '../../data/comfort-packs';
+import { AUNTIE_PACKS, QUARREL_PACKS, BESTIE_PACKS } from '../../data/comfort-packs';
 import { BLIND_DATES, BLIND_DATE_MAP } from '../../data/comfort-dates';
-import { AUNTIE_POSTS, AUNTIE_COMMENTS } from '../../data/comfort-moments';
+import { AUNTIE_POSTS, AUNTIE_COMMENTS, BESTIE_COMMENTS, BESTIE_POSTS } from '../../data/comfort-moments';
 import type { GameState } from '../../types/game';
 
 function fresh(seed = 7): GameState {
@@ -284,6 +285,8 @@ describe('1.1.0 聊天：不耗体力 / 去重 / 伏笔', () => {
 
   it('同一天连续两场，开场白不重复（去重窗口）', () => {
     let s = fresh(29);
+    // 阿凯日夜颠倒：他的对话要等天黑
+    s = dispatch(s, { type: 'enter_night' });
     s = dispatch(s, { type: 'comfort_open_chat', contactId: 'boyfriend' });
     const first = s.comfort.chat!.transcript.filter((m) => m.speaker === 'them').map((m) => m.text).join('｜');
     s = dispatch(s, { type: 'comfort_end_chat' });
@@ -580,11 +583,15 @@ describe('1.1.x 红娘线：凤霞姨与十张牌', () => {
     // 正常玩：选一句回复并结束首聊
     s = dispatch(s, { type: 'comfort_pick', optionIndex: 0 });
     s = dispatch(s, { type: 'comfort_end_chat' });
-    // 第二天早晨阿凯炸毛
+    // 第二天早晨阿凯炸毛（他白天补觉——听他说完要等天黑）
     s = { ...s, day: s.day + 1 };
     runComfortMorning(s);
     const quarrel = s.comfort.incoming.find((m) => m.kind === 'quarrel');
     expect(quarrel).toBeDefined();
+    const daySnap = JSON.stringify(s);
+    s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: quarrel!.id, accept: true });
+    expect(JSON.stringify(s)).toBe(daySnap); // 白天叫不醒他：卡片原样保留
+    s = dispatch(s, { type: 'enter_night' });
     s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: quarrel!.id, accept: true });
     expect(s.comfort.chat!.contactId).toBe('boyfriend');
     expect(s.comfort.chat!.transcript.some((m) => m.text.includes('相亲'))).toBe(true);
@@ -670,5 +677,150 @@ describe('1.1.x 红娘线：凤霞姨与十张牌', () => {
     // 常规事件卡配额不被剧情卡占据：嘘寒问暖/生活费照发
     const talkOrGift = s.comfort.incoming.some((m) => m.kind === 'mom_talk' || m.kind === 'mom_gift');
     expect(talkOrGift).toBe(true);
+  });
+});
+
+describe('1.1.x 时间与日夜：一天 40 分钟，他只在夜里', () => {
+  it('早晨时间回满 40；主动开一场聊天 −10；不足 10 分钟开不了场', () => {
+    let s = fresh(101);
+    expect(s.comfort.minutes).toBe(COMFORT_DAY_MINUTES);
+    s = dispatch(s, { type: 'comfort_open_chat', contactId: 'mother' });
+    expect(s.comfort.minutes).toBe(COMFORT_DAY_MINUTES - COMFORT_CHAT_MINUTES);
+    s = dispatch(s, { type: 'comfort_pick', optionIndex: 0 });
+    s = dispatch(s, { type: 'comfort_end_chat' });
+    // 一场场聊到时间见底 → 开不了新的一场
+    while (s.comfort.minutes >= COMFORT_CHAT_MINUTES) {
+      s = dispatch(s, { type: 'comfort_open_chat', contactId: 'mother' });
+      s = dispatch(s, { type: 'comfort_pick', optionIndex: 0 });
+      s = dispatch(s, { type: 'comfort_end_chat' });
+    }
+    expect(s.comfort.minutes).toBeLessThan(COMFORT_CHAT_MINUTES);
+    const snap = JSON.stringify(s);
+    s = dispatch(s, { type: 'comfort_open_chat', contactId: 'mother' });
+    expect(JSON.stringify(s)).toBe(snap);
+    expect(s.comfort.chat).toBeNull();
+  });
+
+  it('凯凯白天叫不醒：open_chat 原样退回；天黑了他才醒，夜里的对话也占时间', () => {
+    let s = fresh(103);
+    const snap = JSON.stringify(s);
+    s = dispatch(s, { type: 'comfort_open_chat', contactId: 'boyfriend' });
+    expect(JSON.stringify(s)).toBe(snap);
+    s = dispatch(s, { type: 'enter_night' });
+    s = dispatch(s, { type: 'comfort_open_chat', contactId: 'boyfriend' });
+    expect(s.comfort.chat?.contactId).toBe('boyfriend');
+    expect(s.comfort.minutes).toBe(COMFORT_DAY_MINUTES - COMFORT_CHAT_MINUTES);
+  });
+
+  it('其他人夜里睡了：夜里接不了妈的嘘寒问暖卡，卡原样保留（先不回仍可用）', () => {
+    let s = fresh(105);
+    s = dispatch(s, { type: 'enter_night' });
+    s = { ...s, comfort: { ...s.comfort, incoming: [...s.comfort.incoming, { id: 'mom_night', kind: 'mom_talk' as const, day: s.day, amount: 0, lines: ['（测试）'], packId: MOTHER_PACKS[0].id }] } };
+    const snap = JSON.stringify(s);
+    s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: 'mom_night', accept: true });
+    expect(JSON.stringify(s)).toBe(snap);
+    // 「先不回」不受门禁：代价照付
+    const f0 = s.comfort.family;
+    s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: 'mom_night', accept: false });
+    expect(s.comfort.family).toBe(f0 - 2);
+  });
+
+  it('进入明天：时间回满 40；dayAck 落后于新的一天（「开始今天」会再弹）', () => {
+    let s = fresh(107);
+    s = dispatch(s, { type: 'comfort_ack_day' });
+    expect(s.comfort.dayAck).toBe(s.day);
+    s = dispatch(s, { type: 'comfort_open_chat', contactId: 'mother' });
+    s = dispatch(s, { type: 'comfort_pick', optionIndex: 0 });
+    s = dispatch(s, { type: 'comfort_end_chat' });
+    expect(s.comfort.minutes).toBe(COMFORT_DAY_MINUTES - COMFORT_CHAT_MINUTES);
+    s = dispatch(s, { type: 'sleep' });
+    expect(s.comfort.minutes).toBe(COMFORT_DAY_MINUTES);
+    expect(s.comfort.dayAck).toBeLessThan(s.day);
+  });
+
+  it('吵架卡拖到过期 = 晾着他的代价（感情 −8），事件被撤下', () => {
+    let s = fresh(111);
+    s.comfort = {
+      ...s.comfort,
+      incoming: [{ id: 'q1', kind: 'quarrel', day: 9, amount: 0, lines: ['x'], packId: 'quarrel_1' }],
+      quarrel: { count: 1, pending: false },
+    };
+    s.day = 11;
+    const love0 = s.comfort.love;
+    runComfortMorning(s);
+    expect(s.comfort.love).toBe(love0 - 8);
+    expect(s.comfort.incoming.some((m) => m.id === 'q1')).toBe(false);
+  });
+});
+
+describe('1.1.x 曼曼Lisa（闺蜜）：拜金的橱窗，毒舌的撑腰', () => {
+  it('人物齐备：联系人/话术 ≥8 套/评论池/朋友圈文案与配图 id 映射', () => {
+    expect(COMFORT_CONTACTS.bestie.name).toBe('沈曼');
+    expect(BESTIE_PACKS.length).toBeGreaterThanOrEqual(8);
+    for (const p of BESTIE_PACKS) {
+      expect(p.lines.length).toBeGreaterThanOrEqual(1);
+      expect(p.options.length).toBeGreaterThanOrEqual(2);
+      for (const o of p.options) { expect(o.text.trim().length).toBeGreaterThan(0); expect(o.reply.trim().length).toBeGreaterThan(0); }
+    }
+    expect(BESTIE_COMMENTS.inspire.length).toBeGreaterThanOrEqual(2);
+    expect(BESTIE_COMMENTS.family.length).toBeGreaterThanOrEqual(2);
+    expect(BESTIE_COMMENTS.love.length).toBeGreaterThanOrEqual(2);
+    expect(BESTIE_POSTS.length).toBeGreaterThanOrEqual(3);
+    for (const p of BESTIE_POSTS) if (p.photoId) expect(COMFORT_SCENES[p.photoId] ?? p.photoId).toBeTruthy();
+  });
+
+  it('闺蜜卡：接 = 原样开那套话术（体力免费、时间 −10′）；不接 = 无代价转身', () => {
+    let s = fresh(113);
+    s.day = BESTIE_TALK_FIRST_DAY;
+    // 妈/阿凯的嘘寒问暖昨天刚来过（冷却中）——不然 D3 的三张常规卡会占满上限
+    s.comfort = { ...freshComfortState(), momTalk: { lastDay: 2, count: 1 }, bfTalk: { lastDay: 2, count: 1 } };
+    runComfortMorning(s);
+    const card = s.comfort.incoming.find((m) => m.kind === 'bestie_talk');
+    expect(card).toBeDefined();
+    const m0 = s.comfort.minutes;
+    const e0 = s.energy;
+    s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: card!.id, accept: true });
+    expect(s.comfort.chat?.contactId).toBe('bestie');
+    expect(s.comfort.chat!.transcript.some((m) => m.speaker === 'them' && m.text === card!.lines[0])).toBe(true);
+    expect(s.comfort.minutes).toBe(m0 - COMFORT_CHAT_MINUTES);
+    expect(s.energy).toBe(e0);
+    s = dispatch(s, { type: 'comfort_pick', optionIndex: 0 });
+    s = dispatch(s, { type: 'comfort_end_chat' });
+    expect(s.comfort.archives.at(-1)?.contactId).toBe('bestie');
+  });
+
+  it('小满发动态：曼曼必点赞评论（按圈的类型分池）', () => {
+    let s = fresh(115);
+    s = dispatch(s, { type: 'comfort_post_moment', kind: 'love' });
+    const post = s.comfort.moments.find((m) => m.author === 'me')!;
+    expect(post.likes).toContain('bestie');
+    expect(post.comments.some((cm) => cm.by === 'bestie' && BESTIE_COMMENTS.love.includes(cm.text))).toBe(true);
+  });
+
+  it('夜里曼曼也睡了：开不了场', () => {
+    let s = fresh(117);
+    s = dispatch(s, { type: 'enter_night' });
+    const snap = JSON.stringify(s);
+    s = dispatch(s, { type: 'comfort_open_chat', contactId: 'bestie' });
+    expect(JSON.stringify(s)).toBe(snap);
+  });
+
+  it('闺蜜全库台词零重复（与妈/男友/阿姨池同口径）', () => {
+    const seen = new Set<string>();
+    const dupes: string[] = [];
+    const put = (t: string) => {
+      const k = t.replace(/\s/g, '');
+      if (k && seen.has(k)) dupes.push(t);
+      seen.add(k);
+    };
+    for (const p of [...MOTHER_PACKS, ...BOYFRIEND_PACKS, ...AUNTIE_PACKS, ...BESTIE_PACKS]) {
+      for (const l of p.lines) l.split('｜').forEach(put);
+      for (const o of p.options) { put(o.text); o.reply.split('｜').forEach(put); }
+    }
+    BESTIE_COMMENTS.inspire.forEach(put);
+    BESTIE_COMMENTS.family.forEach(put);
+    BESTIE_COMMENTS.love.forEach(put);
+    BESTIE_POSTS.forEach((p) => put(p.text));
+    expect(dupes).toEqual([]);
   });
 });

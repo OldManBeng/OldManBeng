@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import { BLIND_DATE_MAP } from '../data/comfort-dates';
 
-export type ComfortAvatarKey = 'xiaoman' | 'mother' | 'boyfriend' | 'father' | 'auntie' | `bd:${string}`;
+export type ComfortAvatarKey = 'xiaoman' | 'mother' | 'boyfriend' | 'father' | 'auntie' | 'bestie' | `bd:${string}`;
 
 const COMFORT_PNG: Partial<Record<ComfortAvatarKey, string>> = {
   xiaoman: 'comfort/xiaoman_plain.png',
@@ -17,6 +17,7 @@ const COMFORT_PNG: Partial<Record<ComfortAvatarKey, string>> = {
   boyfriend: 'comfort/boyfriend.png',
   father: 'comfort/father.png',
   auntie: 'comfort/auntie.png',
+  bestie: 'comfort/bestie.png',
 };
 
 /** 候选人头像：public/comfort/dates/{id}.png。 */
@@ -60,6 +61,16 @@ export function ComfortAvatar({ who, size = 44 }: { who: ComfortAvatarKey; size?
   if (who.startsWith('bd:')) {
     const name = BLIND_DATE_MAP[who.slice(3)]?.name;
     return <InitialSvg label={name?.[0] ?? '客'} size={size} />;
+  }
+  // 曼曼（闺蜜）PNG 未就绪时的兜底：金色圆牌首字（她是全屏唯一自带"金"色的人）。
+  if (who === 'bestie') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 54 54" role="img" aria-label="曼曼">
+        <circle cx="27" cy="27" r="26" fill="#F2D9A8" />
+        <circle cx="27" cy="27" r="26" fill="none" stroke="#00000022" strokeWidth="1.2" />
+        <text x="27" y="36" textAnchor="middle" fontSize="24" fontWeight="700" fill="#8A5A1B" style={{ fontFamily: 'serif' }}>曼</text>
+      </svg>
+    );
   }
   return <ComfortFaceSvg who={who as 'xiaoman' | 'mother' | 'boyfriend' | 'father'} size={size} />;
 }
@@ -247,6 +258,9 @@ const COMFORT_SCENE_META: Record<string, { sky: string; ground: string; accent: 
   cm_couple: { sky: '#fbd9c8', ground: '#f0a888', accent: '#e86a5a' },
   cm_chicken: { sky: '#f8e8c8', ground: '#e8c888', accent: '#c8955a' },
   cm_game: { sky: '#dfe6ee', ground: '#a8b8c8', accent: '#4a6a9a' },
+  bm_tea: { sky: '#fbe9d0', ground: '#e8c9a0', accent: '#c98a9a' },
+  bm_bag: { sky: '#f4dfc4', ground: '#d9b68a', accent: '#9a6a3a' },
+  bm_spa: { sky: '#eef4f0', ground: '#c8ddd2', accent: '#7aa895' },
 };
 
 /** 兜底场景：暖色渐变 + 物件剪影 + 颗粒暗角——一张随手拍的手机照。 */

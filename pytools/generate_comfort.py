@@ -189,6 +189,12 @@ DATE_AVATARS = {
         "穿藕粉色针织开衫配碎花围巾，表情热络爽利像正要拉着你介绍对象，"
         "居委会办公室背景虚化（荣誉锦旗隐约可见）"
     ),
+    # 曼曼Lisa（闺蜜沈曼，25，医美顾问）：拜金的橱窗感，精致里带三分倦
+    "bestie": (
+        "25 岁中国年轻女性头像，时尚精致风：浅棕色大波浪卷发，妆容明显（眼线上挑、正红色唇），"
+        "金色小圆环耳环，穿米色针织衫配丝巾，做了浅色美甲的手指尖轻触脸颊，"
+        "表情自信带三分精明与一丝不易察觉的倦意，商场美妆区明亮灯光背景虚化"
+    ),
     "chen": "29 岁中国男教师头像：清爽短发，细框方眼镜，白衬衫扣到顶，清瘦书卷气，表情温和拘谨，教室黑板绿背景虚化",
     "zhao": "31 岁中国男医生头像：黑色短发压得服帖，白大褂配听诊器，眼下淡淡熬夜青影，笑容干净可靠，医院走廊冷白背景虚化",
     "sun": "28 岁中国消防员头像：板寸头，皮肤晒成小麦色，浓眉大眼笑得憨直，深蓝色作训服，消防车红白车身边缘虚化",
@@ -222,6 +228,10 @@ DATE_SCENES = {
     "bd_xu_2": "公交车驾驶位视角：方向盘、刷卡机、挂着的的水杯，挡风玻璃外城市清晨街景",
     "bd_jiang_1": "温馨奶茶店吧台：招牌杨枝甘露放在前台，价目牌灯光暖黄，年轻店员的围裙特写",
     "bd_jiang_2": "深夜奶茶店打烊盘账：收银机屏幕亮着，账本和计算器，一杯做坏的试验品奶茶放在角落",
+    # 曼曼的朋友圈：她的橱窗（下午茶/新包/医美）
+    "bm_tea": "精致下午茶摆盘：三层点心塔，马卡龙与司康，拉花咖啡，大理石桌面，甜品店柔和暖光，手机随拍质感",
+    "bm_bag": "新款女士手提包开箱：老花纹样手袋放在床上，防尘袋与丝带散在一旁，购物袋边角入画，卧室暖光",
+    "bm_spa": "医美机构咨询室：干净的白色诊桌、皮肤检测仪屏幕发着光、绿植一角，明亮现代的美容诊所氛围",
 }
 
 # 红娘线 seed 接续原池
@@ -237,8 +247,8 @@ DATE_DIR = os.path.join(OUT_DIR, "dates")
 
 
 def save_date_avatar(raw_path: str, key: str) -> str:
-    if key == "auntie":  # 阿姨是主联系人，头像和妈/阿凯平级放根目录
-        final_path = os.path.join(OUT_DIR, "auntie.png")
+    if key in ("auntie", "bestie"):  # 阿姨/闺蜜是主联系人，头像和妈/阿凯平级放根目录
+        final_path = os.path.join(OUT_DIR, f"{key}.png")
     else:
         os.makedirs(DATE_DIR, exist_ok=True)
         final_path = os.path.join(DATE_DIR, f"{key}.png")
@@ -262,7 +272,7 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description="批量生成舒适圈角色头像与朋友圈场景（1.1.0）")
     parser.add_argument("--server", default="192.168.1.127:8188", help="ComfyUI 地址")
-    parser.add_argument("--only", choices=["avatars", "scenes", "dates"], help="只生成头像/场景/红娘线（11头像+20图）")
+    parser.add_argument("--only", choices=["avatars", "scenes", "dates"], help="只生成头像/场景/红娘+闺蜜线（12头像+23图）")
     parser.add_argument("--key", help="只生成指定 key（如 mother / cm_boba），--force 时可重跑单张")
     parser.add_argument("--force", action="store_true", help="已存在也重新生成")
     parser.add_argument("--dry-run", action="store_true", help="只打印 prompt 不提交")
@@ -332,9 +342,12 @@ def main() -> None:
         print(f"生成场景 {k} ...")
         print("→", generate_one(args.server, workflow, k, is_avatar=False))
 
-    # 红娘线：候选人头像 → public/comfort/dates/，朋友圈图 → public/comfort/scenes/
+    # 红娘线：候选人头像 → public/comfort/dates/（阿姨/闺蜜放根目录），朋友圈图 → public/comfort/scenes/
     for k in date_keys:
-        out = os.path.join(OUT_DIR, "dates", f"{k}.png")
+        if k in ("auntie", "bestie"):
+            out = os.path.join(OUT_DIR, f"{k}.png")
+        else:
+            out = os.path.join(OUT_DIR, "dates", f"{k}.png")
         if os.path.exists(out) and not args.force:
             print(f"skip {k}（已存在，--force 重生成）")
             continue

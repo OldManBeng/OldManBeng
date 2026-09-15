@@ -66,7 +66,7 @@ import {
 } from '../data/direct-ask';
 import { INCIDENTS, incidentsAvailable } from '../data/incidents';
 import type { IncidentDef, IncidentOption } from '../data/incidents';
-import { freshComfortState } from '../data/comfort';
+import { freshComfortState, COMFORT_CHAT_MINUTES } from '../data/comfort';
 import { SWITCH_TO_COMFORT, SWITCH_TO_WORK } from '../data/comfort-contrast';
 import {
   runComfortMorning,
@@ -1894,18 +1894,32 @@ export function dispatch(state: GameState, action: GameAction): GameState {
     }
 
     case 'comfort_open_chat': {
-      // 熟人聊天不耗体力——那是她的生活，不是生意。
+      // 聊天不耗体力，但耗时间：一天只有 40 分钟联系时间，每场 10 分钟。
+      // 作息门禁：别人只在白天说话；阿凯日夜颠倒，只有夜里醒着。
       if (s.comfort.chat) return s;
       if (action.contactId === 'boyfriend' && s.comfort.blockedByBf) return s;
+      const night = s.dayPhase === 'night';
+      if (action.contactId === 'boyfriend' ? !night : night) return s;
+      if (s.comfort.minutes < COMFORT_CHAT_MINUTES) return s;
+      s.comfort.minutes -= COMFORT_CHAT_MINUTES;
       openComfortChat(s, action.contactId);
       return s;
     }
 
     case 'comfort_open_date_chat': {
-      // 相亲对象聊天同样免费——阿姨介绍的人，客气是标配。
+      // 相亲对象也是白天说话的人——阿姨介绍的人，客气是标配。
       if (s.comfort.chat) return s;
       if (!(action.dateId in s.comfort.datesMet)) return s;
+      if (s.dayPhase === 'night') return s;
+      if (s.comfort.minutes < COMFORT_CHAT_MINUTES) return s;
+      s.comfort.minutes -= COMFORT_CHAT_MINUTES;
       openDateChat(s, action.dateId);
+      return s;
+    }
+
+    case 'comfort_ack_day': {
+      // 「开始今天」弹窗确认——常用手机版的 dismiss_briefing。
+      s.comfort.dayAck = Math.max(s.comfort.dayAck, s.day);
       return s;
     }
 
