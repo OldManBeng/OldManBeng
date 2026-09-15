@@ -43,6 +43,8 @@
   --warm-deep: #B0821F;
   /* ---- 结构主色 systemBlue（dark 档） ---- */
   --accent: #0A84FF;
+  /* 实心按钮专用底：白字 4.81:1（--accent 本色做按钮底只有 3.65，白字不达 AA） */
+  --accent-fill: #0A70DC;
   --accent-deep: #0664C8;
   /* ---- 状态色（仅状态用） ---- */
   --danger: #FF453A;
@@ -353,7 +355,7 @@ button { -webkit-tap-highlight-color: transparent; font-family: inherit; }
 .btn:active { transform: scale(0.97); opacity: 0.8; }
 .btn:hover { background: color-mix(in srgb, var(--surface-2) 88%, var(--label) 12%); }
 .btn.primary {
-  background: var(--accent);
+  background: var(--accent-fill);
   color: #fff;
   font-weight: 600;
 }
@@ -588,8 +590,9 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 .bar {
   font-size: var(--fs-1);
   line-height: var(--lh-tight);
-  color: var(--muted);
+  color: var(--label);
   position: relative;
+  isolation: isolate; /* 建立堆叠上下文：让填充 span 压在背景上、又垫在文字下 */
   background: var(--fill);
   border-radius: 5px;
   overflow: hidden;
@@ -598,12 +601,15 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 .bar span {
   position: absolute;
   left: 0; top: 0; bottom: 0;
+  z-index: -1; /* 填充在文字之下——旧层级里文字被半透明填充罩着，对比只剩 2-3 */
   transition: width 400ms var(--ease-out);
 }
-.bar.trust span { background: color-mix(in srgb, var(--trust) 62%, transparent); }
-.bar.wariness span { background: color-mix(in srgb, var(--danger) 62%, transparent); }
-.bar.energy span { background: color-mix(in srgb, var(--accent) 60%, transparent); }
-.bar.numb span { background: color-mix(in srgb, var(--violet) 60%, transparent); }
+/* 进度条：文字要横跨「已填充/未填充」两段底——填充改实色加深（白字 ≥4.5）、
+   标签提亮为全白。旧半透明白字压在亮色填充上只有 2.2-3.1。 */
+.bar.trust span { background: #1E7E36; }
+.bar.wariness span { background: #C0332B; }
+.bar.energy span { background: #0864C0; }
+.bar.numb span { background: #7C55A8; }
 
 /* ---------- 名单卡片 ---------- */
 .roster-panel { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
@@ -1365,6 +1371,9 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 }
 .wallet-summary span { font-size: var(--fs-2); color: var(--muted); letter-spacing: 1px; }
 .wallet-summary strong { font-size: var(--fs-8); line-height: var(--lh-tight); color: var(--warm); }
+/* 正负语义金上夺色：收入绿 / 支出红（特异性 0-2-1 压过上面的 0-1-1 金） */
+.wallet-summary strong.pos { color: var(--trust); }
+.wallet-summary strong.neg { color: var(--danger); }
 .wallet-panel h4,
 .history-panel h4 { margin-top: 4px; }
 .ledger-list { display: flex; flex-direction: column; gap: 4px; }
@@ -1724,7 +1733,7 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 @media (max-width: 420px) {
   .screen { padding: 14px 12px 20px; }
   .app-shell { padding: 10px 10px 0; }
-  .title-screen h1 { font-size: 29px; letter-spacing: 5px; text-indent: 5px; }
+  .title-screen h1 { font-size: var(--fs-11); letter-spacing: 5px; text-indent: 5px; }
   :root { --fs-11: 29px; }
   /* v4.11.2 手机浏览器适配：序章块收 padding、偈语正文收紧，
      保证「标题+正文+偈语+按钮」在最矮视口（横屏/带地址栏）下都完整可见 */
