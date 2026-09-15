@@ -178,6 +178,11 @@ export const BESTIE_TALK_GAP_MAX = 5;
 export const COMFORT_DAY_MINUTES = 40;
 export const COMFORT_CHAT_MINUTES = 10;
 
+/** ---- 舒适圈突发事件（参考工作手机 INCIDENTS）：随机、当场二选一 ----
+ *  概率口径：约三成的日子日子横生枝节；首两日不触发；一次一件；同件一个整月一次。 */
+export const COMFORT_INCIDENT_CHANCE = 0.3;
+export const COMFORT_INCIDENT_FIRST_DAY = 3;
+
 /** 舒适圈聊天归档容量（防存档膨胀）。 */
 export const COMFORT_ARCHIVE_CAP = 40;
 /** 朋友圈容量。 */
@@ -218,5 +223,7 @@ export function freshComfortState(): ComfortState {
     quarrel: { count: 0, pending: false },
     minutes: COMFORT_DAY_MINUTES,
     dayAck: 0,
+    pending: '',
+    incidentsDone: [],
   };
 }

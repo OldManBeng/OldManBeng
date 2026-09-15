@@ -35,11 +35,13 @@ import {
   MOM_GIFT_FIRST_DAY, BF_PACKET_FIRST_DAY, BF_OMEN_DAY,
   XIAOMAN_BIRTHDAY_DAY, freshComfortState, AUNTIE_TALK_FIRST_DAY,
   BESTIE_TALK_FIRST_DAY, COMFORT_DAY_MINUTES, COMFORT_CHAT_MINUTES, COMFORT_CONTACTS,
+  COMFORT_INCIDENT_FIRST_DAY,
 } from '../../data/comfort';
 import { STORY_BEATS } from '../../data/comfort-story';
 import { AUNTIE_PACKS, QUARREL_PACKS, BESTIE_PACKS } from '../../data/comfort-packs';
 import { BLIND_DATES, BLIND_DATE_MAP } from '../../data/comfort-dates';
 import { AUNTIE_POSTS, AUNTIE_COMMENTS, BESTIE_COMMENTS, BESTIE_POSTS } from '../../data/comfort-moments';
+import { COMFORT_INCIDENTS, DAILY_VERSES } from '../../data/comfort-incidents';
 import type { GameState } from '../../types/game';
 
 function fresh(seed = 7): GameState {
@@ -821,6 +823,128 @@ describe('1.1.x 曼曼Lisa（闺蜜）：拜金的橱窗，毒舌的撑腰', () 
     BESTIE_COMMENTS.family.forEach(put);
     BESTIE_COMMENTS.love.forEach(put);
     BESTIE_POSTS.forEach((p) => put(p.text));
+    expect(dupes).toEqual([]);
+  });
+});
+
+describe('1.1.x 舒适圈突发事件：日子不是一条直线', () => {
+  it('数据完整性：选项齐备、id 唯一、选项文案全池不重', () => {
+    expect(COMFORT_INCIDENTS.length).toBeGreaterThanOrEqual(10);
+    const ids = new Set<string>();
+    const texts = new Set<string>();
+    const dupes: string[] = [];
+    for (const inc of COMFORT_INCIDENTS) {
+      expect(inc.title.length).toBeGreaterThan(1);
+      expect(inc.body.length).toBeGreaterThan(8);
+      expect(inc.stale.length).toBeGreaterThan(4);
+      expect(ids.has(inc.id)).toBe(false);
+      ids.add(inc.id);
+      for (const o of inc.options) {
+        expect(o.text.length).toBeGreaterThan(2);
+        expect(o.after.length).toBeGreaterThan(8);
+        const k = o.text.replace(/\s/g, '');
+        if (texts.has(k)) dupes.push(o.text);
+        texts.add(k);
+      }
+    }
+    expect(dupes).toEqual([]);
+  });
+
+  it('掷签：连跑若干天必出事件；一次一件；阿凯不在时他的饭局不来', () => {
+    let fired = 0;
+    for (let seed = 1; seed <= 30; seed++) {
+      let s = fresh(200 + seed);
+      for (let d = COMFORT_INCIDENT_FIRST_DAY; d <= 14; d++) {
+        s.day = d;
+        runComfortMorning(s);
+        if (s.comfort.pending) { fired++; break; }
+        s.comfort.pending = '';
+      }
+    }
+    expect(fired).toBeGreaterThanOrEqual(20);
+    let bad = 0;
+    for (let seed = 1; seed <= 30; seed++) {
+      let s = fresh(300 + seed);
+      s.comfort = { ...s.comfort, bfState: 'broken_up', blockedByBf: true };
+      for (let d = COMFORT_INCIDENT_FIRST_DAY; d <= 20; d++) {
+        s.day = d;
+        runComfortMorning(s);
+        if (s.comfort.pending === 'inc_cm_kai_friends') bad++;
+        s.comfort.pending = '';
+      }
+    }
+    expect(bad).toBe(0);
+  });
+
+  it('结算：网贷选「取三千」→ 钱+3000、债+3000、两笔记账、经文落日志', () => {
+    let s = fresh(211);
+    s.day = 10;
+    s.comfort = { ...freshComfortState(), pending: 'inc_cm_loan_sms' };
+    const m0 = s.money;
+    const g0 = s.goal;
+    const love0 = s.comfort.love;
+    s = dispatch(s, { type: 'comfort_resolve_incident', optionIndex: 1 });
+    expect(s.money).toBe(m0 + 3000);
+    expect(s.goal).toBe(g0 + 3000);
+    expect(s.comfort.love).toBe(love0 + 2);
+    expect(s.comfort.pending).toBe('');
+    const led = s.ledger.filter((l) => l.day === s.day);
+    expect(led.some((l) => l.amount === 3000)).toBe(true);
+    expect(led.some((l) => l.amount === -3000)).toBe(true);
+    const all = s.log.filter((l) => l.kind === 'comfort').map((l) => l.details + (l.line ?? '')).join();
+    expect(all).toContain('把下个月的自己先卖了');
+    expect(all).toContain('提摩太前书');
+  });
+
+  it('时间后果被 0-40 夹住：加班扣到 0，早睡封顶 40', () => {
+    let s = fresh(213);
+    s.day = 10;
+    s.comfort = { ...freshComfortState(), pending: 'inc_cm_overtime', minutes: 25 };
+    s = dispatch(s, { type: 'comfort_resolve_incident', optionIndex: 0 });
+    expect(s.comfort.minutes).toBe(0);
+    let s2 = fresh(215);
+    s2.day = 10;
+    s2.comfort = { ...freshComfortState(), pending: 'inc_cm_blackout', minutes: 36 };
+    s2 = dispatch(s2, { type: 'comfort_resolve_incident', optionIndex: 1 });
+    expect(s2.comfort.minutes).toBe(COMFORT_DAY_MINUTES);
+  });
+
+  it('没接住：拖到明天，stale 代价照付（家庭 -5）', () => {
+    let s = fresh(217);
+    s.day = 10;
+    s.comfort = { ...freshComfortState(), pending: 'inc_cm_mom_waist' };
+    const f0 = s.comfort.family;
+    s = dispatch(s, { type: 'sleep' });
+    expect(s.comfort.pending).toBe('');
+    expect(s.comfort.family).toBe(f0 - 5);
+    const all = s.log.filter((l) => l.kind === 'comfort').map((l) => l.details + (l.line ?? '')).join();
+    expect(all).toContain('没接住');
+    expect(all).toContain('被关心的是你');
+  });
+});
+
+describe('1.1.x 每日经文：常用手机读经', () => {
+  it('池子齐备：≥14 条，十诫（出埃及记 20）与圣约（耶利米书 31）都在，释义不空', () => {
+    expect(DAILY_VERSES.length).toBeGreaterThanOrEqual(14);
+    for (const v of DAILY_VERSES) {
+      expect(v.v.length).toBeGreaterThan(3);
+      expect(v.s.length).toBeGreaterThan(3);
+      expect(v.g.length).toBeGreaterThan(8);
+    }
+    expect(DAILY_VERSES.some((v) => v.s.includes('出埃及记 20'))).toBe(true);
+    expect(DAILY_VERSES.some((v) => v.s.includes('耶利米书'))).toBe(true);
+  });
+
+  it('经文零重复（含事件脚注经文）', () => {
+    const seen = new Set<string>();
+    const dupes: string[] = [];
+    const put = (t: string) => {
+      const k = t.replace(/\s/g, '');
+      if (seen.has(k)) dupes.push(t);
+      seen.add(k);
+    };
+    DAILY_VERSES.forEach((v) => put(v.v));
+    COMFORT_INCIDENTS.forEach((i) => { if (i.verse) put(i.verse.v); });
     expect(dupes).toEqual([]);
   });
 });

@@ -160,4 +160,8 @@ export interface ComfortState {
   minutes: number;
   /** 已确认「开始今天」的天数：dayAck < day 时常用手机弹今日开场景。 */
   dayAck: number;
+  /** 待处理的突发事件 id（'' = 无）。一次只来一件；拖到明天落「没接住」。 */
+  pending: string;
+  /** 这个整月已经来过的事件（事件不重复，除非池子转完一轮）。 */
+  incidentsDone: string[];
 }

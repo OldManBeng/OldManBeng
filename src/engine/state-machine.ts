@@ -72,6 +72,7 @@ import {
   runComfortMorning,
   openDateChat, resolveComfortIncoming, openComfortChat, pickComfortOption, endComfortChat,
   postComfortMoment, reactComfortMoment,
+  resolveComfortIncident, staleComfortIncident,
 } from './comfort';
 
 export const TARGET_MAP: Record<string, Target> = Object.fromEntries(TARGETS.map((t) => [t.id, t]));
@@ -1576,6 +1577,8 @@ export function dispatch(state: GameState, action: GameAction): GameState {
     case 'sleep': {
       s.dayPhase = 'morning';
       s.todayPlan = '';
+      // 1.1.x 舒适圈突发事件落锤：拖到明天 = 没接住（不处理也是一种处理）。
+      staleComfortIncident(s);
       // v4.2 突发事件落锤：拖到睡觉没选 → "没接住"版后果照付（不处理也是一种处理）。
       if (s.pendingIncident && !s.incidentResolved) {
         const inc = INCIDENTS.find((i) => i.id === s.pendingIncident);
@@ -1920,6 +1923,12 @@ export function dispatch(state: GameState, action: GameAction): GameState {
     case 'comfort_ack_day': {
       // 「开始今天」弹窗确认——常用手机版的 dismiss_briefing。
       s.comfort.dayAck = Math.max(s.comfort.dayAck, s.day);
+      return s;
+    }
+
+    case 'comfort_resolve_incident': {
+      // 舒适圈突发事件：当场二选一（至多三选），选完落账。
+      resolveComfortIncident(s, action.optionIndex);
       return s;
     }
 

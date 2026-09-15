@@ -19,6 +19,7 @@ import { MIRROR_LINES, WALLET_CONTRAST } from '../data/comfort-contrast';
 import { STORY_BEATS, STORY_OPEN_LABEL } from '../data/comfort-story';
 import { BLIND_DATES, BLIND_DATE_MAP } from '../data/comfort-dates';
 import { COMFORT_MORNING_LINES } from '../data/comfort-packs';
+import { COMFORT_INCIDENTS, DAILY_VERSES } from '../data/comfort-incidents';
 import type { ComfortContactId, ComfortMessage, ComfortSpeakerId } from '../types/comfort';
 
 /** 说话人显示名：联系人 / 叙事位 / 相亲对象统一入口。 */
@@ -125,6 +126,8 @@ function ComfortDayDialog() {
   const { state } = store;
   const c = state.comfort;
   const morningLine = COMFORT_MORNING_LINES[(state.day - 1) % COMFORT_MORNING_LINES.length];
+  // 每日经文（工作手机敲佛偈，常用手机读经文——同一双手，各念各的经）
+  const verse = DAILY_VERSES[(state.day - 1) % DAILY_VERSES.length];
   const firstDay = state.day === 1;
   return (
     <div className="comfort-day-overlay">
@@ -134,6 +137,11 @@ function ComfortDayDialog() {
           <span className="comfort-day-sub">常用手机 · 睁眼</span>
         </div>
         <p className="comfort-day-line">{morningLine}</p>
+        <div className="comfort-verse">
+          <div className="comfort-verse-text">「{verse.v}」</div>
+          <div className="comfort-verse-src">——{verse.s}</div>
+          <div className="comfort-verse-gloss">{verse.g}</div>
+        </div>
         {firstDay && (
           <div className="comfort-day-rule">
             <div className="comfort-day-rule-row"><span className="briefing-ico"><Ico name="clock" size={20} /></span>
@@ -289,6 +297,27 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
           <p className="muted small">民警说，金额不大，先登记备案；再来一次，就不是登记了。工作手机躺在兜里，一夜没敢开机。</p>
         </div>
       )}
+
+      {/* 突发事件：生活横生枝节的那一下——当场选，拖到明天落「没接住」 */}
+      {(() => {
+        const inc = COMFORT_INCIDENTS.find((i) => i.id === c.pending);
+        if (!inc) return null;
+        return (
+          <div className="beat-card comfort-incident">
+            <div className="beat-title"><Ico name="bolt" size={14} /> {inc.title}</div>
+            <div className="beat-body">{inc.body}</div>
+            <div className="beat-options">
+              {inc.options.map((opt, i) => (
+                <button key={i} className="btn small beat-opt" onClick={() => { playMessage(); store.dispatch({ type: 'comfort_resolve_incident', optionIndex: i }); }}>
+                  {opt.text}
+                </button>
+              ))}
+            </div>
+            {inc.verse && <div className="comfort-incident-verse">「{inc.verse.v}」——{inc.verse.s}</div>}
+            <p className="muted small">不接也行——拖到明天，就按「没接住」算。</p>
+          </div>
+        );
+      })()}
 
       {/* 事件卡：妈的生活费 / 阿凯的红包 / 阿凯要钱 / 嘘寒问暖 / 暗线剧情 */}
       {c.incoming.map((m) => {

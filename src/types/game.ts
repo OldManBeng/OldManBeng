@@ -274,6 +274,8 @@ export type GameAction =
   | { type: 'comfort_open_date_chat'; dateId: string }
   /** 舒适圈：确认「开始今天」（常用手机版的 dismiss_briefing）。 */
   | { type: 'comfort_ack_day' }
+  /** 舒适圈：处理突发事件——当场二选一（至多三选），过夜落「没接住」。 */
+  | { type: 'comfort_resolve_incident'; optionIndex: number }
   /** 舒适圈：选一个回复（对方回应 + 关系变化）。 */
   | { type: 'comfort_pick'; optionIndex: number }
   /** 舒适圈：结束当前聊天（归档）。 */

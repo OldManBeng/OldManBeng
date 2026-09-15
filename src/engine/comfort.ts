@@ -30,6 +30,7 @@ import {
   DATE_INTRO_FAMILY, DATE_INTRO_LOVE, QUARREL_IGNORE_LOVE,
   BESTIE_TALK_FIRST_DAY, BESTIE_TALK_GAP_MIN, BESTIE_TALK_GAP_MAX,
   COMFORT_DAY_MINUTES, COMFORT_CHAT_MINUTES,
+  COMFORT_INCIDENT_CHANCE, COMFORT_INCIDENT_FIRST_DAY,
 } from '../data/comfort';
 import {
   MOTHER_PACKS, BOYFRIEND_PACKS, AUNTIE_PACKS, BESTIE_PACKS, QUARREL_PACKS, BF_OMEN_PACK as BF_OMEN_DATA,
@@ -51,6 +52,7 @@ import {
   BF_DEMAND_CONTRAST, BF_BREAKUP_CONTRAST, MIRROR_LINES,
 } from '../data/comfort-contrast';
 import { STORY_BEATS, type ComfortStoryBeat } from '../data/comfort-story';
+import { COMFORT_INCIDENTS, comfortIncidentsAvailable, type ComfortIncident } from '../data/comfort-incidents';
 import { clamp } from './chat';
 
 /** 按天取模取一行（对比旁白/镜像行不耗 RNG）。 */
@@ -381,6 +383,25 @@ export function runComfortMorning(state: GameState): void {
     state.flags.bf_omen_done = true;
     openComfortChat(state, 'boyfriend', BF_OMEN_PACK);
     clog(state, '常用手机 · 阿凯深夜发来一段很长的语音，说了一句他不该说的话。');
+  }
+
+  // 突发事件（参考工作手机 INCIDENTS）：日子不是一条直线。随机、一次一件、
+  // 同件一个整月只来一次；独立槽位，不与事件卡抢位。
+  if (state.day >= COMFORT_INCIDENT_FIRST_DAY && !c.pending) {
+    const rngI = derivedComfortRng(state, 419);
+    if (rngI.chance(COMFORT_INCIDENT_CHANCE)) {
+      const bfOk = c.bfState === 'normal' && !c.blockedByBf;
+      const eligible = comfortIncidentsAvailable(state.day, bfOk)
+        .filter((i) => !c.incidentsDone.includes(i.id));
+      const pool = eligible.length
+        ? eligible
+        : comfortIncidentsAvailable(state.day, bfOk); // 池子转完一轮，允许重来
+      if (pool.length) {
+        const pick = pool[rngI.int(0, pool.length - 1)];
+        c.pending = pick.id;
+        if (!c.incidentsDone.includes(pick.id)) c.incidentsDone.push(pick.id);
+      }
+    }
   }
 
   // 妈/男友/阿姨偶尔自己发圈（低频）——这面墙也活着。
@@ -886,8 +907,7 @@ export function postComfortMoment(state: GameState, kind: 'inspire' | 'family' |
 }
 
 /** 给妈/男友的动态点赞/评论。 */
-export function reactComfortMoment(state: GameState, momentId: string, kind: 'like' | 'comment'): void {
-  const c = state.comfort;
+export function reactComfortMoment(state: GameState, momentId: string, kind: 'like' | 'comment'): void {  const c = state.comfort;
   const post = c.moments.find((m) => m.id === momentId);
   if (!post || post.author === 'me') return;
   const me: ComfortContactId | 'me' = 'me';
@@ -903,4 +923,53 @@ export function reactComfortMoment(state: GameState, momentId: string, kind: 'li
     if (post.author === 'mother' || post.author === 'auntie') c.family = clamp(c.family + 2, 0, 100);
     else if (post.author === 'boyfriend') c.love = clamp(c.love + 2, 0, 100);
   }
+}
+
+/**
+ * 舒适圈突发事件：当场结算。选了哪条路，代价与收获都落在
+ * 活命钱 / 今日时间 / 家庭 / 感情 / 债 上——事件不等人，也不收回。
+ * 挂了经文的事件，经文跟着落日志（工作手机的偈照生意，这里的经照日子）。
+ */
+export function resolveComfortIncident(state: GameState, optionIndex: number): void {
+  const c = state.comfort;
+  const inc: ComfortIncident | undefined = COMFORT_INCIDENTS.find((i) => i.id === c.pending);
+  if (!inc) return;
+  const opt = inc.options[optionIndex];
+  if (!opt) return;
+  c.pending = '';
+  const fx = opt.fx;
+  if (fx.money) {
+    state.money += fx.money;
+    state.ledger.push({ day: state.day, amount: fx.money, note: `${inc.title}（${opt.text}）`, kind: 'family' });
+  }
+  if (fx.goal) {
+    state.goal += fx.goal;
+    state.ledger.push({ day: state.day, amount: -fx.goal, note: `${inc.title}——记到债上`, kind: 'family' });
+  }
+  if (fx.minutes) c.minutes = clamp(c.minutes + fx.minutes, 0, COMFORT_DAY_MINUTES);
+  if (fx.family) c.family = clamp(c.family + fx.family, 0, 100);
+  if (fx.love) c.love = clamp(c.love + fx.love, 0, 100);
+  clog(state, `常用手机 · ${inc.title}——${opt.text}`, opt.after);
+  if (inc.verse) clog(state, `「${inc.verse.v}」——${inc.verse.s}`);
+}
+
+/**
+ * 「没接住」：突发事件拖到明天（进入明天时仍挂着），后果自己找上门。
+ * 由 state-machine 的 sleep 分支调用——不处理也是一种处理。
+ */
+export function staleComfortIncident(state: GameState): void {
+  const c = state.comfort;
+  const inc = COMFORT_INCIDENTS.find((i) => i.id === c.pending);
+  c.pending = '';
+  if (!inc) return;
+  const fx = inc.staleFx;
+  if (fx.money) {
+    state.money += fx.money;
+    state.ledger.push({ day: state.day, amount: fx.money, note: `${inc.title}（没接住）`, kind: 'family' });
+  }
+  if (fx.goal) state.goal += fx.goal;
+  if (fx.minutes) c.minutes = clamp(c.minutes + fx.minutes, 0, COMFORT_DAY_MINUTES);
+  if (fx.family) c.family = clamp(c.family + fx.family, 0, 100);
+  if (fx.love) c.love = clamp(c.love + fx.love, 0, 100);
+  clog(state, `常用手机 · ${inc.title}——没接住`, inc.stale);
 }

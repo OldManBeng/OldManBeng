@@ -93,6 +93,8 @@ function mergeComfort(saved: GameState['comfort'] | undefined): GameState['comfo
     quarrel: saved.quarrel ?? base.quarrel,
     minutes: saved.minutes ?? base.minutes,
     dayAck: saved.dayAck ?? 0,
+    pending: saved.pending ?? '',
+    incidentsDone: saved.incidentsDone ?? [],
     recentPacks: {
       mother: saved.recentPacks?.mother ?? [],
       boyfriend: saved.recentPacks?.boyfriend ?? [],

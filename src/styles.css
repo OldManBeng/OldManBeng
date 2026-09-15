@@ -2288,3 +2288,42 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   border: 1px dashed var(--c-n4);
   cursor: default;
 }
+
+/* ---------- 1.1.x 舒适圈 · 每日经文 + 突发事件卡 ---------- */
+/* 「开始今天」里的经文块：工作手机敲佛偈（金楷居中），常用手机读经文（左对齐，像案头的随手笔记） */
+.comfort-verse {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--c-gold);
+  border-radius: var(--c-r-sm);
+  background: color-mix(in srgb, var(--c-n2) 62%, transparent);
+  text-align: left;
+}
+.comfort-verse-text {
+  font-family: var(--font-kai);
+  font-size: var(--c-fs-body);
+  line-height: 1.75;
+  color: var(--c-n7);
+}
+.comfort-verse-src {
+  margin-top: 4px;
+  font-size: var(--c-fs-micro);
+  letter-spacing: 1px;
+  color: var(--c-accent-strong);
+}
+.comfort-verse-gloss {
+  margin-top: 6px;
+  font-size: var(--c-fs-caption);
+  line-height: 1.7;
+  color: var(--c-n6);
+}
+/* 事件卡脚注经文：小一号、斜体感，像顺手抄在便签上 */
+.comfort-incident-verse {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--c-n4);
+  font-family: var(--font-kai);
+  font-size: var(--c-fs-caption);
+  line-height: 1.7;
+  color: var(--c-n5);
+}
