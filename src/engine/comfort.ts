@@ -950,16 +950,17 @@ export function postComfortMoment(state: GameState, kind: 'inspire' | 'family' |
     ? '常用手机 · 你发了一条晒恩爱的朋友圈（相亲对象都被你屏蔽了）。妈第一个点了赞。'
     : `常用手机 · 你发了一条朋友圈（${kind === 'inspire' ? '励志' : '晒家'}）。妈第一个点了赞。`);
   // v1.1.x 朋友圈引来相亲对象主动搭话（工作手机「自拍引私信」的同构设计）：
-  // 晒恩爱已被屏蔽不触发；励志/晒家有四成概率引来一位已认识的候选人，
-  // 在「今天」页留一张搭话卡——回他是白天的一场聊天（−10′），不回没有代价。
+  // 晒恩爱已被屏蔽不触发；励志/晒家圈有五成概率引来一位已认识的候选人。
+  // 第一次满足条件保底必发（bd_ping_done 记账）——这个机制不该对玩家隐形；
+  // 搭话卡也不占事件栏上限（它是这条朋友圈的直接后果，最多一天一张）。
   if (kind !== 'love' && Object.keys(c.datesMet).length > 0
     && !c.incoming.some((m) => m.kind === 'bd_ping')
-    && c.incoming.filter((m) => m.kind !== 'story').length < COMFORT_INCOMING_CAP
-    && rng.chance(0.4)) {
+    && (rng.chance(0.5) || !state.flags.bd_ping_done)) {
     const ids = Object.keys(c.datesMet);
     const pick = ids[rng.int(0, ids.length - 1)];
     const date = BLIND_DATE_MAP[pick];
     if (date) {
+      state.flags.bd_ping_done = true;
       c.incoming.push({
         id: `bd_ping_${state.day}`,
         kind: 'bd_ping',

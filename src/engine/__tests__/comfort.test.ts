@@ -1073,25 +1073,30 @@ describe('1.1.0 朋友圈分组可见与相亲对象主动搭话', () => {
     expect(post.likes).toContain('bestie');
   });
 
-  it('励志圈：概率引来相亲对象主动搭话；回他 = 白天开聊 −10′；不回无代价', () => {
-    let verified = 0;
-    for (let seed = 1; seed <= 16 && verified < 3; seed++) {
-      let s = fresh(140 + seed);
-      s.comfort = { ...freshComfortState(), datesMet: { wu: 3, chen: 5 } };
-      s = dispatch(s, { type: 'comfort_post_moment', kind: 'inspire' });
-      const ping = s.comfort.incoming.find((m) => m.kind === 'bd_ping');
-      if (!ping) continue;
-      verified++;
-      expect(ping.packId === 'wu' || ping.packId === 'chen').toBe(true);
-      const m0 = s.comfort.minutes;
-      s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: ping.id, accept: true });
-      expect(s.comfort.chat!.contactId).toBe(`bd:${ping.packId}`);
-      expect(s.comfort.minutes).toBe(m0 - COMFORT_CHAT_MINUTES);
-      s = dispatch(s, { type: 'comfort_pick', optionIndex: 0 });
-      s = dispatch(s, { type: 'comfort_end_chat' });
-      break;
+  it('励志圈：第一次满足条件保底必引来搭话；回他 = 白天开聊 −10′', () => {
+    let s = fresh(141);
+    s.comfort = { ...freshComfortState(), datesMet: { wu: 3, chen: 5 } };
+    s = dispatch(s, { type: 'comfort_post_moment', kind: 'inspire' });
+    const ping = s.comfort.incoming.find((m) => m.kind === 'bd_ping')!;
+    expect(ping).toBeDefined();
+    expect(ping.packId === 'wu' || ping.packId === 'chen').toBe(true);
+    expect(s.flags.bd_ping_done).toBe(true);
+    const m0 = s.comfort.minutes;
+    s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: ping.id, accept: true });
+    expect(s.comfort.chat!.contactId).toBe(`bd:${ping.packId}`);
+    expect(s.comfort.minutes).toBe(m0 - COMFORT_CHAT_MINUTES);
+    s = dispatch(s, { type: 'comfort_pick', optionIndex: 0 });
+    s = dispatch(s, { type: 'comfort_end_chat' });
+  });
+
+  it('搭话卡不占事件栏上限：栏满三张仍能进来（保底机制）', () => {
+    let s = fresh(142);
+    s.comfort = { ...freshComfortState(), datesMet: { wu: 3 } };
+    for (let i = 0; i < 3; i++) {
+      s.comfort.incoming.push({ id: `x${i}`, kind: 'mom_gift', day: s.day, amount: 100, lines: ['x'] });
     }
-    expect(verified).toBeGreaterThan(0);
+    s = dispatch(s, { type: 'comfort_post_moment', kind: 'inspire' });
+    expect(s.comfort.incoming.some((m) => m.kind === 'bd_ping')).toBe(true);
   });
 
   it('再聊轮换：四套话术按场次取模轮换，不再永远卡第二套', () => {

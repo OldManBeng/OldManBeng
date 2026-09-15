@@ -266,11 +266,11 @@ button { -webkit-tap-highlight-color: transparent; font-family: inherit; }
   line-height: var(--lh-tight);
   /* 版本角标：小号上标——版本信息在场，但不与主标题抢分量 */
   .h1-ver {
-    font-size: 0.42em;
+    font-size: 0.46em;
     font-weight: 600;
     letter-spacing: 1.5px;
     text-indent: 0;
-    vertical-align: 0.55em;
+    vertical-align: 0.15em;
     margin-left: 3px;
   }
   /* 标题本身也随刀锋一分为二：左冷右暖——对立，写在同一个词里。
