@@ -237,25 +237,45 @@ button { -webkit-tap-highlight-color: transparent; font-family: inherit; }
   opacity: 0.9;
 }
 .title-backdrop svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* v5.0 双色登录页：一条刀锋把画面斜劈两半——右半保留原来的冷夜（月亮与星），
+   左半盖上暖色的余温（常用手机的那半边人生），亮边就是刀光。
+   金色亮边是有意的：金 = 钱 = 连着两个世界的同一条线。 */
+.title-backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    /* 暖半的余温：像一盏忘了关的灯 */
+    radial-gradient(64% 46% at 18% 76%, rgba(226, 138, 48, 0.15), transparent 72%),
+    /* 刀锋：左暖右冷 */
+    linear-gradient(115deg,
+      rgba(43, 25, 11, 0.88) 0 48.4%,
+      rgba(246, 228, 188, 0.92) 48.4% 49.5%,
+      rgba(246, 228, 188, 0) 50.9%);
+}
 .title-screen h1 {
   font-size: var(--fs-11);
   font-weight: 700;
   letter-spacing: 7px;
   text-indent: 7px; /* 平衡字距造成的偏移 */
   line-height: var(--lh-tight);
-  color: var(--text);
-  text-shadow: 0 0 28px var(--glow-accent), 0 2px 16px color-mix(in srgb, var(--ink) 60%, transparent);
+  /* 标题本身也随刀锋一分为二：左冷右暖——对立，写在同一个词里 */
+  background: linear-gradient(115deg, #E9EFF9 0 46%, #F0D3A0 54% 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 18px rgba(4, 8, 16, 0.65));
 }
-/* 月光横线（灯笼金——金 = 钱与偈语的延伸） */
+/* 月光横线（灯笼金——金 = 钱与偈语的延伸）：冷蓝渐入灯笼金，是那把刀的缩影 */
 .title-screen h1::after {
   content: '';
   display: block;
   width: 72px;
   height: 2px;
   margin: 16px auto 0;
-  background: linear-gradient(90deg, transparent, var(--warm), transparent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 60%, transparent), var(--warm));
   border-radius: 2px;
-  opacity: 0.75;
+  opacity: 0.8;
   box-shadow: 0 0 12px var(--glow-warm);
 }
 .subtitle {
@@ -265,6 +285,26 @@ button { -webkit-tap-highlight-color: transparent; font-family: inherit; }
   letter-spacing: 5px;
   text-indent: 5px;
 }
+/* 对立统一的那两行：刀劈开画面，劈不开握刀的手 */
+.title-motto {
+  margin-top: 12px;
+  color: var(--muted);
+  font-family: var(--font-kai);
+  padding: 0 18px;
+}
+.title-motto span { display: block; }
+.title-motto span:first-child {
+  font-size: var(--fs-4);
+  letter-spacing: 3px;
+  color: var(--text);
+  opacity: 0.88;
+}
+.title-motto span:last-child {
+  font-size: var(--fs-3);
+  letter-spacing: 1.5px;
+  line-height: 1.9;
+}
+.title-motto span + span { margin-top: 7px; }
 .title-buttons { display: flex; flex-direction: column; gap: 11px; width: 226px; margin: 0 auto; position: relative; }
 .title-buttons .btn { font-size: var(--fs-6); }
 .content-warning {

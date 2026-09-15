@@ -172,7 +172,7 @@ export function ComfortScreen() {
   const night = state.dayPhase === 'night';
 
   return (
-    <div className={`screen main-screen app-shell comfort-theme ${night ? 'comfort-night' : ''} phone-flip-in phone-flip-r`} key={`comfort-flip-${c.flipTick}`}>
+    <div className={`screen main-screen app-shell comfort-theme ${night ? 'comfort-night' : ''} ${c.chat ? 'chat-mode' : ''} phone-flip-in phone-flip-r`} key={`comfort-flip-${c.flipTick}`}>
       {/* 「开始今天」：新的一天先过这道幕，才落进消息堆里 */}
       {c.dayAck < state.day && <ComfortDayDialog />}
       <header className="hud">

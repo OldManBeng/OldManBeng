@@ -87,7 +87,12 @@ export function TitleScreen() {
       <TitleBackdrop />
       <div className="title-block">
         <h1>情感反诈模拟器</h1>
-        <p className="subtitle">原名《凌晨三点，哥哥》 · 一个关于「崩老头」的游戏</p>
+        <p className="subtitle">原名《凌晨三点，哥哥》</p>
+        <p className="title-motto">
+          <span>一部手机做生意，一部过日子。</span>
+          <span>冷的那部在行骗，暖的那部在被骗。</span>
+          <span>握着它们的，是同一双手。</span>
+        </p>
       </div>
       <div className="title-buttons">
         {!ageOk && (
@@ -127,10 +132,10 @@ export function TitleScreen() {
       </div>
       <div className="content-warning">
         <p><strong>内容提示</strong></p>
-        <p>本游戏涉及：孤独、情感操纵、网络诈骗、经济压力等主题。</p>
+        <p>本游戏涉及：孤独、情感操纵、网络诈骗、经济压力，以及来自最亲近的人的欺骗。</p>
         <p>游戏中所有角色、话术均为虚构的艺术抽象，不构成任何可操作的指引。</p>
         <p>如果你正在经历类似的困境——无论是孤独还是债务——请寻求身边真实的帮助。</p>
-        <p className="muted small">原型来自2025年流行的网络现象「崩老头」。它不是玩笑。</p>
+        <p className="muted small">原型来自2025年流行的网络现象「崩老头」。它不是玩笑——每一句「哥哥」和每一句「妈」，都有人当真。</p>
       </div>
     </div>
   );
