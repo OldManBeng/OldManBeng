@@ -33,7 +33,7 @@ import {
 import {
   BF_DEMAND_FIRST_DAY, BF_DEMAND_GAP_COLD, BF_BREAKUP_REFUSES,
   MOM_GIFT_FIRST_DAY, BF_PACKET_FIRST_DAY, BF_OMEN_DAY,
-  XIAOMAN_BIRTHDAY_DAY, freshComfortState, AUNTIE_TALK_FIRST_DAY, BF_OMEN_GRACE,
+  XIAOMAN_BIRTHDAY_DAY, freshComfortState, AUNTIE_TALK_FIRST_DAY,
   BESTIE_TALK_FIRST_DAY, COMFORT_DAY_MINUTES, COMFORT_CHAT_MINUTES, COMFORT_CONTACTS,
   COMFORT_INCIDENT_FIRST_DAY,
 } from '../../data/comfort';
@@ -439,6 +439,8 @@ describe('1.1.x 暗线《家的账本》：故事不改结局，只交代来路'
     s.day = 28;
     s.comfort = { ...freshComfortState() };
     runComfortMorning(s);
+    // 跳天导致 D14 伏笔未说过——它会在今天早晨补场（永不过期），先收束它
+    s = dispatch(s, { type: 'comfort_end_chat' });
     const card = s.comfort.incoming.find((m) => m.kind === 'story' && m.beatId === 'd28_kai_taken');
     expect(card).toBeDefined();
     expect(card!.lines[0]).toContain('失联');
@@ -470,6 +472,8 @@ describe('1.1.x 暗线《家的账本》：故事不改结局，只交代来路'
     s.day = 26;
     s.comfort = { ...freshComfortState() };
     runComfortMorning(s);
+    // 同上：迟到的伏笔先收束，再结算剧情卡
+    s = dispatch(s, { type: 'comfort_end_chat' });
     const card = s.comfort.incoming.find((m) => m.kind === 'story' && m.beatId === 'd26_mom_crackdown');
     expect(card).toBeDefined();
     s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: card!.id, accept: true });
@@ -978,10 +982,10 @@ describe('1.1.0 一天一人最多一条消息', () => {
       s.comfort = freshComfortState();
       for (let d = 1; d <= 30; d++) {
         s.day = d;
-        // 伏笔还没说出口的当天，阿凯的名额整段让给真心话（已触发后的窗口日照常）
+        // 伏笔还没说出口的每一天，阿凯的名额都让给真心话（说过之后不再占用）
         const omenPending = s.comfort.bfState === 'normal' && !s.comfort.blockedByBf
           && !s.flags.bf_omen_done && !s.comfort.chat
-          && d >= BF_OMEN_DAY && d <= BF_OMEN_DAY + BF_OMEN_GRACE;
+          && d >= BF_OMEN_DAY;
         runComfortMorning(s);
         const byContact = new Map<string, number>();
         for (const m of s.comfort.incoming.filter((x) => x.day === d)) {
@@ -1118,5 +1122,35 @@ describe('1.1.0 朋友圈分组可见与相亲对象主动搭话', () => {
       s = dispatch(s, { type: 'comfort_open_date_chat', dateId: id });
     }
     expect(s.comfort.dateChats[id]).toBe(5);
+  });
+});
+
+describe('1.1.0 结局后续玩：不再清档重开', () => {
+  it('「再过一个月」= 延续进度开新一月（daysLimit +30），舒适圈关系/暗线全保留', () => {
+    let s = fresh(151);
+    s.comfort = { ...freshComfortState(), datesMet: { wu: 8, chen: 10 }, family: 74, love: 88 };
+    s.day = 30;
+    s.daysLimit = 30;
+    s.phase = 'ended';
+    s.endingId = 'end_broke';
+    s = dispatch(s, { type: 'continue_month' });
+    expect(s.phase).toBe('main');
+    expect(s.daysLimit).toBe(60);
+    expect(s.day).toBe(30);
+    expect(s.endingId).toBe('end_broke');
+    expect(s.comfort.datesMet.wu).toBe(8);
+    expect(s.comfort.family).toBe(74);
+    expect(s.comfort.love).toBe(88);
+  });
+
+  it('「再撑十天」同样延续（daysLimit +10）', () => {
+    let s = fresh(152);
+    s.day = 30;
+    s.daysLimit = 30;
+    s.phase = 'ended';
+    s.endingId = 'end_broke';
+    s = dispatch(s, { type: 'continue_playing' });
+    expect(s.phase).toBe('main');
+    expect(s.daysLimit).toBe(40);
   });
 });

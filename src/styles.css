@@ -64,7 +64,6 @@
   --bub-ink: #F5F5F7;
   --bub-green: #30D158;      /* 你的话：微信绿 */
   --bub-green-ink: #04310F;
-  --bub-gold: #8F6512;       /* 红包标签（浅底可读档） */
   /* ---- 字体 ---- */
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
     "HarmonyOS Sans SC", "MiSans", "Microsoft YaHei", "Noto Sans SC", sans-serif;
@@ -1930,8 +1929,7 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   --c-danger: #B3382C;         /* 要钱卡 / 代价 */
 
   /* ---- 场景色（收敛自散落硬编码） ---- */
-  --c-bubble: #F5D08C;         /* 她的语音气泡面（暖绿） */
-  --c-bubble-ink: #5A3E10;      /* 气泡文字（on --c-bubble = 6.70:1） */
+  /* 微信绿改版后：金色气泡令牌已废——她发出的气泡统一用 --bub-green */
   --c-night-bg: #2E3350;       /* 夜间 chip 实底（#F2ECDD on 它 = 10.45:1） */
   --c-night-text: #F2ECDD;     /* 夜间 chip 文字 */
   --c-night-tag: #C9CFEA;      /* 夜间标签文字（on --c-night-bg = 7.97:1） */

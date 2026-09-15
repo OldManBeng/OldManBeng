@@ -8,15 +8,15 @@ import type { Target } from '../types/target';
  */
 
 /** 8 种自拍的元数据（UI 瓷砖 + 标签）。 */
-export const SELFIE_META: { id: SelfieId; label: string; emoji: string; note: string }[] = [
-  { id: 'bestie', label: '闺蜜照', emoji: '👭', note: '有人陪——关心多一倍，试探也多一倍：旁边那位是谁。' },
-  { id: 'gym', label: '夜跑照', emoji: '🏃', note: '自律人设——"努力生活"的通用证词。' },
-  { id: 'pool', label: '泳池照', emoji: '🏊', note: '贵——谁看了都觉得你"过得不缺钱"。' },
-  { id: 'cat', label: '橘猫照', emoji: '🐈', note: '无害——宠物是孤独者之间的通行证。' },
-  { id: 'grind', label: '加班照', emoji: '💻', note: '苦——凌晨还亮着的屏幕，配上"没事，习惯了"。' },
-  { id: 'travel', label: '旅游照', emoji: '⛰', note: '远——晒的是远方，账单留在这个月。' },
-  { id: 'boba', label: '奶茶咖啡照', emoji: '🧋', note: '小确幸——一杯十九的东西，拍出十九万的滤镜。' },
-  { id: 'sick', label: '病床输液照', emoji: '🩹', note: '惨——互动最猛的一张；疑心重的会去数针眼。' },
+export const SELFIE_META: { id: SelfieId; label: string; note: string }[] = [
+  { id: 'bestie', label: '闺蜜照', note: '有人陪——关心多一倍，试探也多一倍：旁边那位是谁。' },
+  { id: 'gym', label: '夜跑照', note: '自律人设——"努力生活"的通用证词。' },
+  { id: 'pool', label: '泳池照', note: '贵——谁看了都觉得你"过得不缺钱"。' },
+  { id: 'cat', label: '橘猫照', note: '无害——宠物是孤独者之间的通行证。' },
+  { id: 'grind', label: '加班照', note: '苦——凌晨还亮着的屏幕，配上"没事，习惯了"。' },
+  { id: 'travel', label: '旅游照', note: '远——晒的是远方，账单留在这个月。' },
+  { id: 'boba', label: '奶茶咖啡照', note: '小确幸——一杯十九的东西，拍出十九万的滤镜。' },
+  { id: 'sick', label: '病床输液照', note: '惨——互动最猛的一张；疑心重的会去数针眼。' },
 ];
 
 /** 玩家发圈的配文池（口语化真实朋友圈体）。 */

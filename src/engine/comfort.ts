@@ -20,7 +20,7 @@ import {
   BF_BREAKUP_REFUSES, BF_BREAKUP_LOVE, BF_REVENGE_REPORT_CHANCE, BF_REPORT_RISK, BF_POLICE_CHANCE,
   BF_DEMAND_LOVE_GIVE, BF_DEMAND_LOVE_REFUSE, BF_PACKET_LOVE_TAKE, BF_PACKET_LOVE_REFUSE,
   MOM_GIFT_FAMILY_TAKE, MOM_GIFT_FAMILY_REFUSE,
-  BF_OMEN_DAY, BF_OMEN_GRACE, BF_OMEN_PACK, COMFORT_INCOMING_CAP, COMFORT_MOMENTS_CAP,
+  BF_OMEN_DAY, BF_OMEN_PACK, COMFORT_INCOMING_CAP, COMFORT_MOMENTS_CAP,
   COMFORT_ARCHIVE_CAP, FATHER_MEMORIAL,
   MOM_TALK_FIRST_DAY, MOM_TALK_GAP_MIN, MOM_TALK_GAP_MAX, MOM_TALK_FAMILY_FLOOR,
   BF_TALK_FIRST_DAY, BF_TALK_GAP_MIN, BF_TALK_GAP_MAX, BF_TALK_LOVE_FLOOR,
@@ -135,7 +135,8 @@ export function runComfortMorning(state: GameState): void {
 
   // 一天一人最多一条消息（v1.1.0）：随机事件卡按联系人去重——
   // 妈转了账就不再唠家常，阿凯发了红包就不再要钱。一天之内，一个人只对你说一件事。
-  // 剧情卡是"信"不算消息（不受此限）；第 14 天的真心话占掉阿凯当天的名额——故事优先于日常。
+  // 剧情卡是"信"不算消息（不受此限）；D14 起的真心话占掉阿凯每天的名额直到说出口——
+  // 这句话不过期（审查遗留 #1：过期会导致 D28 引用落空），只是等一个空的早晨。
   const taken = new Set<ComfortContactId>();
   const claim = (who: ComfortContactId): boolean => {
     if (taken.has(who)) return false;
@@ -143,7 +144,7 @@ export function runComfortMorning(state: GameState): void {
     return true;
   };
   if (bfAlive && !state.flags.bf_omen_done && !c.chat
-    && state.day >= BF_OMEN_DAY && state.day <= BF_OMEN_DAY + BF_OMEN_GRACE) {
+    && state.day >= BF_OMEN_DAY) {
     taken.add('boyfriend');
   }
 
@@ -322,6 +323,10 @@ export function runComfortMorning(state: GameState): void {
       packId: pack.id,
       note: '他发火了，语音一条接一条',
     });
+  } else if (bfAlive && c.quarrel.pending && c.quarrel.count >= QUARREL_PACKS.length) {
+    // 吵架话术耗尽后的「熄火」：不再发卡，但让沉默被看见——审查遗留 #2 的叙事补丁
+    c.quarrel.pending = false;
+    clog(state, '常用手机 · 阿凯又看到了一个新名字。这一次他什么都没说——连吵的力气都省了。');
   }
 
   // 曼曼的闲聊卡：她的语音大多在补货路上发出——嘴毒心热的姐妹，唠的都是钱和底气。
@@ -395,9 +400,9 @@ export function runComfortMorning(state: GameState): void {
   }
 
   // 第 14 天伏笔：他那句说漏嘴的"真心话"（一次性）。当天聊天没空档就顺延——
-  // 这句话不会丢，只会在你忙完的那天，原样砸过来。
+  // 这句话不会丢，也不会过期：只等一个聊天为空的早晨，原样砸过来（审查遗留 #1 修复）。
   if (bfAlive && !state.flags.bf_omen_done && !c.chat
-    && state.day >= BF_OMEN_DAY && state.day <= BF_OMEN_DAY + BF_OMEN_GRACE) {
+    && state.day >= BF_OMEN_DAY) {
     state.flags.bf_omen_done = true;
     openComfortChat(state, 'boyfriend', BF_OMEN_PACK);
     clog(state, '常用手机 · 阿凯深夜发来一段很长的语音，说了一句他不该说的话。');

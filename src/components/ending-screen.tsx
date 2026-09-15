@@ -1,7 +1,7 @@
 import { useGame } from '../store/gameStore';
 import { ENDINGS } from '../data/endings';
 import { formatMoney } from '../utils/format';
-import { playEnding, playBell } from '../utils/sound';
+import { playEnding, playBell, playTab } from '../utils/sound';
 import { PERSONA_MAP } from '../engine/state-machine';
 import { finalEpilogues, epilogueFor } from '../engine/epilogues';
 import { OldManAvatar } from './character-art';
@@ -146,8 +146,10 @@ export function EndingScreen() {
       </div>
 
       <div className="ending-actions">
-        <button className="btn primary" onClick={() => store.reset()}>再过一个月</button>
-        <button className="btn" onClick={() => store.dispatch({ type: 'continue_playing' })}>再撑十天</button>
+        {/* 「再过一个月」= 延续当前进度开新一月：舒适圈关系/暗线/账目全保留。
+            旧实现 store.reset() 清档重开——对投入了常用手机线的玩家等于清空重来。 */}
+        <button className="btn primary" onClick={() => { playTab(); store.dispatch({ type: 'continue_month' }); }}>再过一个月</button>
+        <button className="btn" onClick={() => { playTab(); store.dispatch({ type: 'continue_playing' }); }}>再撑十天</button>
       </div>
       <p className="muted small center">
         现实里，这件事有个名字，叫诈骗。老人手里那点钱，是他们最后的体面。

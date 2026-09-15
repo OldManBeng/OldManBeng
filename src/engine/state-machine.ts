@@ -1881,6 +1881,17 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       return s;
     }
 
+    case 'continue_month': {
+      // 「再过一个月」：延续同一个进度开新的一月——活命钱/债/舒适圈关系/暗线
+      // 全部保留。旧实现是 store.reset() 清档重开，对投入了舒适圈线的玩家
+      // 等于"重新开始游戏"（2026-09 用户反馈修复）。
+      s.phase = 'main';
+      s.dayPhase = 'morning';
+      s.daysLimit = s.day + 30;
+      log(s, 'day', `新的一月开始了。账还挂在头上，日子还得过——但身边的人，都还在。`);
+      return s;
+    }
+
     // ---- 1.1.0 舒适圈（常用手机）----
     case 'switch_phone': {
       // 纯视图切换：工作手机 ↔ 常用手机。时间共用同一条轴线，他不看你后台，

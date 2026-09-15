@@ -240,6 +240,7 @@ export type GameAction =
   | { type: 'sleep' }
   | { type: 'retire' }
   | { type: 'continue_playing' }
+  | { type: 'continue_month' }
   | { type: 'industry_reply'; accept: boolean }
   | { type: 'choose_plan'; planId: string }
   | { type: 'accept_incoming'; targetId: string }

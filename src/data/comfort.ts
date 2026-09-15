@@ -130,7 +130,8 @@ export const MOM_GIFT_FAMILY_TAKE = 4;
 export const MOM_GIFT_FAMILY_REFUSE = -6;
 
 /** 一次性剧情锚：第 14 天男友深夜的"真心话"（分手伏笔的种子）。
- *  当天聊天没空档就顺延（最多等 3 天），不丢。 */
+ *  【宽限已废弃】这句话不再有过期窗口——没说出口就每天继续占名额，直到说出口
+ *  （否则 D28 的「你想起他说『我拒了五万』」会引用到没发生的事）。 */
 export const BF_OMEN_DAY = 14;
 export const BF_OMEN_GRACE = 3;
 export const BF_OMEN_PACK = 'bf_omen';
