@@ -1995,7 +1995,9 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   box-shadow: var(--c-shadow-1);
 }
 
-/* 事件卡（生活费 / 红包 / 要钱 / 嘘寒问暖 / 暗线剧情） */
+/* 事件卡（生活费 / 红包 / 要钱 / 嘘寒问暖 / 暗线剧情）
+   彩条语义四分（01-设计基准 A-2）：收钱=金（灯笼金=钱的站级语义）、
+   要钱=红（代价）、吵架=玫红（感情冲突）、剧情=靛蓝（只能听完的「信」）。 */
 .comfort-event-card {
   margin: var(--c-s-3) 0; padding: var(--c-s-3) var(--c-s-4);
   background: var(--surface); border: 1px solid var(--line-soft);
@@ -2004,7 +2006,14 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   box-shadow: var(--c-shadow-1);
   display: flex; flex-direction: column; gap: var(--c-s-2);
 }
+.comfort-event-card.mom_gift,
+.comfort-event-card.bf_packet { border-left-color: var(--c-gold); }
 .comfort-event-card.bf_demand { border-left-color: var(--c-danger); }
+.comfort-event-card.quarrel { border-left-color: var(--c-rose); }
+.comfort-event-card.story {
+  border-left-color: var(--c-story);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-story) 30%, transparent), var(--c-shadow-1);
+}
 .comfort-event-card .cec-head { display: flex; align-items: center; gap: var(--c-s-3); }
 .comfort-event-card .cec-name { font-weight: var(--c-w-heading); font-size: var(--c-fs-heading); line-height: var(--c-lh-heading); }
 .comfort-event-card .cec-actions { display: flex; gap: var(--c-s-2); flex-wrap: wrap; }
@@ -2125,7 +2134,7 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 .voice-wave i:nth-child(1) { height: 6px; } .voice-wave i:nth-child(2) { height: 11px; }
 .voice-wave i:nth-child(3) { height: 15px; } .voice-wave i:nth-child(4) { height: 9px; }
 .voice-wave i:nth-child(5) { height: 6px; }
-.voice-secs { font-size: var(--fs-1); opacity: 0.7; font-variant-numeric: tabular-nums; }
+.voice-secs { font-size: var(--c-fs-caption); color: var(--c-n6); font-variant-numeric: tabular-nums; }
 .cbubble-sys {
   align-self: center; text-align: center;
   font-size: var(--c-fs-micro); color: var(--muted);
@@ -2142,7 +2151,7 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 /* 工作手机上的「常用手机」入口（人设浮层 + 今天页提醒） */
 .comfort-entry { margin: 14px 0 4px; }
 .comfort-entry-btn {
-  background: linear-gradient(135deg, #F5D08C, #E8853B);
+  background: linear-gradient(135deg, #F5D08C, #C2620E);
   color: #5A3E10;
   border: none;
   font-weight: 600;
@@ -2172,8 +2181,14 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   color: var(--c-n6);
   opacity: 0.92;
 }
-/* 剧情卡上的系统消息标 */
-.cec-sys-mark { font-size: 30px; line-height: 36px; width: 36px; text-align: center; }
+/* 剧情卡上的系统消息标：SVG 信封（全站无 emoji），靛蓝 = 「夜的信」 */
+.cec-sys-mark {
+  width: 36px; height: 36px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--c-story);
+  background: color-mix(in srgb, var(--c-story) 10%, transparent);
+  border-radius: var(--c-r-sm);
+}
 
 /* ---- 舒适圈控件规范：按钮三档（32/44/52）+ 每屏唯一主 CTA ---- */
 .comfort-theme .btn { min-height: var(--c-h-md); }
@@ -2243,7 +2258,9 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 /* 今日时间条：与工作手机精力条同构，色走暖主题主色 */
 .comfort-theme .bar.minutes span { background: color-mix(in srgb, var(--c-accent) 55%, transparent); }
 
-/* 夜：靛蓝月色从顶部漫进来，再压一层薄暮（同 .screen-night 的手法，暖纸也过夜） */
+/* 夜：靛蓝月色从顶部漫进来，再压一层薄暮（同 .screen-night 的手法，暖纸也过夜）。
+   夜不只是一层罩：chip 改实底夜色（透明合成后文字对比仅 2.07:1），
+   透明底上的功能文字统一升一档（n5 在夜罩下实测 2.99:1，n6 = 5.19:1）。 */
 .comfort-theme.comfort-night::before {
   content: '';
   position: fixed;
@@ -2254,8 +2271,14 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
     radial-gradient(120% 52% at 50% -8%, rgba(99, 112, 160, 0.24), transparent 62%),
     linear-gradient(180deg, rgba(40, 44, 68, 0.08) 0%, rgba(40, 44, 68, 0.24) 100%);
 }
-.comfort-theme.comfort-night .day-chip { background: rgba(60, 55, 88, 0.42); color: #F2ECDD; }
-.comfort-theme.comfort-night .comfort-phone-tag { color: #AAB2D6; }
+.comfort-theme.comfort-night .day-chip { background: var(--c-night-bg); color: var(--c-night-text); }
+.comfort-theme.comfort-night .comfort-phone-tag {
+  color: var(--c-night-tag);
+  background: rgba(46, 51, 80, 0.55);
+  border-color: rgba(201, 207, 234, 0.30);
+}
+.comfort-theme.comfort-night .btn:disabled { color: var(--c-n6); }
+/* 聊天是「家里的灯」：气泡在夜里保持白/暖绿不变，只有环境变夜。 */
 
 /* 「开始今天」弹窗：v3.1 DayBriefingModal 的暖色同构（第 1 天把规矩说一遍，此后只报时） */
 .comfort-day-overlay {
@@ -2278,7 +2301,7 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 }
 .comfort-day-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
 .comfort-day-num { font-size: var(--c-fs-display); font-weight: var(--c-w-display); color: var(--c-n7); font-family: var(--font-kai); letter-spacing: 1px; }
-.comfort-day-sub { font-size: var(--c-fs-caption); color: var(--c-n5); }
+.comfort-day-sub { font-size: var(--c-fs-caption); color: var(--c-n6); }
 .comfort-day-line { font-size: var(--c-fs-body); line-height: 1.8; color: var(--c-n6); margin: 0 0 12px; }
 .comfort-day-rule {
   display: flex; flex-direction: column; gap: 10px;
@@ -2305,7 +2328,7 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   align-items: center;
   gap: 1px;
 }
-.comfort-day-money span { font-size: var(--c-fs-micro); color: var(--c-n5); letter-spacing: 1px; }
+.comfort-day-money span { font-size: var(--c-fs-micro); color: var(--c-n6); letter-spacing: 1px; }
 .comfort-day-money strong { font-size: var(--c-fs-heading); color: var(--c-n7); font-variant-numeric: tabular-nums; }
 .comfort-day-money strong .hud-sub { font-size: var(--c-fs-micro); font-style: normal; color: var(--c-n5); }
 .comfort-day-row {
@@ -2320,13 +2343,13 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 }
 .comfort-day-row .briefing-ico { color: var(--c-accent-strong); flex: none; padding-top: 1px; }
 .comfort-day-row-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.comfort-day-row-label { font-size: var(--c-fs-micro); color: var(--c-n5); letter-spacing: 2px; }
+.comfort-day-row-label { font-size: var(--c-fs-micro); color: var(--c-n6); letter-spacing: 2px; }
 .comfort-day-row-text { font-size: var(--c-fs-caption); line-height: 1.7; color: var(--c-n6); }
 /* 突发事件行（v1.0.0 的「今天出事了」⚡ 同构）：独占一行，事件色压住回响的暖色 */
 .comfort-day-row-incident { background: color-mix(in srgb, var(--c-accent) 7%, transparent); border-radius: 10px; padding: 8px 10px; margin: 0 -10px; }
 .comfort-day-row-incident .briefing-ico { color: var(--c-accent-strong); }
 .comfort-day-row-incident .comfort-day-row-label { color: var(--c-accent-strong); }
-.comfort-day-rule-label { font-size: var(--c-fs-micro); color: var(--c-n5); letter-spacing: 2px; margin-bottom: 2px; }
+.comfort-day-rule-label { font-size: var(--c-fs-micro); color: var(--c-n6); letter-spacing: 2px; margin-bottom: 2px; }
 /* 简报内逐行浮现：animationDelay 由组件按行内序注入 */
 .comfort-day-card .cd-in { animation: row-in 300ms var(--ease-out) both; }
 
@@ -2375,4 +2398,17 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   font-size: var(--c-fs-caption);
   line-height: 1.7;
   color: var(--c-n5);
+}
+
+/* ---- 全局杂项（02 方案 3.1-d / 3.9） ---- */
+/* 金额统一等宽数字：事件卡按钮、钱包 summary、速聊行（数字与文字混排不跳动） */
+.comfort-theme .comfort-event-card .btn,
+.comfort-theme .wallet-summary strong,
+.comfort-theme .comfort-rel-strip {
+  font-variant-numeric: tabular-nums;
+}
+/* 360px 窄视口：语音条与气泡让出一点宽度，防挤压（02 方案 3.9） */
+@media (max-width: 360px) {
+  .comfort-theme .voice-bar { min-width: 84px; }
+  .comfort-theme .cbubble { max-width: 74%; }
 }

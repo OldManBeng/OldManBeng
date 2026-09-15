@@ -454,7 +454,7 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
           <div key={m.id} className={`comfort-event-card ${m.kind}`}>
             <div className="cec-head">
               {isStory && storyFrom === 'sys'
-                ? <span className="cec-sys-mark">📨</span>
+                ? <span className="cec-sys-mark"><Ico name="letter" size={22} /></span>
                 : <ComfortAvatar who={speakerAvatar(speaker) ?? 'xiaoman'} size={36} />}
               <div>
                 <div className="cec-name">{storyName}{tag}</div>

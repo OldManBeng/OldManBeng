@@ -15,12 +15,20 @@ const S = {
 };
 
 export type IconName =
+  | 'letter'
   | 'home' | 'park' | 'gym' | 'market' | 'chess' | 'square' | 'net' | 'car'
   | 'chat' | 'cash' | 'bill' | 'dice' | 'clock' | 'hourglass' | 'bolt' | 'pin'
   | 'heart' | 'spk-on' | 'spk-off' | 'chev-up' | 'chev-down'
   | 'bestie' | 'run' | 'pool' | 'cat' | 'laptop' | 'mountain' | 'boba' | 'iv';
 
 const PATHS: Record<IconName, ReactNode> = {
+  // ---- 暗线剧情卡：只能听完的「信」（舒适圈 sys 标记，替代 emoji 📨） ----
+  letter: (
+    <>
+      <rect x="2.5" y="4.5" width="15" height="11" rx="1.6" />
+      <path d="M3 5.6 10 11l7-5.4" />
+    </>
+  ),
   // ---- 每日计划 ----
   home: (
     <>
