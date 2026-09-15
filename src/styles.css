@@ -2510,13 +2510,22 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   background: color-mix(in srgb, var(--c-accent) 8%, var(--c-n0));
   border-color: var(--c-accent);
 }
-/* 弹窗里的决策按钮：纵向等宽一列——横排时两行文案高度参差，视觉散 */
+/* 弹窗内的突发事件：拍平为分区段落——不再嵌套盒中盒，
+   ⚡标题+正文+决策按钮与「开始今天」按钮全部对齐同一条 386px 内容线。
+   （旧样式自带底色描边+内衬，控件宽度比其它控件窄一圈，视觉不协调） */
+.comfort-day-card .beat-card.comfort-incident {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  border-top: 1px solid var(--c-n4);
+  border-radius: 0;
+  padding: var(--c-s-3) 0 0;
+  margin: 0 0 var(--c-s-3);
+}
 .comfort-theme .beat-options { flex-direction: column; }
 .comfort-theme .beat-opt { flex: none; width: 100%; }
 /* 决策提示语：紧跟按钮（旧版挤在经文下面，像经文的注脚） */
 .comfort-incident-hint { margin: 10px 0 0; }
-/* 弹窗内的突发事件卡：与各区块同节奏（旧 10px 0 与 12px 节奏混用） */
-.comfort-day-card .beat-card.comfort-incident { margin: 0 0 var(--c-s-3); }
 /* 评论作者名与条目引文：浅底上用加重橙（accent 在 fill 底上略低于 AA） */
 .comfort-theme .mc-author { color: var(--c-accent-strong); }
 /* 事件卡脚注经文：小一号、斜体感，像顺手抄在便签上 */
