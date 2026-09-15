@@ -2052,6 +2052,19 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 .comfort-contact-row.father { opacity: 0.55; cursor: pointer; filter: grayscale(1); }
 .comfort-contact-row.gone { opacity: 0.55; filter: grayscale(1); }
 .comfort-contact-row.gone .ccr-name { text-decoration: line-through; }
+/* 相亲候选人行的次级标识（02 方案 3.2-b）：来源胶囊——他们的关系有介绍人，
+   与「家里人」的行一眼分开；描边暖色 chip，与 HUD 常用手机 tag 同款语言。 */
+.comfort-contact-row.candidate { background: color-mix(in srgb, var(--c-n2) 60%, var(--surface)); }
+.ccr-tag {
+  display: inline-block; margin-left: var(--c-s-2);
+  font-size: var(--c-fs-micro); font-weight: 400;
+  color: var(--c-accent-strong);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  padding: 1px var(--c-s-2);
+  border-radius: var(--c-r-full);
+  white-space: nowrap; vertical-align: 1px;
+}
 .comfort-contact-bio {
   font-size: var(--fs-2); color: var(--muted);
   margin-top: 5px; line-height: var(--lh-body);

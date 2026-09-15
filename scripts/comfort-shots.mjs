@@ -64,7 +64,7 @@ const saveFor = (night) => JSON.stringify({
   moments: [], unseenMoments: 0, inventory: {}, briefingDay: 0,
   pendingBeat: '', beatResolved: false, pinnedTargets: [], pendingIncident: '', incidentResolved: false,
   selfieAudience: [], bioAudience: [], bioAudienceDay: 0,
-  comfort: { active: true, family: 62, love: 41, minutes: 40, blockedByBf: false, bfState: 'normal' },
+  comfort: { active: true, family: 62, love: 41, minutes: 40, blockedByBf: false, bfState: 'normal', datesMet: { chen: 3, sun: 4 } },
 });
 
 async function drive(night, tag) {

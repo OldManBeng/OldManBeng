@@ -723,10 +723,10 @@ function ComfortContacts() {
             const date = BLIND_DATE_MAP[id];
             if (!date) return null;
             return (
-              <div key={id} className="comfort-contact-row">
+              <div key={id} className="comfort-contact-row candidate">
                 <ComfortAvatar who={`bd:${id}` as ComfortAvatarKey} size={44} />
                 <div className="ccr-body">
-                  <div className="ccr-name">{date.handle}（{date.name} · {date.age}岁）</div>
+                  <div className="ccr-name">{date.handle}（{date.name} · {date.age}岁）<span className="ccr-tag">凤霞姨介绍的</span></div>
                   <div className="muted small">{date.job} · {date.signature}</div>
                   <div className="comfort-contact-bio">{date.bio}</div>
                   <div className="muted small">第 {metDay} 天经凤霞姨认识</div>
