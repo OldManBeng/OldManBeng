@@ -9,7 +9,7 @@
  * - 阿姨的介绍卡接受后，候选人以 `bd:{id}` 加入常用手机（datesMet）。
  * - 首聊 pack 只有一场（认识礼数），后续不再推进关系——他们是路，
  *   不是终点：这条线真正的戏，在阿凯那边。
- * - 每人 2 条朋友圈（认识第 2/4 天浮上时间线）+ 给小满朋友圈的 2 句评论。
+ * - 每人 3 条朋友圈（认识第 2/4/6 天浮上时间线）+ 给小满朋友圈的 2 句评论。
  */
 import type { ComfortOption } from '../types/comfort';
 
@@ -62,6 +62,7 @@ export const BLIND_DATES: BlindDate[] = [
     moments: [
       { photoId: 'bd_chen_1', text: '月考卷子改完了。第 23 题全班只有一个人做对，解法比我的漂亮。' },
       { photoId: 'bd_chen_2', text: '晚自习。粉笔灰落在袖口上，像下了半场雪。' },
+      { photoId: 'bd_chen_3', text: '办公桌上的绿萝又抽了新叶。带初三这几年，多亏这点绿。' },
     ],
     comments: [
       '（陈老师点了个赞，没有评论。半小时后又取消，重新点了一次。）',
@@ -90,6 +91,7 @@ export const BLIND_DATES: BlindDate[] = [
     moments: [
       { photoId: 'bd_zhao_1', text: '凌晨三点的儿科走廊。今天的第七个退烧贴，第三十个「谢谢医生」。' },
       { photoId: 'bd_zhao_2', text: '下夜班。食堂的豆浆永远比外卖的凉得慢——这是我这周最大的发现。' },
+      { photoId: 'bd_zhao_3', text: '诊室桌上永远有两样东西：听诊器，和小患者们送的蜡笔。抽屉已经装不下了。' },
     ],
     comments: [
       '这张照片气色不错。记得按时吃饭，这句我专业。',
@@ -118,6 +120,7 @@ export const BLIND_DATES: BlindDate[] = [
     moments: [
       { photoId: 'bd_sun_1', text: '体能训练完，手套能拧出水。今天又是全队第一——第二名是他们追我。' },
       { photoId: 'bd_sun_2', text: '出警回来，食堂给我们留了热汤。这碗面，是全世界最好吃的面。' },
+      { photoId: 'bd_sun_3', text: '休整日。作训服晒在院子里，全是太阳的味道——队里最安静的时刻。' },
     ],
     comments: [
       '拍得好！我们队宣传员都没你这水平！',
@@ -146,6 +149,7 @@ export const BLIND_DATES: BlindDate[] = [
     moments: [
       { photoId: 'bd_zhou_1', text: '君子兰今年第二次开花。养了五年，第一次见它这么争气。' },
       { photoId: 'bd_zhou_2', text: '周末大扫除。窗户擦到能当镜子——这是家政公司都未必有的标准。' },
+      { photoId: 'bd_zhou_3', text: '评书听到《三侠五义》第 47 回。搪瓷杯里的茶，配这一段刚好。' },
     ],
     comments: [
       '生活需要仪式感，你这个爱好很健康。',
@@ -174,6 +178,7 @@ export const BLIND_DATES: BlindDate[] = [
     moments: [
       { photoId: 'bd_wu_1', text: '上线部署成功，凌晨两点的月亮都是绿色的。（图一是我种的多肉，它叫"缓存"。）' },
       { photoId: 'bd_wu_2', text: '周末不写代码，写了张纸：下周想学会煲三款汤。进度 1/3，鸡汤，已验证。' },
+      { photoId: 'bd_wu_3', text: '白板上的流程图画到一半，突然想通了卡了一周的问题。科学技术是第一生产力。' },
     ],
     comments: [
       '这张照片的构图用了三分法，拍得不错（真诚的）。',
@@ -202,6 +207,7 @@ export const BLIND_DATES: BlindDate[] = [
     moments: [
       { photoId: 'bd_zheng_1', text: '早课六点，学员比太阳先到。有人问我累不累——看他们变化的时候，一点不累。' },
       { photoId: 'bd_zheng_2', text: '今天拒了一个想买五十节课的姐妹，她膝盖不行。钱要挣，但得挣良心允许的那份。' },
+      { photoId: 'bd_zheng_3', text: '傍晚操场加练。跑道的红色配晚霞，不需要滤镜。' },
     ],
     comments: [
       '状态可以啊！这个体脂率，比你朋友圈看着还精神！',
@@ -230,6 +236,7 @@ export const BLIND_DATES: BlindDate[] = [
     moments: [
       { photoId: 'bd_feng_1', text: '一台老桑塔纳，车主跟了我十年。今天他儿子来取车，说爸走了，车留着。手上的活突然就重了。' },
       { photoId: 'bd_feng_2', text: '厂子里新到的举升机，工人们说装完这台能歇半天。歇不了，还有三台等着。' },
+      { photoId: 'bd_feng_3', text: '交车前最后一次检查。方向盘上的包浆，是车主二十年的手温。' },
     ],
     comments: [
       '（冯师傅点了个赞。过了很久，评论了一句：）挺好的。',
@@ -258,6 +265,7 @@ export const BLIND_DATES: BlindDate[] = [
     moments: [
       { photoId: 'bd_he_1', text: '今天的婚礼，新娘的爸爸把她交出去之后，一个人在角落坐了很久。我按下了快门——有些眼泪是喜事。' },
       { photoId: 'bd_he_2', text: '修片到凌晨。客户说"把我们拍得比真人好看一点"，我说不行——你们本来就好看了。' },
+      { photoId: 'bd_he_3', text: '整理胶卷。拍数码的年头久了，还是偏爱按快门前那半秒的犹豫。' },
     ],
     comments: [
       '这张照片有故事感。光是从哪边进来的？',
@@ -286,6 +294,7 @@ export const BLIND_DATES: BlindDate[] = [
     moments: [
       { photoId: 'bd_xu_1', text: '28路清晨首班。天还没亮透，车厢里的灯是全城最早亮起的一排。' },
       { photoId: 'bd_xu_2', text: '今天有位老大爷坐过站了，我把车靠边，陪他等了二十分钟折返车。方向盘后面的人，得对一车人负责。' },
+      { photoId: 'bd_xu_3', text: '收车。28路停进场站，最后一盏灯熄了——今天也把一车人安全送到了。' },
     ],
     comments: [
       '（强子点了个赞。评论：）这个角度拍得好，有生活。',
@@ -314,6 +323,7 @@ export const BLIND_DATES: BlindDate[] = [
     moments: [
       { photoId: 'bd_jiang_1', text: '门店日营业额创新高！感谢团队，感谢每一个选择一帆的家人。深耕餐饮，初心不改。' },
       { photoId: 'bd_jiang_2', text: '凌晨盘账。创业者的夜是甜的——就像我们的招牌杨枝甘露。三年三店，说到做到。' },
+      { photoId: 'bd_jiang_3', text: '第二家店围挡上墙！开业倒计时 15 天。深耕餐饮，一帆 speed。（兄弟们，这次是真的）' },
     ],
     comments: [
       '姐妹的进步肉眼可见！给你点赞，坚持就是胜利！',

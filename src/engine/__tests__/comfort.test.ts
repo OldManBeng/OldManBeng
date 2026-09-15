@@ -658,7 +658,7 @@ describe('1.1.x 红娘线：凤霞姨与十张牌', () => {
     AUNTIE_POSTS.forEach((p) => put(p.text));
     expect(dupes).toEqual([]);
     expect(BLIND_DATES.length).toBe(10);
-    expect(BLIND_DATES.every((d) => d.pack.options.length >= 2 && d.moments.length === 2)).toBe(true);
+    expect(BLIND_DATES.every((d) => d.pack.options.length >= 2 && d.moments.length === 3)).toBe(true);
     expect(Object.keys(BLIND_DATE_MAP).length).toBe(10);
   });
 

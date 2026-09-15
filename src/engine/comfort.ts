@@ -441,11 +441,11 @@ export function runComfortMorning(state: GameState): void {
     }
   }
 
-  // 相亲对象的朋友圈：认识第 2 / 第 4 天各浮出一条——他们的日子也在过。
+  // 相亲对象的朋友圈：认识第 2 / 第 4 / 第 6 天各浮出一条——他们的日子也在过。
   for (const [id, metDay] of Object.entries(c.datesMet)) {
     const date = BLIND_DATE_MAP[id];
     if (!date) continue;
-    [2, 4].forEach((offset, i) => {
+    [2, 4, 6].forEach((offset, i) => {
       const postDay = metDay + offset;
       const moment = date.moments[i];
       if (!moment || state.day !== postDay) return;

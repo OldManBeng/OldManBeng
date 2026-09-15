@@ -2166,11 +2166,19 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 /* ---- 舒适圈控件规范：按钮三档（32/44/52）+ 每屏唯一主 CTA ---- */
 .comfort-theme .btn { min-height: var(--c-h-md); }
 .comfort-theme .btn.small { min-height: var(--c-h-sm); }
-.comfort-theme .comfort-today > .btn.wide {
+/* 两段式日夜换键变色（同 v1.0.0 的蓝→灰）：白天「天黑了」= 暖橙主 CTA，
+   夜里「进入明天」压成夜色深棕——一眼看出页面已经换了一段。 */
+.comfort-theme .comfort-today > .btn.primary.wide {
   min-height: var(--c-h-lg);
   background: var(--c-accent);
   color: var(--c-n0);
   font-weight: 600;
+  box-shadow: var(--c-shadow-1);
+}
+.comfort-theme .comfort-today > .btn.wide:not(.primary) {
+  min-height: var(--c-h-lg);
+  background: var(--c-n7);
+  color: var(--c-n1);
   box-shadow: var(--c-shadow-1);
 }
 
@@ -2270,16 +2278,6 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 .comfort-day-rule-row { display: flex; gap: 10px; font-size: var(--c-fs-caption); line-height: 1.7; color: var(--c-n6); }
 .comfort-day-rule-row .briefing-ico { color: var(--c-accent-strong); flex: none; margin-top: 2px; }
 .comfort-day-rule-row b { color: var(--c-accent-strong); }
-.comfort-day-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
-.comfort-day-stats > div {
-  background: var(--c-n2);
-  border-radius: var(--c-r-sm);
-  padding: 8px 10px;
-  display: flex; flex-direction: column; gap: 2px;
-}
-.comfort-day-stats span { font-size: var(--c-fs-micro); color: var(--c-n5); }
-.comfort-day-stats strong { font-size: var(--c-fs-heading); color: var(--c-n7); }
-.comfort-day-stats strong .hud-sub { font-size: var(--c-fs-micro); font-style: normal; color: var(--c-n5); }
 /* 晨间简报的余额格与昨日回响行——结构同工作手机 briefing-*，配色走 --c-* 暖系 */
 .comfort-day-money {
   display: grid;
@@ -2312,6 +2310,10 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 .comfort-day-row-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .comfort-day-row-label { font-size: var(--c-fs-micro); color: var(--c-n5); letter-spacing: 2px; }
 .comfort-day-row-text { font-size: var(--c-fs-caption); line-height: 1.7; color: var(--c-n6); }
+/* 突发事件行（v1.0.0 的「今天出事了」⚡ 同构）：独占一行，事件色压住回响的暖色 */
+.comfort-day-row-incident { background: color-mix(in srgb, var(--c-accent) 7%, transparent); border-radius: 10px; padding: 8px 10px; margin: 0 -10px; }
+.comfort-day-row-incident .briefing-ico { color: var(--c-accent-strong); }
+.comfort-day-row-incident .comfort-day-row-label { color: var(--c-accent-strong); }
 .comfort-day-rule-label { font-size: var(--c-fs-micro); color: var(--c-n5); letter-spacing: 2px; margin-bottom: 2px; }
 /* 简报内逐行浮现：animationDelay 由组件按行内序注入 */
 .comfort-day-card .cd-in { animation: row-in 300ms var(--ease-out) both; }
