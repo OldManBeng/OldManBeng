@@ -946,7 +946,8 @@ function ComfortChatView() {
         <>
           <div className="closing-note">{chat.closingNote}</div>
           <div className="chat-actions">
-            <button className="btn" onClick={() => store.dispatch({ type: 'comfort_end_chat' })}>放下手机</button>
+            {/* 主色实心：收束动作是聊天里唯一的必点按钮，浅底药丸在暖纸页面上会看不见 */}
+            <button className="btn primary" onClick={() => store.dispatch({ type: 'comfort_end_chat' })}>放下手机</button>
           </div>
         </>
       )}
