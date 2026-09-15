@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """批量生成舒适圈角色头像与朋友圈场景 PNG（第二阶段 1.1.0，ComfyUI 文生图 → public/comfort/）。
 
-产物：
-- 头像 256×256 PNG：public/comfort/{xiaoman_plain|mother|boyfriend|father}.png
-  （小满素颜 / 妈王秀兰 / 男友阿凯 / 父亲旧照—— father 建议黑白，前端会再压一层灰调）
-- 场景 560×420 JPEG q85：public/comfort/scenes/cm_*.jpg（v4.13.2 web 尺寸规范；
-  raw 768 PNG 留 pytools/avatar_raw/comfort_raw/，gitignore）
+产物（按类型分目录）：
+- 头像 256×256 PNG：public/comfort/avatars/{key}.png
+  （小满素颜 / 妈王秀兰 / 男友阿凯 / 父亲旧照—— father 建议黑白，前端会再压一层灰调；
+  红娘线的阿姨/闺蜜与候选人头像也归此处 / dates/）
+- 场景 560×420 JPEG q85：public/comfort/scenes/{cm|bd|bm}/{key}.jpg（v4.13.2 web 尺寸规范；
+  raw 768 PNG 留 pytools/comfort_raw/{avatars|dates|cm|bd|bm}/，gitignore）
 
 用法（与 generate_avatars.py 一致）:
     python generate_comfort.py                 # 全部（已存在跳过）
@@ -31,9 +32,13 @@ from generate_images import (
     wait_for_history,
 )
 
-WORKFLOW_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "amazing-z-photo_GGUF.json")
-RAW_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "avatar_raw", "comfort_raw")
-OUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "public", "comfort")
+WORKFLOW_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "amazing-z-photo_GGUF.json"
+)
+RAW_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "comfort_raw")
+OUT_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "public", "comfort"
+)
 
 PROMPT_NODE = "385"
 SEED_NODE = "307"
@@ -43,8 +48,8 @@ STYLE_NODE = "125"
 
 AVATAR_SIZE = 1024
 AVATAR_FINAL = 256
-SCENE_W, SCENE_H = 1024, 768          # 4:3 生成
-SCENE_OUT = (560, 420)                # web 入库（q85 JPEG）
+SCENE_W, SCENE_H = 1024, 768  # 4:3 生成
+SCENE_OUT = (560, 420)  # web 入库（q85 JPEG）
 
 # 头像：单人纯净版风格前缀（同 generate_avatars.py 的 CLEAN_STYLE）
 CLEAN_STYLE = """YOUR CONTEXT:
@@ -112,36 +117,70 @@ for _k in SCENES:
     _seed += 1
 
 
+# ---- 分类路径 helper（public/comfort 与 raw 归档均按类型分目录） ----
+def scene_rel(key: str) -> str:
+    """场景入库相对路径：scenes/{cm|bd|bm}/{key}.jpg（按 key 前缀分子目录）。"""
+    return os.path.join("scenes", key.split("_")[0], f"{key}.jpg")
+
+
+def out_avatar_path(key: str) -> str:
+    """头像入库路径：avatars/{key}.png；候选人头像 → dates/{key}.png（阿姨/闺蜜归 avatars/）。"""
+    sub = (
+        "dates"
+        if key in DATE_AVATARS and key not in ("auntie", "bestie")
+        else "avatars"
+    )
+    return os.path.join(OUT_DIR, sub, f"{key}.png")
+
+
+def raw_subdir(key: str) -> str:
+    """raw 归档子目录（pytools/comfort_raw/ 下）：avatars / dates / cm / bd / bm。"""
+    if key in AVATARS or key in ("auntie", "bestie"):
+        return "avatars"
+    if key in DATE_AVATARS:
+        return "dates"
+    return key.split("_")[0]
+
 
 def patch_avatar(workflow: dict, key: str) -> None:
     workflow[STYLE_NODE]["inputs"]["value"] = CLEAN_STYLE
-    workflow[PROMPT_NODE]["inputs"]["string"] = f"舒适圈头像·{key}：{AVATARS[key]} +（通用底座）"
+    workflow[PROMPT_NODE]["inputs"][
+        "string"
+    ] = f"舒适圈头像·{key}：{AVATARS[key]} +（通用底座）"
     workflow[SEED_NODE]["inputs"]["value"] = SEEDS[key]
     workflow[SIZE_NODE]["inputs"]["width"] = AVATAR_SIZE
     workflow[SIZE_NODE]["inputs"]["height"] = AVATAR_SIZE
-    workflow[PREFIX_NODE]["inputs"]["filename_prefix"] = f"comfort/{key}"
+    workflow[PREFIX_NODE]["inputs"]["filename_prefix"] = f"comfort/avatars/{key}"
 
 
 def _patch_date_scene(workflow: dict, key: str) -> None:
-    workflow[PROMPT_NODE]["inputs"]["string"] = f"相亲对象朋友圈配图·{key}：{DATE_SCENES[key]}，横构图 4:3"
+    workflow[PROMPT_NODE]["inputs"][
+        "string"
+    ] = f"相亲对象朋友圈配图·{key}：{DATE_SCENES[key]}，横构图 4:3"
     workflow[SEED_NODE]["inputs"]["value"] = SEEDS[key]
     workflow[SIZE_NODE]["inputs"]["width"] = SCENE_W
     workflow[SIZE_NODE]["inputs"]["height"] = SCENE_H
-    workflow[PREFIX_NODE]["inputs"]["filename_prefix"] = f"comfort/scenes/{key}"
+    workflow[PREFIX_NODE]["inputs"][
+        "filename_prefix"
+    ] = f"comfort/scenes/{key.split('_')[0]}/{key}"
 
 
 def patch_scene(workflow: dict, key: str) -> None:
     # 场景沿用工作流默认风格前缀（手机摄影质感），不换 CLEAN_STYLE。
-    workflow[PROMPT_NODE]["inputs"]["string"] = f"舒适圈朋友圈配图·{key}：{SCENES[key]}，横构图 4:3"
+    workflow[PROMPT_NODE]["inputs"][
+        "string"
+    ] = f"舒适圈朋友圈配图·{key}：{SCENES[key]}，横构图 4:3"
     workflow[SEED_NODE]["inputs"]["value"] = SEEDS[key]
     workflow[SIZE_NODE]["inputs"]["width"] = SCENE_W
     workflow[SIZE_NODE]["inputs"]["height"] = SCENE_H
-    workflow[PREFIX_NODE]["inputs"]["filename_prefix"] = f"comfort/scenes/{key}"
+    workflow[PREFIX_NODE]["inputs"][
+        "filename_prefix"
+    ] = f"comfort/scenes/{key.split('_')[0]}/{key}"
 
 
 def save_avatar(raw_path: str, key: str) -> str:
-    os.makedirs(OUT_DIR, exist_ok=True)
-    final_path = os.path.join(OUT_DIR, f"{key}.png")
+    final_path = out_avatar_path(key)
+    os.makedirs(os.path.dirname(final_path), exist_ok=True)
     with Image.open(raw_path) as im:
         im = im.convert("RGB").resize((AVATAR_FINAL, AVATAR_FINAL), Image.LANCZOS)
         im.save(final_path, optimize=True)
@@ -149,9 +188,8 @@ def save_avatar(raw_path: str, key: str) -> str:
 
 
 def save_scene(raw_path: str, key: str) -> str:
-    scenes_dir = os.path.join(OUT_DIR, "scenes")
-    os.makedirs(scenes_dir, exist_ok=True)
-    final_path = os.path.join(scenes_dir, f"{key}.jpg")
+    final_path = os.path.join(OUT_DIR, scene_rel(key))
+    os.makedirs(os.path.dirname(final_path), exist_ok=True)
     with Image.open(raw_path) as im:
         im = im.convert("RGB").resize(SCENE_OUT, Image.LANCZOS)
         im.save(final_path, quality=85, optimize=True)
@@ -159,7 +197,8 @@ def save_scene(raw_path: str, key: str) -> str:
 
 
 def generate_one(server: str, workflow: dict, key: str, is_avatar: bool) -> str:
-    os.makedirs(RAW_DIR, exist_ok=True)
+    raw_dir = os.path.join(RAW_DIR, raw_subdir(key))
+    os.makedirs(raw_dir, exist_ok=True)
     if is_avatar:
         patch_avatar(workflow, key)
     else:
@@ -172,16 +211,15 @@ def generate_one(server: str, workflow: dict, key: str, is_avatar: bool) -> str:
     if not images:
         print(f"{key}: 任务完成但没有输出图片")
         sys.exit(1)
-    raw_path = download_image(server, images[0], RAW_DIR, prompt_id)
+    raw_path = download_image(server, images[0], raw_dir, prompt_id)
     return save_avatar(raw_path, key) if is_avatar else save_scene(raw_path, key)
-
 
 
 # ==========================================================================
 # v1.1.x 红娘线：凤霞姨头像 + 10 个相亲对象头像 + 20 张候选人朋友圈图
 # 产物：
-#   头像 → public/comfort/auntie.png / public/comfort/dates/{key}.png
-#   场景 → public/comfort/scenes/bd_{key}_{1,2}.jpg
+#   头像 → public/comfort/avatars/auntie.png / public/comfort/dates/{key}.png
+#   场景 → public/comfort/scenes/bd/bd_{key}_{1,2}.jpg
 # ==========================================================================
 DATE_AVATARS = {
     "auntie": (
@@ -243,15 +281,12 @@ for _k in DATE_SCENES:
     _seed += 1
 
 # 候选人头像生成到 public/comfort/dates/{key}.png
-DATE_DIR = os.path.join(OUT_DIR, "dates")
 
 
 def save_date_avatar(raw_path: str, key: str) -> str:
-    if key in ("auntie", "bestie"):  # 阿姨/闺蜜是主联系人，头像和妈/阿凯平级放根目录
-        final_path = os.path.join(OUT_DIR, f"{key}.png")
-    else:
-        os.makedirs(DATE_DIR, exist_ok=True)
-        final_path = os.path.join(DATE_DIR, f"{key}.png")
+    # 阿姨/闺蜜是主联系人，头像和小满/妈/阿凯平级归 avatars/；候选人头像 → dates/
+    final_path = out_avatar_path(key)
+    os.makedirs(os.path.dirname(final_path), exist_ok=True)
     with Image.open(raw_path) as im:
         im = im.convert("RGB").resize((AVATAR_FINAL, AVATAR_FINAL), Image.LANCZOS)
         im.save(final_path, optimize=True)
@@ -260,20 +295,33 @@ def save_date_avatar(raw_path: str, key: str) -> str:
 
 def patch_date_avatar(workflow: dict, key: str) -> None:
     workflow[STYLE_NODE]["inputs"]["value"] = CLEAN_STYLE
-    workflow[PROMPT_NODE]["inputs"]["string"] = f"相亲对象头像·{key}：{DATE_AVATARS[key]} +（通用底座）"
+    workflow[PROMPT_NODE]["inputs"][
+        "string"
+    ] = f"相亲对象头像·{key}：{DATE_AVATARS[key]} +（通用底座）"
     workflow[SEED_NODE]["inputs"]["value"] = SEEDS[key]
     workflow[SIZE_NODE]["inputs"]["width"] = AVATAR_SIZE
     workflow[SIZE_NODE]["inputs"]["height"] = AVATAR_SIZE
-    workflow[PREFIX_NODE]["inputs"]["filename_prefix"] = f"comfort/dates/{key}"
+    workflow[PREFIX_NODE]["inputs"][
+        "filename_prefix"
+    ] = f"comfort/{raw_subdir(key)}/{key}"
+
 
 def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-    parser = argparse.ArgumentParser(description="批量生成舒适圈角色头像与朋友圈场景（1.1.0）")
+    parser = argparse.ArgumentParser(
+        description="批量生成舒适圈角色头像与朋友圈场景（1.1.0）"
+    )
     parser.add_argument("--server", default="192.168.1.127:8188", help="ComfyUI 地址")
-    parser.add_argument("--only", choices=["avatars", "scenes", "dates"], help="只生成头像/场景/红娘+闺蜜线（12头像+23图）")
-    parser.add_argument("--key", help="只生成指定 key（如 mother / cm_boba），--force 时可重跑单张")
+    parser.add_argument(
+        "--only",
+        choices=["avatars", "scenes", "dates"],
+        help="只生成头像/场景/红娘+闺蜜线（12头像+23图）",
+    )
+    parser.add_argument(
+        "--key", help="只生成指定 key（如 mother / cm_boba），--force 时可重跑单张"
+    )
     parser.add_argument("--force", action="store_true", help="已存在也重新生成")
     parser.add_argument("--dry-run", action="store_true", help="只打印 prompt 不提交")
     args = parser.parse_args()
@@ -304,28 +352,28 @@ def main() -> None:
         workflow = load_workflow(WORKFLOW_PATH)
         for k in avatar_keys:
             patch_avatar(workflow, k)
-            print(f"--- 头像 {k}（seed={SEEDS[k]}）→ comfort/{k}.png ---")
+            print(f"--- 头像 {k}（seed={SEEDS[k]}）→ comfort/avatars/{k}.png ---")
             print(workflow[PROMPT_NODE]["inputs"]["string"])
             print()
         for k in date_keys:
             patch_date_avatar(workflow, k)
-            print(f"--- 候选人头像 {k}（seed={SEEDS[k]}）→ comfort/dates/{k}.png ---")
+            print(f"--- 候选人头像 {k}（seed={SEEDS[k]}）→ {out_avatar_path(k)} ---")
             print(workflow[PROMPT_NODE]["inputs"]["string"])
             print()
         for k in scene_keys:
             patch_scene(workflow, k)
-            print(f"--- 场景 {k}（seed={SEEDS[k]}）→ comfort/scenes/{k}.jpg ---")
+            print(f"--- 场景 {k}（seed={SEEDS[k]}）→ comfort/{scene_rel(k)} ---")
             print(workflow[PROMPT_NODE]["inputs"]["string"])
             print()
         for k in date_scene_keys:
             _patch_date_scene(workflow, k)
-            print(f"--- 候选人场景 {k}（seed={SEEDS[k]}）→ comfort/scenes/{k}.jpg ---")
+            print(f"--- 候选人场景 {k}（seed={SEEDS[k]}）→ comfort/{scene_rel(k)} ---")
             print(workflow[PROMPT_NODE]["inputs"]["string"])
             print()
         return
 
     for k in avatar_keys:
-        out = os.path.join(OUT_DIR, f"{k}.png")
+        out = out_avatar_path(k)
         if os.path.exists(out) and not args.force:
             print(f"skip {k}（已存在，--force 重生成）")
             continue
@@ -334,7 +382,7 @@ def main() -> None:
         print("→", generate_one(args.server, workflow, k, is_avatar=True))
 
     for k in scene_keys:
-        out = os.path.join(OUT_DIR, "scenes", f"{k}.jpg")
+        out = os.path.join(OUT_DIR, scene_rel(k))
         if os.path.exists(out) and not args.force:
             print(f"skip {k}（已存在，--force 重生成）")
             continue
@@ -342,12 +390,9 @@ def main() -> None:
         print(f"生成场景 {k} ...")
         print("→", generate_one(args.server, workflow, k, is_avatar=False))
 
-    # 红娘线：候选人头像 → public/comfort/dates/（阿姨/闺蜜放根目录），朋友圈图 → public/comfort/scenes/
+    # 红娘线：候选人头像 → public/comfort/dates/（阿姨/闺蜜归 avatars/），朋友圈图 → scenes/bd/
     for k in date_keys:
-        if k in ("auntie", "bestie"):
-            out = os.path.join(OUT_DIR, f"{k}.png")
-        else:
-            out = os.path.join(OUT_DIR, "dates", f"{k}.png")
+        out = out_avatar_path(k)
         if os.path.exists(out) and not args.force:
             print(f"skip {k}（已存在，--force 重生成）")
             continue
@@ -361,11 +406,13 @@ def main() -> None:
         if not images:
             print(f"{k}: 任务完成但没有输出图片")
             sys.exit(1)
-        raw_path = download_image(args.server, images[0], RAW_DIR, prompt_id)
+        raw_path = download_image(
+            args.server, images[0], os.path.join(RAW_DIR, raw_subdir(k)), prompt_id
+        )
         print("→", save_date_avatar(raw_path, k))
 
     for k in date_scene_keys:
-        out = os.path.join(OUT_DIR, "scenes", f"{k}.jpg")
+        out = os.path.join(OUT_DIR, scene_rel(k))
         if os.path.exists(out) and not args.force:
             print(f"skip {k}（已存在，--force 重生成）")
             continue
@@ -379,7 +426,9 @@ def main() -> None:
         if not images:
             print(f"{k}: 任务完成但没有输出图片")
             sys.exit(1)
-        raw_path = download_image(args.server, images[0], RAW_DIR, prompt_id)
+        raw_path = download_image(
+            args.server, images[0], os.path.join(RAW_DIR, raw_subdir(k)), prompt_id
+        )
         print("→", save_scene(raw_path, k))
 
 

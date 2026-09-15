@@ -97,7 +97,7 @@ export interface ComfortMoment {
   author: ComfortSpeakerId | 'me';
   /** 我发的三类主打内容。 */
   kind?: 'inspire' | 'family' | 'love';
-  /** 配图场景 id（public/comfort/scenes/{id}.jpg，404 落 SVG 场景）。 */
+  /** 配图场景 id（public/comfort/scenes/{cm|bd|bm}/{id}.jpg，404 落 SVG 场景）。 */
   photoId?: string;
   text: string;
   likes: (ComfortSpeakerId | 'me')[];

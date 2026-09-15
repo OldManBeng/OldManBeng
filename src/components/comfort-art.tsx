@@ -12,12 +12,12 @@ import { BLIND_DATE_MAP } from '../data/comfort-dates';
 export type ComfortAvatarKey = 'xiaoman' | 'mother' | 'boyfriend' | 'father' | 'auntie' | 'bestie' | `bd:${string}`;
 
 const COMFORT_PNG: Partial<Record<ComfortAvatarKey, string>> = {
-  xiaoman: 'comfort/xiaoman_plain.png',
-  mother: 'comfort/mother.png',
-  boyfriend: 'comfort/boyfriend.png',
-  father: 'comfort/father.png',
-  auntie: 'comfort/auntie.png',
-  bestie: 'comfort/bestie.png',
+  xiaoman: 'comfort/avatars/xiaoman_plain.png',
+  mother: 'comfort/avatars/mother.png',
+  boyfriend: 'comfort/avatars/boyfriend.png',
+  father: 'comfort/avatars/father.png',
+  auntie: 'comfort/avatars/auntie.png',
+  bestie: 'comfort/avatars/bestie.png',
 };
 
 /** 候选人头像：public/comfort/dates/{id}.png。 */
@@ -228,14 +228,14 @@ function ComfortFaceSvg({ who, size }: { who: ComfortAvatarKey; size: number }) 
   );
 }
 
-/** 舒适圈朋友圈配图：public/comfort/scenes/{id}.jpg（404 落 SVG 暖色场景）。 */
+/** 舒适圈朋友圈配图：public/comfort/scenes/{cm|bd|bm}/{id}.jpg（404 落 SVG 暖色场景）。 */
 export function ComfortSceneRender({ photoId }: { photoId?: string }) {
   const [failed, setFailed] = useState(false);
   if (!photoId) return null;
   if (!failed) {
     return (
       <img
-        src={`comfort/scenes/${photoId}.jpg`}
+        src={`comfort/scenes/${photoId.slice(0, photoId.indexOf('_'))}/${photoId}.jpg`}
         alt=""
         draggable={false}
         style={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', display: 'block' }}

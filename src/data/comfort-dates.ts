@@ -14,7 +14,7 @@
 import type { ComfortOption } from '../types/comfort';
 
 export interface BlindDateMoment {
-  /** 朋友圈配图（public/comfort/scenes/{photoId}.jpg，走通用暖色兜底）。 */
+  /** 朋友圈配图（public/comfort/scenes/bd/{photoId}.jpg，走通用暖色兜底）。 */
   photoId: string;
   text: string;
 }

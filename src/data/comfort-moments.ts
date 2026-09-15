@@ -81,7 +81,7 @@ export const OTHER_POSTS: { author: 'mother' | 'boyfriend'; text: string; photoI
   { author: 'boyfriend', text: '今天遇个神仙阿姨队友，格局打开。有些人的温柔，是隔着屏幕都挡不住的。', photoId: 'cm_game' },
 ];
 
-/** 舒适圈配图场景（public/comfort/scenes/{id}.jpg，404 落 SVG 场景渲染）。 */
+/** 舒适圈配图场景（public/comfort/scenes/{cm|bd|bm}/{id}.jpg，404 落 SVG 场景渲染）。 */
 export const COMFORT_SCENES: Record<string, string> = {
   cm_soy: '早餐店的热豆浆',
   cm_sunrise: '出租屋窗台的日出',
