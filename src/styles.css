@@ -2060,7 +2060,12 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 }
 
 /* 熟人速聊 / 通讯录 */
-.comfort-quick-chat h3 { margin: var(--c-s-4) 0 var(--c-s-2); }
+/* 分组标题：小字号 + 字距 + 辅文色——分组列表的 overline 层级，不与内容抢戏 */
+.comfort-quick-chat h3, .comfort-contacts h3 {
+  margin: var(--c-s-4) var(--c-s-1) var(--c-s-2);
+  font-size: var(--c-fs-caption); font-weight: 600; letter-spacing: 3px;
+  color: var(--c-n5);
+}
 .comfort-contact-row {
   display: flex; align-items: center; gap: var(--c-s-3);
   padding: var(--c-s-3) var(--c-s-4); margin: var(--c-s-2) 0;
@@ -2076,6 +2081,11 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 /* 相亲候选人行的次级标识（02 方案 3.2-b）：来源胶囊——他们的关系有介绍人，
    与「家里人」的行一眼分开；描边暖色 chip，与 HUD 常用手机 tag 同款语言。 */
 .comfort-contact-row.candidate { background: color-mix(in srgb, var(--c-n2) 60%, var(--surface)); }
+/* 可展开行：名字常驻、档案进抽屉——hover 提边、open 记忆态、行尾 chevron */
+.comfort-contact-row { cursor: pointer; transition: border-color var(--t-micro) var(--ease), background var(--t-micro) var(--ease); }
+.comfort-contact-row:hover { border-color: var(--c-n3); }
+.comfort-contact-row.open { background: color-mix(in srgb, var(--c-n2) 55%, transparent); }
+.ccr-chev { flex: none; display: inline-flex; color: var(--c-n5); }
 .ccr-tag {
   display: inline-block; margin-left: var(--c-s-2);
   font-size: var(--c-fs-micro); font-weight: 400;
@@ -2291,6 +2301,14 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 
 /* 今日时间条：与工作手机精力条同构，色走暖主题主色 */
 .comfort-theme .bar.minutes span { background: color-mix(in srgb, var(--c-accent) 55%, transparent); }
+/* 时间条的刻度：40′ 分四段——「每场 10′」画在条上，文字不必再说一遍 */
+.comfort-theme .bar.minutes.bar-ticks::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent calc(25% - 1px), rgba(255, 253, 248, 0.5) calc(25% - 1px) calc(25% + 0px), transparent calc(25% + 0px)),
+    linear-gradient(90deg, transparent calc(50% - 1px), rgba(255, 253, 248, 0.5) calc(50% - 1px) calc(50% + 0px), transparent calc(50% + 0px)),
+    linear-gradient(90deg, transparent calc(75% - 1px), rgba(255, 253, 248, 0.5) calc(75% - 1px) calc(75% + 0px), transparent calc(75% + 0px));
+}
 
 /* 夜：靛蓝月色从顶部漫进来，再压一层薄暮（同 .screen-night 的手法，暖纸也过夜）。
    夜不只是一层罩：chip 改实底夜色（透明合成后文字对比仅 2.07:1），

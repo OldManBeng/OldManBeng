@@ -29,7 +29,7 @@ export const COMFORT_CONTACTS: Record<ComfortContactId, ComfortContact> = {
   boyfriend: {
     id: 'boyfriend',
     name: '阿凯',
-    handle: '凯凯👩‍❤️‍👨',
+    handle: '阿凯',
     age: 27,
     avatarKey: 'boyfriend',
     signature: '代练接单 · 私聊 · 带上分',

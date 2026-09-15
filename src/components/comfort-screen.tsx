@@ -308,11 +308,14 @@ export function ComfortScreen() {
             {tab === 'moments' && <ComfortMoments />}
             {tab === 'history' && <ComfortHistory />}
             {tab === 'wallet' && <ComfortWallet />}
-            <footer className="stats-row">
-              <span>妈给过 {formatMoney(c.momGiven)}</span>
-              <span>阿凯给过 {formatMoney(c.bfGiven)}</span>
-              <span>阿凯拿走 {formatMoney(c.bfTaken)}</span>
-            </footer>
+            {/* 账目角标：只显示发生过的事——零值的行是噪音 */}
+            {(c.momGiven > 0 || c.bfGiven > 0 || c.bfTaken > 0) && (
+              <footer className="stats-row">
+                {c.momGiven > 0 && <span>妈给过 {formatMoney(c.momGiven)}</span>}
+                {c.bfGiven > 0 && <span>阿凯给过 {formatMoney(c.bfGiven)}</span>}
+                {c.bfTaken > 0 && <span>阿凯拿走 {formatMoney(c.bfTaken)}</span>}
+              </footer>
+            )}
           </div>
 
           <nav className="module-nav">
@@ -376,7 +379,7 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
             </button>
           </div>
           <div className="bars" style={{ margin: '5px 0 0' }}>
-            <div className="bar minutes"><span style={{ width: `${(c.minutes / COMFORT_DAY_MINUTES) * 100}%` }} />今日空闲时间 {c.minutes}′（一场 {COMFORT_CHAT_MINUTES}′）</div>
+            <div className="bar minutes bar-ticks"><span style={{ width: `${(c.minutes / COMFORT_DAY_MINUTES) * 100}%` }} />今日时间 {c.minutes}′ · 每场 {COMFORT_CHAT_MINUTES}′</div>
           </div>
         </div>
       </div>
@@ -439,18 +442,18 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
         const talkIsBf = m.kind === 'bf_talk';
         const talkAwake = (talkIsBf ? night : !night) && timeLeft;
         const talkPronoun = m.kind === 'bf_talk' ? '他' : '她';
-        const talkBlockReason = chatOpen ? '（先回完手头这场）'
+        const talkBlockReason = chatOpen ? '先回完当前对话'
           : (talkIsBf ? !night : night)
-            ? (talkIsBf ? '他白天在补觉（晚上再说）' : '她这个点睡了（明天再说）')
+            ? (talkIsBf ? '他夜里才在线' : '她这个点睡了')
             : '今天的时间用完了';
         // 吵架卡：他只有夜里醒着。
         const quarrelAwake = night && timeLeft;
-        const quarrelBlockReason = chatOpen ? '（先回完手头这场）'
-          : !night ? '他白天在补觉（晚上再说）' : '今天的时间用完了';
+        const quarrelBlockReason = chatOpen ? '先回完当前对话'
+          : !night ? '他夜里才在线' : '今天的时间用完了';
         // 介绍卡：见面首聊是白天的事，也占一场时间。
         const introAwake = !night && timeLeft;
-        const introBlockReason = chatOpen ? '（先回完手头这场）'
-          : night ? '明天白天再见了' : '今天没空见了';
+        const introBlockReason = chatOpen ? '先回完当前对话'
+          : night ? '明天白天再见面' : '今天的时间用完了';
         return (
           <div key={m.id} className={`comfort-event-card ${m.kind}`}>
             <div className="cec-head">
@@ -472,7 +475,7 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
                   disabled={chatOpen}
                   onClick={() => { playMessage(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: true }); }}
                 >
-                  {chatOpen ? '（先回完手头这场）' : STORY_OPEN_LABEL[storyFrom]}
+                  {chatOpen ? '先回完当前对话' : STORY_OPEN_LABEL[storyFrom]}
                 </button>
               ) : isIntro ? (
                 <>
@@ -565,10 +568,10 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
                 <button
                   className="btn small primary"
                   disabled={!awake}
-                  title={awake ? talkHint(id) : undefined}
+                  title={awake ? `一场 ${COMFORT_CHAT_MINUTES} 分钟` : undefined}
                   onClick={() => { playMessage(); store.dispatch({ type: 'comfort_open_chat', contactId: id }); }}
                 >
-                  {awake ? '发消息' : talkHint(id)}
+                  发消息
                 </button>
               )}
             </div>
@@ -588,10 +591,10 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
               <button
                 className="btn small primary"
                 disabled={!awake}
-                title={awake ? talkHint(id) : undefined}
+                title={awake ? `一场 ${COMFORT_CHAT_MINUTES} 分钟` : undefined}
                 onClick={() => { playMessage(); store.dispatch({ type: 'comfort_open_chat', contactId: id }); }}
               >
-                {awake ? '发消息' : talkHint(id)}
+                发消息
               </button>
             </div>
           );
@@ -615,7 +618,7 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
                     disabled={!awake}
                     onClick={() => { playMessage(); store.dispatch({ type: 'comfort_open_date_chat', dateId: id }); }}
                   >
-                    {awake ? '发消息' : talkHint('mother')}
+                    发消息
                   </button>
                 </div>
               );
@@ -653,68 +656,87 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
   );
 }
 
-/** 通讯录：父亲（置灰纪念位）、妈、男友。 */
+/** 通讯录：名字与签名常驻，长档案与账目收进抽屉——点行展开（父亲纪念位同款交互）。 */
 function ComfortContacts() {
   const { state } = useGame();
   const c = state.comfort;
-  const [dadOpen, setDadOpen] = useState(false);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const toggle = (id: string) => setOpenId(openId === id ? null : id);
   const bfGone = c.blockedByBf || c.bfState !== 'normal';
   const bfGoneTag = c.bfState === 'arrested' ? ' · 被带走了' : ' · 已拉黑';
+  const chev = (id: string) => (
+    <span className="ccr-chev"><Ico name={openId === id ? 'chev-up' : 'chev-down'} size={14} /></span>
+  );
+  // handle 与本名相同时（阿凯）不重复展示，只保留年龄
+  const nameTag = (c0: { handle: string; name: string; age: number }) =>
+    `（${c0.handle === c0.name ? '' : `${c0.name} · `}${c0.age}岁）`;
 
   return (
     <section className="comfort-contacts">
       <h3>通讯录（{4 + Object.keys(c.datesMet).length} 人）</h3>
-      {/* 父亲：置灰 */}
-      <div className="comfort-contact-row father" onClick={() => setDadOpen(!dadOpen)}>
+      {/* 父亲：置灰纪念位 */}
+      <div className={`comfort-contact-row father ${openId === 'father' ? 'open' : ''}`} onClick={() => toggle('father')}>
         <ComfortAvatar who="father" size={44} />
         <div className="ccr-body">
           <div className="ccr-name">{FATHER_MEMORIAL.handle}</div>
           <div className="muted small">{FATHER_MEMORIAL.signature}</div>
-          {dadOpen && <div className="comfort-father-bio">{FATHER_MEMORIAL.bio}</div>}
+          {openId === 'father' && <div className="comfort-father-bio">{FATHER_MEMORIAL.bio}</div>}
         </div>
-        {dadOpen && <span className="muted small">收起</span>}
+        {chev('father')}
       </div>
       {/* 妈 */}
-      <div className="comfort-contact-row">
+      <div className={`comfort-contact-row ${openId === 'mother' ? 'open' : ''}`} onClick={() => toggle('mother')}>
         <ComfortAvatar who="mother" size={44} />
         <div className="ccr-body">
-          <div className="ccr-name">{COMFORT_CONTACTS.mother.handle}（{COMFORT_CONTACTS.mother.name} · {COMFORT_CONTACTS.mother.age}岁）</div>
+          <div className="ccr-name">{COMFORT_CONTACTS.mother.handle}{nameTag(COMFORT_CONTACTS.mother)}</div>
           <div className="muted small">{COMFORT_CONTACTS.mother.signature}</div>
-          <div className="comfort-contact-bio">{COMFORT_CONTACTS.mother.bio}</div>
-          <div className="muted small">家庭关系 {Math.round(c.family)} · 给过你 {formatMoney(c.momGiven)} · 你推掉过 {formatMoney(c.momRefused)}</div>
+          {openId === 'mother' && (<>
+            <div className="comfort-contact-bio">{COMFORT_CONTACTS.mother.bio}</div>
+            <div className="muted small">家庭关系 {Math.round(c.family)} · 给过你 {formatMoney(c.momGiven)} · 你推掉过 {formatMoney(c.momRefused)}</div>
+          </>)}
         </div>
+        {chev('mother')}
       </div>
       {/* 凤霞姨（红娘） */}
-      <div className="comfort-contact-row">
+      <div className={`comfort-contact-row ${openId === 'auntie' ? 'open' : ''}`} onClick={() => toggle('auntie')}>
         <ComfortAvatar who="auntie" size={44} />
         <div className="ccr-body">
-          <div className="ccr-name">{COMFORT_CONTACTS.auntie.handle}（{COMFORT_CONTACTS.auntie.name} · {COMFORT_CONTACTS.auntie.age}岁）</div>
+          <div className="ccr-name">{COMFORT_CONTACTS.auntie.handle}{nameTag(COMFORT_CONTACTS.auntie)}</div>
           <div className="muted small">{COMFORT_CONTACTS.auntie.signature}</div>
-          <div className="comfort-contact-bio">{COMFORT_CONTACTS.auntie.bio}</div>
-          <div className="muted small">介绍过 {c.auntie.count} 个 · 认识了 {Object.keys(c.datesMet).length} 个</div>
+          {openId === 'auntie' && (<>
+            <div className="comfort-contact-bio">{COMFORT_CONTACTS.auntie.bio}</div>
+            <div className="muted small">介绍过 {c.auntie.count} 个 · 认识了 {Object.keys(c.datesMet).length} 个</div>
+          </>)}
         </div>
+        {chev('auntie')}
       </div>
       {/* 曼曼Lisa（闺蜜） */}
-      <div className="comfort-contact-row">
+      <div className={`comfort-contact-row ${openId === 'bestie' ? 'open' : ''}`} onClick={() => toggle('bestie')}>
         <ComfortAvatar who="bestie" size={44} />
         <div className="ccr-body">
-          <div className="ccr-name">{COMFORT_CONTACTS.bestie.handle}（{COMFORT_CONTACTS.bestie.name} · {COMFORT_CONTACTS.bestie.age}岁）</div>
+          <div className="ccr-name">{COMFORT_CONTACTS.bestie.handle}{nameTag(COMFORT_CONTACTS.bestie)}</div>
           <div className="muted small">{COMFORT_CONTACTS.bestie.signature}</div>
-          <div className="comfort-contact-bio">{COMFORT_CONTACTS.bestie.bio}</div>
-          <div className="muted small">找你唠过 {c.bestieTalk.count} 回 · 劝分 {c.bestieTalk.count > 3 ? '（她自己都数不清了）' : '若干回'}</div>
+          {openId === 'bestie' && (<>
+            <div className="comfort-contact-bio">{COMFORT_CONTACTS.bestie.bio}</div>
+            <div className="muted small">找你唠过 {c.bestieTalk.count} 回 · 劝分 {c.bestieTalk.count > 3 ? '（她自己都数不清了）' : '若干回'}</div>
+          </>)}
         </div>
+        {chev('bestie')}
       </div>
       {/* 男友 */}
-      <div className={`comfort-contact-row ${bfGone ? 'gone' : ''}`}>
+      <div className={`comfort-contact-row ${bfGone ? 'gone' : ''} ${openId === 'boyfriend' ? 'open' : ''}`} onClick={() => toggle('boyfriend')}>
         <ComfortAvatar who="boyfriend" size={44} />
         <div className="ccr-body">
-          <div className="ccr-name">{COMFORT_CONTACTS.boyfriend.handle}（{COMFORT_CONTACTS.boyfriend.name} · {COMFORT_CONTACTS.boyfriend.age}岁）{bfGone ? bfGoneTag : ''}</div>
+          <div className="ccr-name">{COMFORT_CONTACTS.boyfriend.handle}{nameTag(COMFORT_CONTACTS.boyfriend)}{bfGone ? bfGoneTag : ''}</div>
           <div className="muted small">{bfGone ? '（长期离线）' : COMFORT_CONTACTS.boyfriend.signature}</div>
-          <div className="comfort-contact-bio">{COMFORT_CONTACTS.boyfriend.bio}</div>
-          {!bfGone && <div className="muted small">感情 {Math.round(c.love)} · 给过你 {formatMoney(c.bfGiven)} · 从你这儿拿走 {formatMoney(c.bfTaken)}</div>}
-          {bfGone && c.bfState === 'broken_up' && <div className="comfort-contact-bio muted">他卷走了活命钱里剩下的每一块，连同他游戏里那个"满姐"的聊天记录。你被他拉黑了——常用手机里，这行灰色的名字删不删，你还没想好。</div>}
-          {bfGone && c.bfState === 'arrested' && <div className="comfort-contact-bio muted">警情通报里没有他的名字，只有那件灰卫衣。兰姨的五万成了"彩礼"，你转他的每一笔都躺在案卷第 9 页。妈听说了，只说了一句：早看出来了，就没敢说。</div>}
+          {openId === 'boyfriend' && (<>
+            <div className="comfort-contact-bio">{COMFORT_CONTACTS.boyfriend.bio}</div>
+            {!bfGone && <div className="muted small">感情 {Math.round(c.love)} · 给过你 {formatMoney(c.bfGiven)} · 从你这儿拿走 {formatMoney(c.bfTaken)}</div>}
+            {bfGone && c.bfState === 'broken_up' && <div className="comfort-contact-bio muted">他卷走了活命钱里剩下的每一块，连同他游戏里那个"满姐"的聊天记录。你被他拉黑了——常用手机里，这行灰色的名字删不删，你还没想好。</div>}
+            {bfGone && c.bfState === 'arrested' && <div className="comfort-contact-bio muted">警情通报里没有他的名字，只有那件灰卫衣。兰姨的五万成了"彩礼"，你转他的每一笔都躺在案卷第 9 页。妈听说了，只说了一句：早看出来了，就没敢说。</div>}
+          </>)}
         </div>
+        {chev('boyfriend')}
       </div>
       <p className="muted small">爸的名字一直置着灰。妈说，留着吧，就当这个号还在等他上线。</p>
       {Object.keys(c.datesMet).length > 0 && (
@@ -724,14 +746,17 @@ function ComfortContacts() {
             const date = BLIND_DATE_MAP[id];
             if (!date) return null;
             return (
-              <div key={id} className="comfort-contact-row candidate">
+              <div key={id} className={`comfort-contact-row candidate ${openId === id ? 'open' : ''}`} onClick={() => toggle(id)}>
                 <ComfortAvatar who={`bd:${id}` as ComfortAvatarKey} size={44} />
                 <div className="ccr-body">
                   <div className="ccr-name">{date.handle}（{date.name} · {date.age}岁）<span className="ccr-tag">凤霞姨介绍的</span></div>
-                  <div className="muted small">{date.job} · {date.signature}</div>
-                  <div className="comfort-contact-bio">{date.bio}</div>
-                  <div className="muted small">第 {metDay} 天经凤霞姨认识</div>
+                  <div className="muted small">{date.job} · 第 {metDay} 天经凤霞姨认识</div>
+                  {openId === id && (<>
+                    <div className="comfort-contact-bio">{date.bio}</div>
+                    <div className="muted small">{date.signature}</div>
+                  </>)}
                 </div>
+                {chev(id)}
               </div>
             );
           })}
