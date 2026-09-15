@@ -512,13 +512,14 @@ export function resolveComfortIncoming(state: GameState, incomingId: string, acc
   // 嘘寒问暖/介绍/吵架卡：一场聊天没完不能"回"下一场——卡片保留，回完手头这场再说。
   if ((inc.kind === 'mom_talk' || inc.kind === 'bf_talk' || inc.kind === 'story'
     || inc.kind === 'bestie_talk'
-    || inc.kind === 'auntie_intro' || inc.kind === 'quarrel') && c.chat) return;
+    || inc.kind === 'auntie_intro' || inc.kind === 'bd_ping' || inc.kind === 'quarrel') && c.chat) return;
   // 作息门禁（只拦"接了要开口说话"的那半边）：别人只在白天说话，
   // 阿凯作息日夜颠倒、只有夜里醒着；时间不足 10 分钟也开不了场。
   // 剧情卡是"信"，转账卡是"钱"——都不开口，不受门禁。
   const night = state.dayPhase === 'night';
   const opensChat = accept && (inc.kind === 'mom_talk' || inc.kind === 'bf_talk'
-    || inc.kind === 'bestie_talk' || inc.kind === 'quarrel' || inc.kind === 'auntie_intro');
+    || inc.kind === 'bestie_talk' || inc.kind === 'quarrel' || inc.kind === 'auntie_intro'
+    || inc.kind === 'bd_ping');
   if (opensChat) {
     const bfCard = inc.kind === 'bf_talk' || inc.kind === 'quarrel';
     if (bfCard && !night) return;
@@ -553,6 +554,21 @@ export function resolveComfortIncoming(state: GameState, incomingId: string, acc
     if (beat.effect === 'kai_arrested') {
       c.bfState = 'arrested';
       c.blockedByBf = true;
+    }
+    return;
+  }
+
+  if (inc.kind === 'bd_ping') {
+    // 相亲对象看到朋友圈主动搭话：回他 = 白天开一场聊天（轮换话术），不回 = 没有代价
+    const dateId = inc.packId ?? '';
+    const date = BLIND_DATE_MAP[dateId];
+    if (!date) return;
+    if (accept) {
+      c.minutes -= COMFORT_CHAT_MINUTES;
+      clog(state, `常用手机 · ${dateName(dateId)}刷到了你的朋友圈，主动来找你说话。`);
+      openDateChat(state, dateId);
+    } else {
+      clog(state, '你没有回。朋友圈搭的这句客气话，没有回执，也不需要有。');
     }
     return;
   }
@@ -852,7 +868,9 @@ export function openDateChat(state: GameState, dateId: string): void {
   if (!date) return;
   const chats = c.dateChats[dateId] ?? 0;
   c.dateChats[dateId] = chats + 1;
-  const pack = chats === 0 || !date.pack2 ? date.pack : date.pack2;
+  // 四套话术按场次轮换——第二场起不再永远卡同一套（v1.1.0 话术扩容）
+  const packs = [date.pack, date.pack2, date.pack3, date.pack4];
+  const pack = packs[chats % packs.length];
   const rng = derivedComfortRng(state, 449);
   const transcript = [];
   transcript.push({ speaker: 'sys' as const, text: `和 ${date.handle} 的聊天`, stamp: dayStamp(rng) });
@@ -910,12 +928,16 @@ export function postComfortMoment(state: GameState, kind: 'inspire' | 'family' |
   post.comments.push({ by: 'auntie', text: AUNTIE_COMMENTS[rng.int(0, AUNTIE_COMMENTS.length - 1)] });
   post.likes.push('bestie');
   post.comments.push({ by: 'bestie', text: BESTIE_COMMENTS[kind][rng.int(0, BESTIE_COMMENTS[kind].length - 1)] });
-  const metIds = Object.keys(c.datesMet).sort((a, b) => c.datesMet[b] - c.datesMet[a]);
-  const latest = metIds[0];
-  const latestDate = latest ? BLIND_DATE_MAP[latest] : null;
-  if (latestDate && rng.chance(0.7)) {
-    if (rng.chance(0.5)) post.likes.push(`bd:${latest}`);
-    else post.comments.push({ by: `bd:${latest}`, text: latestDate.comments[state.day % latestDate.comments.length] });
+  // 晒恩爱走「分组可见」：所有加过好友的相亲对象全部屏蔽（点赞/评论都不会出现）——
+  // 她的恋爱是她和妈、曼曼的事，不该摊在相亲角的名册上。
+  if (kind !== 'love') {
+    const metIds = Object.keys(c.datesMet).sort((a, b) => c.datesMet[b] - c.datesMet[a]);
+    const latest = metIds[0];
+    const latestDate = latest ? BLIND_DATE_MAP[latest] : null;
+    if (latestDate && rng.chance(0.7)) {
+      if (rng.chance(0.5)) post.likes.push(`bd:${latest}`);
+      else post.comments.push({ by: `bd:${latest}`, text: latestDate.comments[state.day % latestDate.comments.length] });
+    }
   }
   if (c.bfState === 'normal' && !c.blockedByBf && c.love >= 20 && rng.chance(0.75)) {
     if (rng.chance(0.5)) post.likes.push('boyfriend');
@@ -924,7 +946,31 @@ export function postComfortMoment(state: GameState, kind: 'inspire' | 'family' |
   }
   c.moments.push(post);
   if (c.moments.length > COMFORT_MOMENTS_CAP) c.moments.splice(0, c.moments.length - COMFORT_MOMENTS_CAP);
-  clog(state, `常用手机 · 你发了一条朋友圈（${kind === 'inspire' ? '励志' : kind === 'family' ? '晒家' : '晒恩爱'}）。妈第一个点了赞。`);
+  clog(state, kind === 'love'
+    ? '常用手机 · 你发了一条晒恩爱的朋友圈（相亲对象都被你屏蔽了）。妈第一个点了赞。'
+    : `常用手机 · 你发了一条朋友圈（${kind === 'inspire' ? '励志' : '晒家'}）。妈第一个点了赞。`);
+  // v1.1.x 朋友圈引来相亲对象主动搭话（工作手机「自拍引私信」的同构设计）：
+  // 晒恩爱已被屏蔽不触发；励志/晒家有四成概率引来一位已认识的候选人，
+  // 在「今天」页留一张搭话卡——回他是白天的一场聊天（−10′），不回没有代价。
+  if (kind !== 'love' && Object.keys(c.datesMet).length > 0
+    && !c.incoming.some((m) => m.kind === 'bd_ping')
+    && c.incoming.filter((m) => m.kind !== 'story').length < COMFORT_INCOMING_CAP
+    && rng.chance(0.4)) {
+    const ids = Object.keys(c.datesMet);
+    const pick = ids[rng.int(0, ids.length - 1)];
+    const date = BLIND_DATE_MAP[pick];
+    if (date) {
+      c.incoming.push({
+        id: `bd_ping_${state.day}`,
+        kind: 'bd_ping',
+        day: state.day,
+        amount: 0,
+        lines: [date.pings[state.day % date.pings.length]],
+        packId: pick,
+        note: '看到你的朋友圈，主动来搭话',
+      });
+    }
+  }
 }
 
 /** 给别人的动态点赞：不用花钱的礼貌，也是一点心意。 */

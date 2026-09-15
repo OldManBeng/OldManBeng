@@ -247,11 +247,14 @@ button { -webkit-tap-highlight-color: transparent; font-family: inherit; }
   position: absolute;
   inset: 0;
   background:
-    /* 暖半的余温：像一盏忘了关的灯 */
-    radial-gradient(64% 46% at 18% 76%, rgba(226, 138, 48, 0.15), transparent 72%),
-    /* 刀锋：左暖右冷 */
+    /* 暖半的余温：一盏忘了关的灯——灯下最暖，越远越沉 */
+    radial-gradient(64% 46% at 18% 76%, rgba(236, 122, 24, 0.32), transparent 72%),
+    radial-gradient(50% 38% at 6% 94%, rgba(196, 88, 12, 0.38), transparent 70%),
+    /* 刀锋：左暖右冷。暖半从余烬褐向刀锋渐亮——火光贴着刀口烧 */
     linear-gradient(115deg,
-      rgba(43, 25, 11, 0.88) 0 48.4%,
+      rgba(48, 23, 9, 0.9) 0 28%,
+      rgba(96, 43, 11, 0.88) 42%,
+      rgba(146, 66, 14, 0.85) 47.6%,
       rgba(246, 228, 188, 0.92) 48.4% 49.5%,
       rgba(246, 228, 188, 0) 50.9%);
 }
@@ -261,8 +264,18 @@ button { -webkit-tap-highlight-color: transparent; font-family: inherit; }
   letter-spacing: 7px;
   text-indent: 7px; /* 平衡字距造成的偏移 */
   line-height: var(--lh-tight);
-  /* 标题本身也随刀锋一分为二：左冷右暖——对立，写在同一个词里 */
-  background: linear-gradient(115deg, #E9EFF9 0 46%, #F0D3A0 54% 100%);
+  /* 版本角标：小号上标——版本信息在场，但不与主标题抢分量 */
+  .h1-ver {
+    font-size: 0.42em;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-indent: 0;
+    vertical-align: 0.55em;
+    margin-left: 3px;
+  }
+  /* 标题本身也随刀锋一分为二：左冷右暖——对立，写在同一个词里。
+     暖侧用琥珀而非淡金（2026-09：冷暖对比拉满） */
+  background: linear-gradient(115deg, #E9EFF9 0 46%, #F5BE62 54% 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -1969,13 +1982,15 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   --line: var(--c-line);
   --line-soft: rgba(125, 98, 60, 0.18);
   --accent: var(--c-accent);
+  --accent-fill: var(--c-accent); /* 实心按钮底跟随暖橙——不许工作手机的蓝漏进来 */
   --accent-deep: var(--c-accent-strong);
   --warm: var(--c-gold);
   --danger: var(--c-danger);
   --bub-target: #FFFFFF;
   --bub-ink: var(--c-n7);
-  --bub-green: var(--c-bubble);
-  --bub-green-ink: var(--c-bubble-ink);
+  /* 她发出去的气泡：微信绿（与工作手机同支绿，墨绿字 7.16:1）——用户指定 2026-09 */
+  --bub-green: #30D158;
+  --bub-green-ink: #04310F;
   /* 字阶别名：旧 7 档挤压（10.5-14px）→ 新 6 档；正文 13→14px。 */
   --fs-0: var(--c-fs-micro);
   --fs-1: var(--c-fs-micro);
@@ -2112,6 +2127,19 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 .comfort-contact-row:hover { border-color: var(--c-n3); }
 .comfort-contact-row.open { background: color-mix(in srgb, var(--c-n2) 55%, transparent); }
 .ccr-chev { flex: none; display: inline-flex; color: var(--c-n5); }
+.comfort-event-card.bd_ping { border-left-color: var(--c-accent-strong); }
+/* 晒恩爱的「分组可见」标签：贴在作者名旁的小胶囊——屏蔽是主动的，要看得见 */
+.comfort-theme .moment-block-tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  vertical-align: 1px;
+  font-size: var(--c-fs-micro);
+  font-weight: 400;
+  color: var(--c-n5);
+  border: 1px solid var(--c-n4);
+  border-radius: 999px;
+}
 .ccr-tag {
   display: inline-block; margin-left: var(--c-s-2);
   font-size: var(--c-fs-micro); font-weight: 400;
@@ -2396,8 +2424,9 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 /* 晨间简报的余额格与昨日回响行——结构同工作手机 briefing-*，配色走 --c-* 暖系 */
 .comfort-day-money {
   display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2×2：四格不挤行，「两机共用」不再折断 */
   gap: var(--c-s-2);
-  margin-bottom: var(--c-s-4);
+  margin-bottom: var(--c-s-3);
 }
 .comfort-day-money > div {
   background: var(--c-n2);
@@ -2481,6 +2510,13 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   background: color-mix(in srgb, var(--c-accent) 8%, var(--c-n0));
   border-color: var(--c-accent);
 }
+/* 弹窗里的决策按钮：纵向等宽一列——横排时两行文案高度参差，视觉散 */
+.comfort-theme .beat-options { flex-direction: column; }
+.comfort-theme .beat-opt { flex: none; width: 100%; }
+/* 决策提示语：紧跟按钮（旧版挤在经文下面，像经文的注脚） */
+.comfort-incident-hint { margin: 10px 0 0; }
+/* 弹窗内的突发事件卡：与各区块同节奏（旧 10px 0 与 12px 节奏混用） */
+.comfort-day-card .beat-card.comfort-incident { margin: 0 0 var(--c-s-3); }
 /* 评论作者名与条目引文：浅底上用加重橙（accent 在 fill 底上略低于 AA） */
 .comfort-theme .mc-author { color: var(--c-accent-strong); }
 /* 事件卡脚注经文：小一号、斜体感，像顺手抄在便签上 */

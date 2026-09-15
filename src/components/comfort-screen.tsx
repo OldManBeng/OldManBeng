@@ -168,7 +168,7 @@ function ComfortDayDialog() {
           <span className="comfort-day-sub">常用手机 · 睁眼</span>
         </div>
         <p className="comfort-day-line cd-in" style={{ animationDelay: delay(rowIdx++) }}>{morningLine}</p>
-        <div className="comfort-day-money cd-in" style={{ animationDelay: delay(rowIdx++), gridTemplateColumns: `repeat(${moneyCells.length}, 1fr)` }}>
+        <div className="comfort-day-money cd-in" style={{ animationDelay: delay(rowIdx++) }}>
           {moneyCells.map((cell) => (
             <div key={cell.label}>
               <span>{cell.label}</span>
@@ -222,8 +222,8 @@ function ComfortDayDialog() {
                   </button>
                 ))}
               </div>
+              <p className="muted small comfort-incident-hint">不接也行——拖到明天，就按「没接住」算。</p>
               {inc.verse && <div className="comfort-incident-verse">「{inc.verse.v}」——{inc.verse.s}</div>}
-              <p className="muted small">不接也行——拖到明天，就按「没接住」算。</p>
             </div>
           );
         })()}
@@ -406,8 +406,8 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
                 </button>
               ))}
             </div>
+            <p className="muted small comfort-incident-hint">不接也行——拖到明天，就按「没接住」算。</p>
             {inc.verse && <div className="comfort-incident-verse">「{inc.verse.v}」——{inc.verse.s}</div>}
-            <p className="muted small">不接也行——拖到明天，就按「没接住」算。</p>
           </div>
         );
       })()}
@@ -422,16 +422,19 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
         const isQuarrel = m.kind === 'quarrel';
         const isMom = m.kind === 'mom_gift' || m.kind === 'mom_talk';
         const isDemand = m.kind === 'bf_demand';
+        const isPing = m.kind === 'bd_ping';
         // 每种卡的"说话人"：故事卡按 beat 来源，其余按卡的归属
         const speaker: ComfortSpeakerId = isStory
           ? (storyFrom as ComfortSpeakerId)
           : isMom ? 'mother'
           : (m.kind === 'bf_packet' || m.kind === 'bf_demand' || m.kind === 'bf_talk' || isQuarrel) ? 'boyfriend'
           : m.kind === 'bestie_talk' ? 'bestie'
+          : isPing ? ((`bd:${m.packId}`) as ComfortSpeakerId)
           : 'auntie';
         const tag = isStory ? ' · ' + (storyFrom === 'sys' ? '消息' : '语音')
           : isIntro ? ' · 给你介绍个人'
           : isQuarrel ? ' · 火气'
+          : isPing ? ' · 朋友圈'
           : m.tone === 'birthday' ? ' · 生日'
           : isTalk ? ' · 语音'
           : m.kind === 'bf_packet' ? ' · 红包'
@@ -454,6 +457,10 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
         const introAwake = !night && timeLeft;
         const introBlockReason = chatOpen ? '先回完当前对话'
           : night ? '明天白天再见面' : '今天的时间用完了';
+        // 朋友圈搭话卡：同样白天、同样占一场。
+        const pingAwake = !night && timeLeft;
+        const pingBlockReason = chatOpen ? '先回完当前对话'
+          : night ? '明天白天再聊' : '今天的时间用完了';
         return (
           <div key={m.id} className={`comfort-event-card ${m.kind}`}>
             <div className="cec-head">
@@ -489,6 +496,20 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
                   </button>
                   <button className="btn small muted-btn" onClick={() => { playBlocked(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: false }); }}>
                     婉拒（姨有点可惜，还会再来）
+                  </button>
+                </>
+              ) : isPing ? (
+                <>
+                  <button
+                    className="btn small primary"
+                    disabled={!pingAwake}
+                    title={pingAwake ? `一场 ${COMFORT_CHAT_MINUTES} 分钟` : undefined}
+                    onClick={() => { playMessage(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: true }); }}
+                  >
+                    {pingAwake ? '回他' : pingBlockReason}
+                  </button>
+                  <button className="btn small muted-btn" onClick={() => { playBlocked(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: false }); }}>
+                    不回（少了场客气）
                   </button>
                 </>
               ) : isQuarrel ? (
@@ -821,7 +842,11 @@ function ComfortMoments() {
               <div className="moment-head">
                 {ava}
                 <div>
-                  <div className="moment-name">{nameOf(m.author)}</div>
+                  <div className="moment-name">{nameOf(m.author)}
+                    {m.author === 'me' && m.kind === 'love' && (
+                      <span className="moment-block-tag">已屏蔽：阿姨介绍的人</span>
+                    )}
+                  </div>
                   <div className="muted small">第 {m.day} 天</div>
                 </div>
               </div>

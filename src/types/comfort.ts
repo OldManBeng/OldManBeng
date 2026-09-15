@@ -14,11 +14,12 @@ export type ComfortContactId = 'mother' | 'boyfriend' | 'auntie' | 'bestie';
 export type ComfortSpeakerId = ComfortContactId | 'sys' | `bd:${string}`;
 
 /** 舒适圈事件卡类型。mom_talk/bf_talk/bestie_talk：嘘寒问暖的纯聊天卡；story：暗线剧情卡；
- *  auntie_intro：红娘介绍相亲对象；quarrel：阿凯因相亲炸毛。 */
+ *  auntie_intro：红娘介绍相亲对象；quarrel：阿凯因相亲炸毛；bd_ping：相亲对象看到朋友圈主动搭话。 */
 export type ComfortIncomingKind =
   | 'mom_gift' | 'bf_packet' | 'bf_demand'
   | 'mom_talk' | 'bf_talk' | 'bestie_talk'
   | 'auntie_intro' | 'quarrel'
+  | 'bd_ping'
   | 'story';
 
 /** 挂在常用手机「今天」页的待处理事件（妈的生活费/男友红包/男友要钱/嘘寒问暖/暗线剧情）。 */

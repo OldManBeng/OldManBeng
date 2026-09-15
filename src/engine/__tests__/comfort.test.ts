@@ -656,10 +656,11 @@ describe('1.1.x 红娘线：凤霞姨与十张牌', () => {
     }
     for (const d of BLIND_DATES) {
       d.intro.split('｜').forEach(put);
-      for (const pack of [d.pack, d.pack2]) {
+      for (const pack of [d.pack, d.pack2, d.pack3, d.pack4]) {
         for (const l of pack.lines) l.split('｜').forEach(put);
         for (const o of pack.options) { put(o.text); o.reply.split('｜').forEach(put); }
       }
+      d.pings.forEach(put);
       d.comments.forEach(put);
       for (const mo of d.moments) put(mo.text);
     }
@@ -669,6 +670,8 @@ describe('1.1.x 红娘线：凤霞姨与十张牌', () => {
     expect(BLIND_DATES.length).toBe(10);
     expect(BLIND_DATES.every((d) => d.pack.options.length >= 2 && d.moments.length === 3)).toBe(true);
     expect(BLIND_DATES.every((d) => d.pack2.options.length >= 2 && d.pack2.lines.length >= 1)).toBe(true);
+    expect(BLIND_DATES.every((d) => d.pack3.options.length >= 2 && d.pack4.options.length >= 2)).toBe(true);
+    expect(BLIND_DATES.every((d) => d.pings.length >= 2)).toBe(true);
     expect(Object.keys(BLIND_DATE_MAP).length).toBe(10);
   });
 
@@ -1054,5 +1057,61 @@ describe('1.1.0 相亲对象再聊：第二场换第二套话术', () => {
     expect(s.comfort.dateChats[dateId]).toBe(2);
     expect(s.comfort.chat!.transcript.some((m) => m.text === date.pack2.lines[0].split('｜')[0])).toBe(true);
     expect(s.comfort.minutes).toBe(COMFORT_DAY_MINUTES - COMFORT_CHAT_MINUTES * 2);
+  });
+});
+
+describe('1.1.0 朋友圈分组可见与相亲对象主动搭话', () => {
+  it('晒恩爱：相亲对象全部屏蔽（无点赞无评论、不触发搭话），妈和曼曼照常可见', () => {
+    let s = fresh(131);
+    s.comfort = { ...freshComfortState(), datesMet: { chen: 3, wu: 4 }, love: 60 };
+    s = dispatch(s, { type: 'comfort_post_moment', kind: 'love' });
+    const post = s.comfort.moments.find((m) => m.author === 'me')!;
+    expect(post.likes.some((l) => l.startsWith('bd:'))).toBe(false);
+    expect(post.comments.some((cm) => cm.by.startsWith('bd:'))).toBe(false);
+    expect(s.comfort.incoming.some((m) => m.kind === 'bd_ping')).toBe(false);
+    expect(post.likes).toContain('mother');
+    expect(post.likes).toContain('bestie');
+  });
+
+  it('励志圈：概率引来相亲对象主动搭话；回他 = 白天开聊 −10′；不回无代价', () => {
+    let verified = 0;
+    for (let seed = 1; seed <= 16 && verified < 3; seed++) {
+      let s = fresh(140 + seed);
+      s.comfort = { ...freshComfortState(), datesMet: { wu: 3, chen: 5 } };
+      s = dispatch(s, { type: 'comfort_post_moment', kind: 'inspire' });
+      const ping = s.comfort.incoming.find((m) => m.kind === 'bd_ping');
+      if (!ping) continue;
+      verified++;
+      expect(ping.packId === 'wu' || ping.packId === 'chen').toBe(true);
+      const m0 = s.comfort.minutes;
+      s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: ping.id, accept: true });
+      expect(s.comfort.chat!.contactId).toBe(`bd:${ping.packId}`);
+      expect(s.comfort.minutes).toBe(m0 - COMFORT_CHAT_MINUTES);
+      s = dispatch(s, { type: 'comfort_pick', optionIndex: 0 });
+      s = dispatch(s, { type: 'comfort_end_chat' });
+      break;
+    }
+    expect(verified).toBeGreaterThan(0);
+  });
+
+  it('再聊轮换：四套话术按场次取模轮换，不再永远卡第二套', () => {
+    let s = fresh(131);
+    s.day = AUNTIE_TALK_FIRST_DAY;
+    s.comfort = freshComfortState();
+    runComfortMorning(s);
+    const card = s.comfort.incoming.find((m) => m.kind === 'auntie_intro')!;
+    s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: card.id, accept: true });
+    const id = Object.keys(s.comfort.datesMet)[0];
+    const date = BLIND_DATE_MAP[id];
+    const packs = [date.pack, date.pack2, date.pack3, date.pack4];
+    for (let i = 0; i < 4; i++) {
+      const opener = packs[i].lines[0].split('｜')[0];
+      expect(s.comfort.chat!.transcript.some((m) => m.text === opener)).toBe(true);
+      s = dispatch(s, { type: 'comfort_pick', optionIndex: 0 });
+      s = dispatch(s, { type: 'comfort_end_chat' });
+      s.comfort.minutes = COMFORT_DAY_MINUTES;
+      s = dispatch(s, { type: 'comfort_open_date_chat', dateId: id });
+    }
+    expect(s.comfort.dateChats[id]).toBe(5);
   });
 });
