@@ -196,3 +196,54 @@ export const BESTIE_COMMENTS: Record<'inspire' | 'family' | 'love', string[]> = 
     '他是有点帅的（不客观）你开心就好',
   ],
 };
+
+/** ---- v1.1.0 小满回别人朋友圈的评论 ----
+ *  不带回话术、不带目的——就是刷到之后随口的一句话。
+ *  但话有分量：有的暖人，有的噎人。家里人和男朋友都看得见，也都记得住。
+ *  family 落家庭关系，love 落感情；闺蜜和相亲对象的圈只是生活，不动账。 */
+export interface MyMomentComment {
+  text: string;
+  family?: number;
+  love?: number;
+}
+
+export const MY_MOMENT_COMMENTS: {
+  mother: MyMomentComment[];
+  boyfriend: MyMomentComment[];
+  auntie: MyMomentComment[];
+  bestie: MyMomentComment[];
+  date: MyMomentComment[];
+} = {
+  mother: [
+    { text: '妈你真时髦，滤镜都会用了。', family: 2 },
+    { text: '东家再好也别太累，你的腰我记着呢。', family: 4 },
+    { text: '哈哈全勤奖多少？请我喝奶茶了吗。', family: 1 },
+    { text: '知道了，忙着呢。', family: -2 },
+    { text: '妈你别老发这些，同事看见了笑话。', family: -4 },
+  ],
+  boyfriend: [
+    { text: '可以啊凯老板，晚上给你加鸡腿。', love: 3 },
+    { text: '又熬夜？说好的早点睡呢，宝。', love: 1 },
+    { text: '就这水平还王者归来呢（笑）。', love: -1 },
+    { text: '忙着呢，没空看。', love: -2 },
+    { text: '天天就知道打游戏，你能不能有点出息。', love: -4 },
+  ],
+  auntie: [
+    { text: '姨又立功了！回头请你喝奶茶。', family: 3 },
+    { text: '姨站在太阳底下记得戴帽子。', family: 2 },
+    { text: '姨这相册比影楼拍得都好。', family: 1 },
+    { text: '姨我先不聊了，忙着呢。', family: -1 },
+    { text: '姨你管得是不是有点宽了。', family: -3 },
+  ],
+  bestie: [
+    { text: '曼曼这生活，看看就当自己过了。' },
+    { text: '包好看，人更好看，臭美。' },
+    { text: '下次不许只拍照，要带我。' },
+    { text: '又炫富，举报了（假装）。' },
+  ],
+  date: [
+    { text: '哈哈看你朋友圈就知道你把日子过得很认真。' },
+    { text: '挺好，加油。' },
+    { text: '收藏了，改天照着这个去处打卡。' },
+  ],
+};

@@ -71,7 +71,7 @@ import { SWITCH_TO_COMFORT, SWITCH_TO_WORK } from '../data/comfort-contrast';
 import {
   runComfortMorning,
   openDateChat, resolveComfortIncoming, openComfortChat, pickComfortOption, endComfortChat,
-  postComfortMoment, reactComfortMoment,
+  postComfortMoment, reactComfortMoment, commentComfortMoment,
   resolveComfortIncident, staleComfortIncident,
 } from './comfort';
 
@@ -1953,7 +1953,13 @@ export function dispatch(state: GameState, action: GameAction): GameState {
     }
 
     case 'comfort_react_moment': {
-      reactComfortMoment(s, action.momentId, action.kind);
+      reactComfortMoment(s, action.momentId);
+      return s;
+    }
+
+    case 'comfort_comment_moment': {
+      // 随口一句评论：不是话术，但暖人的噎人的都记在关系账上。
+      commentComfortMoment(s, action.momentId, action.optionIndex);
       return s;
     }
 

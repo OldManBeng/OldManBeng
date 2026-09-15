@@ -220,6 +220,7 @@ export function freshComfortState(): ComfortState {
     flipTick: 0,
     auntie: { lastDay: 0, count: 0 },
     datesMet: {},
+    dateChats: {},
     quarrel: { count: 0, pending: false },
     minutes: COMFORT_DAY_MINUTES,
     dayAck: 0,

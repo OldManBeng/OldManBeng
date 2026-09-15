@@ -153,6 +153,8 @@ export interface ComfortState {
   auntie: { lastDay: number; count: number };
   /** 已认识的相亲对象：candidateId → 认识那天的 day。 */
   datesMet: Record<string, number>;
+  /** 跟每个相亲对象聊过的场数：candidateId → 场次（第二场起换第二套话术）。 */
+  dateChats: Record<string, number>;
   /** 阿凯因相亲炸毛：已吵架次数 + 待引爆（认识新对象后的第二天早晨）。 */
   quarrel: { count: number; pending: boolean };
   /** 今日联系时间（分钟）：一天只有 40 分钟，每场对话 10 分钟——

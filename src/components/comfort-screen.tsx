@@ -20,6 +20,7 @@ import { STORY_BEATS, STORY_OPEN_LABEL } from '../data/comfort-story';
 import { BLIND_DATES, BLIND_DATE_MAP } from '../data/comfort-dates';
 import { COMFORT_MORNING_LINES } from '../data/comfort-packs';
 import { COMFORT_INCIDENTS, DAILY_VERSES } from '../data/comfort-incidents';
+import { myMomentCommentOptions } from '../engine/comfort';
 import type { ComfortContactId, ComfortMessage, ComfortSpeakerId } from '../types/comfort';
 
 /** 说话人显示名：联系人 / 叙事位 / 相亲对象统一入口。 */
@@ -746,6 +747,7 @@ function ComfortMoments() {
   const store = useGame();
   const { state } = store;
   const c = state.comfort;
+  const [pickerFor, setPickerFor] = useState<string | null>(null);
   const postedToday = c.moments.some((m) => m.author === 'me' && m.day === state.day);
 
   return (
@@ -812,12 +814,22 @@ function ComfortMoments() {
               )}
               {m.author !== 'me' && (
                 <div className="moment-actions">
-                  <button className="btn small" disabled={liked} onClick={() => { playSocial(); store.dispatch({ type: 'comfort_react_moment', momentId: m.id, kind: 'like' }); }}>
+                  <button className="btn small" disabled={liked} onClick={() => { playSocial(); store.dispatch({ type: 'comfort_react_moment', momentId: m.id }); }}>
                     {liked ? '已赞' : '点赞'}
                   </button>
-                  <button className="btn small" disabled={commented} onClick={() => { playSocial(); store.dispatch({ type: 'comfort_react_moment', momentId: m.id, kind: 'comment' }); }}>
+                  <button className="btn small" disabled={commented} onClick={() => setPickerFor(pickerFor === m.id ? null : m.id)}>
                     {commented ? '已评论' : '评论'}
                   </button>
+                </div>
+              )}
+              {m.author !== 'me' && pickerFor === m.id && !commented && (
+                <div className="moment-comment-picker">
+                  <div className="muted small">随口回一句——话不带目的，但有分量。</div>
+                  {myMomentCommentOptions(m.author).map((opt, i) => (
+                    <button key={i} className="moment-comment-opt" onClick={() => { playSend(); setPickerFor(null); store.dispatch({ type: 'comfort_comment_moment', momentId: m.id, optionIndex: i }); }}>
+                      {opt.text}
+                    </button>
+                  ))}
                 </div>
               )}
             </div>

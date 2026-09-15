@@ -90,6 +90,7 @@ function mergeComfort(saved: GameState['comfort'] | undefined): GameState['comfo
     flipTick: saved.flipTick ?? base.flipTick,
     auntie: saved.auntie ?? base.auntie,
     datesMet: saved.datesMet ?? base.datesMet,
+    dateChats: saved.dateChats ?? base.dateChats,
     quarrel: saved.quarrel ?? base.quarrel,
     minutes: saved.minutes ?? base.minutes,
     dayAck: saved.dayAck ?? 0,

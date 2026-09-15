@@ -1515,6 +1515,27 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 .mc-author { color: var(--accent); font-weight: 600; }
 .moment-actions { display: flex; gap: 8px; }
 .moment-comment-options { display: flex; flex-direction: column; gap: 6px; }
+/* v1.1.0 随口评论：展开的一小列候选——像在心里打好的草稿。 */
+.moment-comment-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--fill);
+  border-radius: var(--r-sm);
+  padding: 8px 10px;
+}
+.moment-comment-opt {
+  text-align: left;
+  font-size: var(--fs-3);
+  line-height: 1.55;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.moment-comment-opt:hover { background: var(--fill); border-color: var(--accent); }
 
 /* ---------- 商店 ---------- */
 .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }

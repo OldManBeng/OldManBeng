@@ -33,7 +33,7 @@ import {
 import {
   BF_DEMAND_FIRST_DAY, BF_DEMAND_GAP_COLD, BF_BREAKUP_REFUSES,
   MOM_GIFT_FIRST_DAY, BF_PACKET_FIRST_DAY, BF_OMEN_DAY,
-  XIAOMAN_BIRTHDAY_DAY, freshComfortState, AUNTIE_TALK_FIRST_DAY,
+  XIAOMAN_BIRTHDAY_DAY, freshComfortState, AUNTIE_TALK_FIRST_DAY, BF_OMEN_GRACE,
   BESTIE_TALK_FIRST_DAY, COMFORT_DAY_MINUTES, COMFORT_CHAT_MINUTES, COMFORT_CONTACTS,
   COMFORT_INCIDENT_FIRST_DAY,
 } from '../../data/comfort';
@@ -42,6 +42,8 @@ import { AUNTIE_PACKS, QUARREL_PACKS, BESTIE_PACKS } from '../../data/comfort-pa
 import { BLIND_DATES, BLIND_DATE_MAP } from '../../data/comfort-dates';
 import { AUNTIE_POSTS, AUNTIE_COMMENTS, BESTIE_COMMENTS, BESTIE_POSTS } from '../../data/comfort-moments';
 import { COMFORT_INCIDENTS, DAILY_VERSES } from '../../data/comfort-incidents';
+import { myMomentCommentOptions } from '../../engine/comfort';
+import { MY_MOMENT_COMMENTS } from '../../data/comfort-moments';
 import type { GameState } from '../../types/game';
 
 function fresh(seed = 7): GameState {
@@ -64,10 +66,15 @@ function withIncoming(s: GameState, kind: 'mom_gift' | 'bf_packet' | 'bf_demand'
 }
 
 describe('1.1.0 话术库：人设与红线', () => {
-  it('母亲/男友各 ≥10 套，话题与选项齐备', () => {
-    expect(MOTHER_PACKS.length).toBeGreaterThanOrEqual(10);
-    expect(BOYFRIEND_PACKS.length).toBeGreaterThanOrEqual(10);
-    for (const p of [...MOTHER_PACKS, ...BOYFRIEND_PACKS]) {
+  it('母亲/男友各 ≥20 套、阿姨/闺蜜 ≥16 套、吵架 ≥4 套，话题与选项齐备', () => {
+    expect(MOTHER_PACKS.length).toBeGreaterThanOrEqual(20);
+    expect(BOYFRIEND_PACKS.length).toBeGreaterThanOrEqual(20);
+    expect(AUNTIE_PACKS.length).toBeGreaterThanOrEqual(16);
+    expect(BESTIE_PACKS.length).toBeGreaterThanOrEqual(16);
+    expect(QUARREL_PACKS.length).toBeGreaterThanOrEqual(4);
+    const allPacks = [...MOTHER_PACKS, ...BOYFRIEND_PACKS, ...AUNTIE_PACKS, ...BESTIE_PACKS, ...QUARREL_PACKS];
+    expect(new Set(allPacks.map((p) => p.id)).size).toBe(allPacks.length);
+    for (const p of allPacks) {
       expect(p.lines.length).toBeGreaterThanOrEqual(1);
       expect(p.options.length).toBeGreaterThanOrEqual(2);
       for (const o of p.options) {
@@ -649,8 +656,10 @@ describe('1.1.x 红娘线：凤霞姨与十张牌', () => {
     }
     for (const d of BLIND_DATES) {
       d.intro.split('｜').forEach(put);
-      for (const l of d.pack.lines) l.split('｜').forEach(put);
-      for (const o of d.pack.options) { put(o.text); o.reply.split('｜').forEach(put); }
+      for (const pack of [d.pack, d.pack2]) {
+        for (const l of pack.lines) l.split('｜').forEach(put);
+        for (const o of pack.options) { put(o.text); o.reply.split('｜').forEach(put); }
+      }
       d.comments.forEach(put);
       for (const mo of d.moments) put(mo.text);
     }
@@ -659,6 +668,7 @@ describe('1.1.x 红娘线：凤霞姨与十张牌', () => {
     expect(dupes).toEqual([]);
     expect(BLIND_DATES.length).toBe(10);
     expect(BLIND_DATES.every((d) => d.pack.options.length >= 2 && d.moments.length === 3)).toBe(true);
+    expect(BLIND_DATES.every((d) => d.pack2.options.length >= 2 && d.pack2.lines.length >= 1)).toBe(true);
     expect(Object.keys(BLIND_DATE_MAP).length).toBe(10);
   });
 
@@ -756,9 +766,9 @@ describe('1.1.x 时间与日夜：一天 40 分钟，他只在夜里', () => {
 });
 
 describe('1.1.x 曼曼Lisa（闺蜜）：拜金的橱窗，毒舌的撑腰', () => {
-  it('人物齐备：联系人/话术 ≥8 套/评论池/朋友圈文案与配图 id 映射', () => {
+  it('人物齐备：联系人/话术 ≥16 套/评论池/朋友圈文案与配图 id 映射', () => {
     expect(COMFORT_CONTACTS.bestie.name).toBe('沈曼');
-    expect(BESTIE_PACKS.length).toBeGreaterThanOrEqual(8);
+    expect(BESTIE_PACKS.length).toBeGreaterThanOrEqual(16);
     for (const p of BESTIE_PACKS) {
       expect(p.lines.length).toBeGreaterThanOrEqual(1);
       expect(p.options.length).toBeGreaterThanOrEqual(2);
@@ -946,5 +956,103 @@ describe('1.1.x 每日经文：常用手机读经', () => {
     DAILY_VERSES.forEach((v) => put(v.v));
     COMFORT_INCIDENTS.forEach((i) => { if (i.verse) put(i.verse.v); });
     expect(dupes).toEqual([]);
+  });
+});
+
+describe('1.1.0 一天一人最多一条消息', () => {
+  const contactOf = (kind: string): string | null => {
+    if (kind === 'mom_gift' || kind === 'mom_talk') return 'mother';
+    if (kind === 'bf_packet' || kind === 'bf_demand' || kind === 'bf_talk' || kind === 'quarrel') return 'boyfriend';
+    if (kind === 'auntie_intro') return 'auntie';
+    if (kind === 'bestie_talk') return 'bestie';
+    return null; // story 是"信"，不算消息
+  };
+
+  it('30 个种子 × 30 天：同一天同一联系人最多一张卡；真心话窗口里阿凯不再发日常卡', () => {
+    let checked = 0;
+    for (let seed = 1; seed <= 30; seed++) {
+      const s = fresh(400 + seed);
+      s.comfort = freshComfortState();
+      for (let d = 1; d <= 30; d++) {
+        s.day = d;
+        // 伏笔还没说出口的当天，阿凯的名额整段让给真心话（已触发后的窗口日照常）
+        const omenPending = s.comfort.bfState === 'normal' && !s.comfort.blockedByBf
+          && !s.flags.bf_omen_done && !s.comfort.chat
+          && d >= BF_OMEN_DAY && d <= BF_OMEN_DAY + BF_OMEN_GRACE;
+        runComfortMorning(s);
+        const byContact = new Map<string, number>();
+        for (const m of s.comfort.incoming.filter((x) => x.day === d)) {
+          const who = contactOf(m.kind);
+          if (!who) continue;
+          byContact.set(who, (byContact.get(who) ?? 0) + 1);
+          checked++;
+        }
+        for (const [, n] of byContact) expect(n).toBeLessThanOrEqual(1);
+        if (omenPending) expect(byContact.get('boyfriend') ?? 0).toBe(0);
+      }
+    }
+    expect(checked).toBeGreaterThan(50); // 抽样确实覆盖了大量卡片
+  });
+});
+
+describe('1.1.0 朋友圈评论：随口一句话，落在关系账上', () => {
+  it('评论按作者分池：暖话加家庭、噎话扣感情；一条动态只能评一句；相亲对象走客气池不动账', () => {
+    let s = fresh(121);
+    const motherPool = MY_MOMENT_COMMENTS.mother;
+    const warmIdx = motherPool.findIndex((o) => (o.family ?? 0) >= 2);
+    const coldIdx = motherPool.findIndex((o) => (o.family ?? 0) <= -2);
+    expect(warmIdx).toBeGreaterThanOrEqual(0);
+    expect(coldIdx).toBeGreaterThanOrEqual(0);
+    s.comfort.moments.push({ id: 'mm', day: s.day, author: 'mother', text: '（妈的动态）', likes: [], comments: [] });
+    const f0 = s.comfort.family;
+    s = dispatch(s, { type: 'comfort_comment_moment', momentId: 'mm', optionIndex: warmIdx });
+    expect(s.comfort.family).toBe(Math.min(100, f0 + motherPool[warmIdx].family!));
+    expect(s.comfort.moments.find((m) => m.id === 'mm')!.comments.some((cm) => cm.by === 'me' && cm.text === motherPool[warmIdx].text)).toBe(true);
+    // 已评过：再评不动账不改文案
+    const snap = JSON.stringify(s);
+    s = dispatch(s, { type: 'comfort_comment_moment', momentId: 'mm', optionIndex: coldIdx });
+    expect(JSON.stringify(s)).toBe(snap);
+    // 男友的动态：噎话扣感情
+    const bfPool = MY_MOMENT_COMMENTS.boyfriend;
+    const bfColdIdx = bfPool.findIndex((o) => (o.love ?? 0) <= -2);
+    s.comfort.moments.push({ id: 'mb', day: s.day, author: 'boyfriend', text: '（他的动态）', likes: [], comments: [] });
+    const l0 = s.comfort.love;
+    s = dispatch(s, { type: 'comfort_comment_moment', momentId: 'mb', optionIndex: bfColdIdx });
+    expect(s.comfort.love).toBe(l0 + bfPool[bfColdIdx].love!);
+    // 相亲对象：客气池，无 fx
+    expect(myMomentCommentOptions('bd:chen').length).toBeGreaterThanOrEqual(2);
+    expect(myMomentCommentOptions('bd:chen').every((o) => !o.family && !o.love)).toBe(true);
+  });
+
+  it('点赞仍然只加不减，且不能重复点赞', () => {
+    let s = fresh(122);
+    s.comfort.moments.push({ id: 'mk', day: s.day, author: 'auntie', text: '（阿姨的动态）', likes: [], comments: [] });
+    const f0 = s.comfort.family;
+    s = dispatch(s, { type: 'comfort_react_moment', momentId: 'mk' });
+    expect(s.comfort.family).toBe(f0 + 1);
+    const snap = JSON.stringify(s);
+    s = dispatch(s, { type: 'comfort_react_moment', momentId: 'mk' });
+    expect(JSON.stringify(s)).toBe(snap);
+  });
+});
+
+describe('1.1.0 相亲对象再聊：第二场换第二套话术', () => {
+  it('首聊走 pack；结束后再聊走 pack2；dateChats 记账、时间各 −10′', () => {
+    let s = fresh(85);
+    s.day = AUNTIE_TALK_FIRST_DAY;
+    s.comfort = freshComfortState();
+    runComfortMorning(s);
+    const card = s.comfort.incoming.find((m) => m.kind === 'auntie_intro')!;
+    s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: card.id, accept: true });
+    const dateId = Object.keys(s.comfort.datesMet)[0];
+    const date = BLIND_DATE_MAP[dateId];
+    expect(s.comfort.dateChats[dateId]).toBe(1);
+    expect(s.comfort.chat!.transcript.some((m) => m.text === date.pack.lines[0].split('｜')[0])).toBe(true);
+    s = dispatch(s, { type: 'comfort_pick', optionIndex: 0 });
+    s = dispatch(s, { type: 'comfort_end_chat' });
+    s = dispatch(s, { type: 'comfort_open_date_chat', dateId });
+    expect(s.comfort.dateChats[dateId]).toBe(2);
+    expect(s.comfort.chat!.transcript.some((m) => m.text === date.pack2.lines[0].split('｜')[0])).toBe(true);
+    expect(s.comfort.minutes).toBe(COMFORT_DAY_MINUTES - COMFORT_CHAT_MINUTES * 2);
   });
 });

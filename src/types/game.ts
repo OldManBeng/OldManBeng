@@ -284,7 +284,9 @@ export type GameAction =
   | { type: 'comfort_resolve_incoming'; incomingId: string; accept: boolean }
   /** 舒适圈：发一条朋友圈（励志/晒家/晒恩爱，每天一条）。 */
   | { type: 'comfort_post_moment'; kind: 'inspire' | 'family' | 'love' }
-  /** 舒适圈：给妈/男友的动态点赞/评论（关系+微调）。 */
-  | { type: 'comfort_react_moment'; momentId: string; kind: 'like' | 'comment' }
+  /** 舒适圈：给他人的动态点赞（不用付费的礼貌，关系微调）。 */
+  | { type: 'comfort_react_moment'; momentId: string }
+  /** 舒适圈：从随口评论里挑一句回他人的动态（家庭/感情 ±）。 */
+  | { type: 'comfort_comment_moment'; momentId: string; optionIndex: number }
   /** 舒适圈：打开朋友圈模块（清红点）。 */
   | { type: 'comfort_view_moments' };;
