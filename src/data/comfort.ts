@@ -4,20 +4,20 @@
  * 常用手机里住着三个人：过世的父亲（置灰的纪念）、家政公司的妈、
  * 游手好闲的同居男友。小满在这里素颜。
  */
-import type { ComfortState } from '../types/comfort';
+import type { ComfortContactId, ComfortState } from '../types/comfort';
 
 /** 父亲——几年前过世，通讯录置灰。他的存在是一行纪念日和一张旧照。 */
 export interface ComfortContact {
-  id: 'mother' | 'boyfriend';
+  id: ComfortContactId;
   name: string;
   handle: string;          // 微信昵称
   age: number;
-  avatarKey: 'mother' | 'boyfriend';
+  avatarKey: 'mother' | 'boyfriend' | 'auntie';
   signature: string;
   bio: string;
 }
 
-export const COMFORT_CONTACTS: Record<'mother' | 'boyfriend', ComfortContact> = {
+export const COMFORT_CONTACTS: Record<ComfortContactId, ComfortContact> = {
   mother: {
     id: 'mother',
     name: '王秀兰',
@@ -30,11 +30,20 @@ export const COMFORT_CONTACTS: Record<'mother' | 'boyfriend', ComfortContact> = 
   boyfriend: {
     id: 'boyfriend',
     name: '阿凯',
-    handle: '凯凯',
+    handle: '凯凯👩‍❤️‍👨',
     age: 27,
     avatarKey: 'boyfriend',
     signature: '代练接单 · 私聊 · 带上分',
     bio: '小满的同居男友。不上班，自称"灵活就业"，主业是打游戏——在游戏里扮成温柔体贴的年轻男人，哄中老年女性玩家刷礼物，圈里管这叫"崩阿姨"。他管这叫生意，对小满甜言蜜语，对房租熟视无睹。缺钱的时候，甜言蜜语会换一副面孔。',
+  },
+  auntie: {
+    id: 'auntie',
+    name: '刘凤霞',
+    handle: '凤霞姨',
+    age: 53,
+    avatarKey: 'auntie',
+    signature: '有合适的尽管找我 · 单身男女免费登记',
+    bio: '妈在超市理货时的老姐妹，现在在社区居委会管登记，方圆三条街的单身男女她手里有半本花名册。受小满妈郑重所托：给满满物色一个"靠谱的"。她眼里靠谱的标准很朴素——有正经工作，下班回家，妈还健在。她不知道小满有个同居的阿凯。',
   },
 };
 
@@ -139,6 +148,16 @@ export const XIAOMAN_BIRTHDAY_PACKET = 21;
 /** 感情 ≥ 此值，阿凯才记得你生日。 */
 export const BF_BIRTHDAY_REMEMBER_LOVE = 55;
 
+/** ---- 凤霞姨（红娘）：受小满妈所托，介绍靠谱的相亲对象 ---- */
+export const AUNTIE_TALK_FIRST_DAY = 5;
+export const AUNTIE_TALK_GAP_MIN = 4;
+export const AUNTIE_TALK_GAP_MAX = 6;
+/** 接受介绍：家庭关系 +（妈的心愿）/ 感情 -（阿凯炸毛）。 */
+export const DATE_INTRO_FAMILY = 2;
+export const DATE_INTRO_LOVE = -6;
+/** 阿凯吵架卡晾着不接的代价。 */
+export const QUARREL_IGNORE_LOVE = -8;
+
 /** 舒适圈聊天归档容量（防存档膨胀）。 */
 export const COMFORT_ARCHIVE_CAP = 40;
 /** 朋友圈容量。 */
@@ -168,10 +187,13 @@ export function freshComfortState(): ComfortState {
     chat: null,
     storyDone: [],
     archives: [],
-    recentPacks: { mother: [], boyfriend: [] },
+    recentPacks: { mother: [], boyfriend: [], auntie: [] },
     moments: [],
     unseenMoments: 0,
     policeDay: 0,
     flipTick: 0,
+    auntie: { lastDay: 0, count: 0 },
+    datesMet: {},
+    quarrel: { count: 0, pending: false },
   };
 }

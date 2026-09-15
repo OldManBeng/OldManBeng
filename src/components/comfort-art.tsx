@@ -7,23 +7,44 @@
  * 素颜小满是常用手机里唯一的她：眼镜、低马尾、无修容、小雀斑、眼下倦意。
  */
 import { useState } from 'react';
+import { BLIND_DATE_MAP } from '../data/comfort-dates';
 
-export type ComfortAvatarKey = 'xiaoman' | 'mother' | 'boyfriend' | 'father';
+export type ComfortAvatarKey = 'xiaoman' | 'mother' | 'boyfriend' | 'father' | 'auntie' | `bd:${string}`;
 
-const COMFORT_PNG: Record<ComfortAvatarKey, string> = {
+const COMFORT_PNG: Partial<Record<ComfortAvatarKey, string>> = {
   xiaoman: 'comfort/xiaoman_plain.png',
   mother: 'comfort/mother.png',
   boyfriend: 'comfort/boyfriend.png',
   father: 'comfort/father.png',
+  auntie: 'comfort/auntie.png',
 };
+
+/** 候选人头像：public/comfort/dates/{id}.png。 */
+function avatarSrc(who: ComfortAvatarKey): string | null {
+  if (who === 'auntie') return COMFORT_PNG.auntie!;
+  if (who.startsWith('bd:')) return `comfort/dates/${who.slice(3)}.png`;
+  return COMFORT_PNG[who] ?? null;
+}
+
+/** 兜底：相亲对象画姓氏首字圆牌（生成图未就绪时）。 */
+function InitialSvg({ label, size }: { label: string; size: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 54 54" role="img" aria-label={label}>
+      <circle cx="27" cy="27" r="26" fill="#F4E8D2" />
+      <circle cx="27" cy="27" r="26" fill="none" stroke="#00000022" strokeWidth="1.2" />
+      <text x="27" y="36" textAnchor="middle" fontSize="24" fontWeight="600" fill="#8A6D3B" style={{ fontFamily: 'serif' }}>{label}</text>
+    </svg>
+  );
+}
 
 /** 舒适圈头像。 */
 export function ComfortAvatar({ who, size = 44 }: { who: ComfortAvatarKey; size?: number }) {
   const [failed, setFailed] = useState(false);
-  if (!failed) {
+  const src = avatarSrc(who);
+  if (!failed && src) {
     return (
       <img
-        src={COMFORT_PNG[who]}
+        src={src}
         width={size}
         height={size}
         alt=""
@@ -36,7 +57,11 @@ export function ComfortAvatar({ who, size = 44 }: { who: ComfortAvatarKey; size?
       />
     );
   }
-  return <ComfortFaceSvg who={who} size={size} />;
+  if (who.startsWith('bd:')) {
+    const name = BLIND_DATE_MAP[who.slice(3)]?.name;
+    return <InitialSvg label={name?.[0] ?? '客'} size={size} />;
+  }
+  return <ComfortFaceSvg who={who as 'xiaoman' | 'mother' | 'boyfriend' | 'father'} size={size} />;
 }
 
 /** 程序化兜底脸：四张暖色系面孔（素颜小满/家政妈/电竞男友/父亲旧照位）。 */

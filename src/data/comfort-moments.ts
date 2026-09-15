@@ -95,3 +95,17 @@ export const COMFORT_SCENES: Record<string, string> = {
   cm_chicken: '分一半的炸鸡',
   cm_game: '他的游戏截图',
 };
+
+/** ---- 凤霞姨的朋友圈（红娘的日常：相亲角/老姐妹/她做这行的骄傲） ---- */
+export const AUNTIE_POSTS: { text: string; photoId?: string }[] = [
+  { text: '今天相亲角，挂出去的牌子比上个月多了二十张。年轻人啊——机会从来不会自己走来，得有人推着走。', photoId: 'cm_road' },
+  { text: '上午茶的时候老姐妹们感慨：我们那时候东西坏了想着修，现在的人坏了就想换。人和人，也一样。', photoId: 'cm_soy' },
+  { text: '妈们托我的人越来越多。受人之托，忠人之事——这八个字，比啥都金贵。', photoId: 'cm_quilt' },
+];
+
+/** 阿姨给小满朋友圈的评论（她把每一条都当成了解小满的窗口）。 */
+export const AUNTIE_COMMENTS: string[] = [
+  '满满这照片拍得好！心态好的人，照片里都带着光。姨给你转给你妈看了啊。',
+  '哎哟我们满满真俊！姨把这条也记下了——好姑娘的日子，就该这么亮堂。',
+  '满满会生活！姨跟你说，会记录生活的人，日子差不了。',
+];

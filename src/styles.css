@@ -1219,7 +1219,7 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   .plan-bar-toggle { transition: none; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .plan-panel.open .plan-bar-toggle { border-bottom-left-radius: var(--r-list); border-bottom-right-radius: var(--r-list); }
+  .plan-panel.open.chosen .plan-bar-toggle { border-bottom-left-radius: var(--r-list); border-bottom-right-radius: var(--r-list); }
 }
 
 /* v4.3.3 选中态：胶囊下方展开计划详情行。 */

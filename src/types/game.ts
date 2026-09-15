@@ -270,7 +270,8 @@ export type GameAction =
   /** 1.1.0 切换常用手机——工作手机（崩老头）↔ 常用手机（舒适圈）。纯视图切换。 */
   | { type: 'switch_phone' }
   /** 舒适圈：主动找妈/男友聊天（不耗体力）。 */
-  | { type: 'comfort_open_chat'; contactId: 'mother' | 'boyfriend' }
+  | { type: 'comfort_open_chat'; contactId: 'mother' | 'boyfriend' | 'auntie' }
+  | { type: 'comfort_open_date_chat'; dateId: string }
   /** 舒适圈：选一个回复（对方回应 + 关系变化）。 */
   | { type: 'comfort_pick'; optionIndex: number }
   /** 舒适圈：结束当前聊天（归档）。 */

@@ -11,13 +11,30 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../store/gameStore';
 import { formatMoney } from '../utils/format';
-import { ComfortAvatar, ComfortSceneRender } from './comfort-art';
+import { ComfortAvatar, ComfortSceneRender, type ComfortAvatarKey } from './comfort-art';
 import { Ico } from './icons';
 import { playMessage, playSend, playMoney, playTab, playBlocked, playPost, playSocial } from '../utils/sound';
 import { COMFORT_CONTACTS, FATHER_MEMORIAL, XIAOMAN } from '../data/comfort';
 import { MIRROR_LINES, WALLET_CONTRAST } from '../data/comfort-contrast';
 import { STORY_BEATS, STORY_OPEN_LABEL } from '../data/comfort-story';
-import type { ComfortContactId, ComfortMessage } from '../types/comfort';
+import { BLIND_DATES, BLIND_DATE_MAP } from '../data/comfort-dates';
+import type { ComfortContactId, ComfortMessage, ComfortSpeakerId } from '../types/comfort';
+
+/** 说话人显示名：联系人 / 叙事位 / 相亲对象统一入口。 */
+function speakerName(id: ComfortSpeakerId): string {
+  if (id === 'mother') return COMFORT_CONTACTS.mother.handle;
+  if (id === 'boyfriend') return COMFORT_CONTACTS.boyfriend.handle;
+  if (id === 'auntie') return COMFORT_CONTACTS.auntie.handle;
+  if (id === 'sys') return '消息';
+  return BLIND_DATE_MAP[id.slice(3)]?.handle ?? id;
+}
+
+/** 说话人头像 key：bd:{id} 直接透传给 ComfortAvatar（PNG 优先，首字兜底）。 */
+function speakerAvatar(id: ComfortSpeakerId): ComfortAvatarKey | undefined {
+  if (id === 'mother' || id === 'boyfriend' || id === 'auntie') return id;
+  if (id.startsWith('bd:')) return id as `bd:${string}`;
+  return undefined;
+}
 
 type ComfortTab = 'today' | 'contacts' | 'moments' | 'history' | 'wallet';
 
@@ -71,7 +88,7 @@ function ComfortNavIcon({ name }: { name: ComfortTab }) {
 const REL_LABEL = (v: number) => (v >= 75 ? '很亲' : v >= 50 ? '还行' : v >= 30 ? '有点淡了' : '快凉透了');
 
 /** 微信式语音条 + 下方真文字——熟人全靠语音，文字是玩家可见的译文。 */
-function VoiceBubble({ m, name, who }: { m: ComfortMessage; name?: string; who?: 'mother' | 'boyfriend' | 'xiaoman' | 'father' }) {
+function VoiceBubble({ m, name, who }: { m: ComfortMessage; name?: string; who?: ComfortAvatarKey }) {
   if (m.speaker === 'sys') {
     return (
       <div className="cbubble-sys">
@@ -226,31 +243,38 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
         const storyFrom = beat?.from ?? 'sys';
         const isStory = m.kind === 'story';
         const isTalk = m.kind === 'mom_talk' || m.kind === 'bf_talk';
+        const isIntro = m.kind === 'auntie_intro';
+        const isQuarrel = m.kind === 'quarrel';
         const isMom = m.kind === 'mom_gift' || m.kind === 'mom_talk';
         const isDemand = m.kind === 'bf_demand';
-        const contactId: ComfortContactId = isMom ? 'mother' : 'boyfriend';
+        // 每种卡的"说话人"：故事卡按 beat 来源，其余按卡的归属
+        const speaker: ComfortSpeakerId = isStory
+          ? (storyFrom as ComfortSpeakerId)
+          : isMom || m.kind === 'mom_talk' ? 'mother'
+          : (m.kind === 'bf_packet' || m.kind === 'bf_demand' || m.kind === 'bf_talk' || isQuarrel) ? 'boyfriend'
+          : 'auntie';
         const tag = isStory ? ' · ' + (storyFrom === 'sys' ? '消息' : '语音')
+          : isIntro ? ' · 给你介绍个人'
+          : isQuarrel ? ' · 火气'
           : m.tone === 'birthday' ? ' · 生日'
           : isTalk ? ' · 语音'
           : m.kind === 'bf_packet' ? ' · 红包'
           : isDemand ? ' · 要钱' : ' · 转账';
-        const storyName = !isStory ? nameOf(contactId)
-          : storyFrom === 'mother' ? '妈'
-          : storyFrom === 'boyfriend' ? nameOf('boyfriend') : '消息';
+        const storyName = speakerName(speaker);
         const chatOpen = c.chat !== null;
         return (
           <div key={m.id} className={`comfort-event-card ${m.kind}`}>
             <div className="cec-head">
               {isStory && storyFrom === 'sys'
                 ? <span className="cec-sys-mark">📨</span>
-                : <ComfortAvatar who={isMom ? 'mother' : 'boyfriend'} size={36} />}
+                : <ComfortAvatar who={speakerAvatar(speaker) ?? 'xiaoman'} size={36} />}
               <div>
                 <div className="cec-name">{storyName}{tag}</div>
                 <div className="muted small">{m.note}</div>
               </div>
             </div>
             {m.lines.map((l, i) => (
-              <VoiceBubble key={i} m={{ speaker: 'them', text: l, voiceSecs: Math.min(58, Math.max(2, Math.ceil(l.length / 4))) }} name={storyName} who={isStory && storyFrom !== 'sys' ? (storyFrom as ComfortContactId) : isMom ? 'mother' : 'boyfriend'} />
+              <VoiceBubble key={i} m={{ speaker: 'them', text: l, voiceSecs: Math.min(58, Math.max(2, Math.ceil(l.length / 4))) }} name={storyName} who={speakerAvatar(speaker)} />
             ))}
             <div className="cec-actions">
               {isStory ? (
@@ -261,20 +285,46 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
                 >
                   {chatOpen ? '（先回完手头这场）' : STORY_OPEN_LABEL[storyFrom]}
                 </button>
-              ) : isTalk ? (
+              ) : isIntro ? (
                 <>
                   <button
                     className="btn small primary"
                     disabled={chatOpen}
                     onClick={() => { playMessage(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: true }); }}
                   >
-                    {chatOpen ? '（先回完手头这场）' : `回${isMom ? '她' : '他'}（免费聊天）`}
+                    {chatOpen ? '（先回完手头这场）' : '见见（阿姨都安排好了）'}
                   </button>
                   <button className="btn small muted-btn" onClick={() => { playBlocked(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: false }); }}>
-                    先不回（{isMom ? '她会等到很晚' : '他马上追问'}）
+                    婉拒（姨有点可惜，还会再来）
                   </button>
                 </>
-              ) : isDemand ? (
+              ) : isQuarrel ? (
+                <>
+                  <button
+                    className="btn small primary"
+                    disabled={chatOpen}
+                    onClick={() => { playMessage(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: true }); }}
+                  >
+                    {chatOpen ? '（先回完手头这场）' : '听他说完'}
+                  </button>
+                  <button className="btn small muted-btn" onClick={() => { playBlocked(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: false }); }}>
+                    晾着他（感情更凉）
+                  </button>
+                </>
+              ) : isTalk ? (
+                  <>
+                    <button
+                      className="btn small primary"
+                      disabled={chatOpen}
+                      onClick={() => { playMessage(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: true }); }}
+                    >
+                      {chatOpen ? '（先回完手头这场）' : `回${isMom ? '她' : '他'}（免费聊天）`}
+                    </button>
+                    <button className="btn small muted-btn" onClick={() => { playBlocked(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: false }); }}>
+                      先不回（{isMom ? '她会等到很晚' : '他马上追问'}）
+                    </button>
+                  </>
+                ) : isDemand ? (
                 <>
                   <button className="btn small primary" onClick={() => { playMoney(); store.dispatch({ type: 'comfort_resolve_incoming', incomingId: m.id, accept: true }); }}>
                     给他 {formatMoney(m.amount)}（活命钱扣，不够记债）
@@ -307,13 +357,13 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
       {/* 熟人速聊（不耗体力） */}
       <div className="comfort-quick-chat">
         <h3>家人</h3>
-        {(['mother', 'boyfriend'] as ComfortContactId[]).map((id) => {
+        {(['mother', 'boyfriend', 'auntie'] as ComfortContactId[]).map((id) => {
           const def = COMFORT_CONTACTS[id];
           const gone = id === 'boyfriend' && (c.blockedByBf || c.bfState !== 'normal');
           const goneText = c.bfState === 'arrested' ? '（他的头像再也没有亮过。）' : '（他把你删了。）';
           return (
             <div key={id} className={`comfort-contact-row ${gone ? 'gone' : ''}`}>
-              <ComfortAvatar who={id === 'mother' ? 'mother' : 'boyfriend'} size={40} />
+              <ComfortAvatar who={id} size={40} />
               <div className="ccr-body">
                 <div className="ccr-name">{def.handle}</div>
                 <div className="muted small">{gone ? goneText : def.signature}</div>
@@ -326,6 +376,27 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
             </div>
           );
         })}
+        {Object.keys(c.datesMet).length > 0 && (
+          <>
+            <h3>阿姨介绍的</h3>
+            {Object.entries(c.datesMet).sort((a, b) => b[1] - a[1]).map(([id, metDay]) => {
+              const date = BLIND_DATE_MAP[id];
+              if (!date) return null;
+              return (
+                <div key={id} className="comfort-contact-row">
+                  <ComfortAvatar who={`bd:${id}` as ComfortAvatarKey} size={40} />
+                  <div className="ccr-body">
+                    <div className="ccr-name">{date.handle}</div>
+                    <div className="muted small">{date.job} · 第 {metDay} 天经凤霞姨认识</div>
+                  </div>
+                  <button className="btn small primary" onClick={() => { playMessage(); store.dispatch({ type: 'comfort_open_date_chat', dateId: id }); }}>
+                    发消息
+                  </button>
+                </div>
+              );
+            })}
+          </>
+        )}
       </div>
 
       <div className="event-feed">
@@ -355,7 +426,7 @@ function ComfortContacts() {
 
   return (
     <section className="comfort-contacts">
-      <h3>通讯录（3 人）</h3>
+      <h3>通讯录（{3 + Object.keys(c.datesMet).length} 人）</h3>
       {/* 父亲：置灰 */}
       <div className="comfort-contact-row father" onClick={() => setDadOpen(!dadOpen)}>
         <ComfortAvatar who="father" size={44} />
@@ -376,6 +447,16 @@ function ComfortContacts() {
           <div className="muted small">家庭关系 {Math.round(c.family)} · 给过你 {formatMoney(c.momGiven)} · 你推掉过 {formatMoney(c.momRefused)}</div>
         </div>
       </div>
+      {/* 凤霞姨（红娘） */}
+      <div className="comfort-contact-row">
+        <ComfortAvatar who="auntie" size={44} />
+        <div className="ccr-body">
+          <div className="ccr-name">{COMFORT_CONTACTS.auntie.handle}（{COMFORT_CONTACTS.auntie.name} · {COMFORT_CONTACTS.auntie.age}岁）</div>
+          <div className="muted small">{COMFORT_CONTACTS.auntie.signature}</div>
+          <div className="comfort-contact-bio">{COMFORT_CONTACTS.auntie.bio}</div>
+          <div className="muted small">介绍过 {c.auntie.count} 个 · 认识了 {Object.keys(c.datesMet).length} 个</div>
+        </div>
+      </div>
       {/* 男友 */}
       <div className={`comfort-contact-row ${bfGone ? 'gone' : ''}`}>
         <ComfortAvatar who="boyfriend" size={44} />
@@ -389,6 +470,27 @@ function ComfortContacts() {
         </div>
       </div>
       <p className="muted small">爸的名字一直置着灰。妈说，留着吧，就当这个号还在等他上线。</p>
+      {Object.keys(c.datesMet).length > 0 && (
+        <>
+          <h3>阿姨介绍的</h3>
+          {Object.entries(c.datesMet).sort((a, b) => b[1] - a[1]).map(([id, metDay]) => {
+            const date = BLIND_DATE_MAP[id];
+            if (!date) return null;
+            return (
+              <div key={id} className="comfort-contact-row">
+                <ComfortAvatar who={`bd:${id}` as ComfortAvatarKey} size={44} />
+                <div className="ccr-body">
+                  <div className="ccr-name">{date.handle}（{date.name} · {date.age}岁）</div>
+                  <div className="muted small">{date.job} · {date.signature}</div>
+                  <div className="comfort-contact-bio">{date.bio}</div>
+                  <div className="muted small">第 {metDay} 天经凤霞姨认识</div>
+                </div>
+              </div>
+            );
+          })}
+          <p className="muted small">阿姨的花名册还有半本没翻完。她说好男人不等人，她能等。</p>
+        </>
+      )}
     </section>
   );
 }
@@ -429,8 +531,18 @@ function ComfortMoments() {
         {[...c.moments].reverse().map((m) => {
           const liked = m.likes.includes('me');
           const commented = m.comments.some((cm) => cm.by === 'me');
-          const nameOf = (by: string) => by === 'me' ? (state.playerName || '小满') : by === 'mother' ? '妈' : by === 'boyfriend' ? COMFORT_CONTACTS.boyfriend.handle : by;
-          const ava = m.author === 'me' ? <ComfortAvatar who="xiaoman" size={36} /> : <ComfortAvatar who={m.author === 'mother' ? 'mother' : 'boyfriend'} size={36} />;
+          const nameOf = (by: string) => {
+            if (by === 'me') return state.playerName || '小满';
+            if (by === 'sys') return '消息';
+            if (by.startsWith('bd:')) return BLIND_DATE_MAP[by.slice(3)]?.handle ?? by;
+            return COMFORT_CONTACTS[by as ComfortContactId].handle;
+          };
+          const authorAvatar = (by: string): ComfortAvatarKey | undefined => {
+            if (by === 'me') return 'xiaoman';
+            if (by.startsWith('bd:')) return by as `bd:${string}`;
+            return by as ComfortAvatarKey;
+          };
+          const ava = <ComfortAvatar who={authorAvatar(m.author) ?? 'xiaoman'} size={36} />;
           return (
             <div key={m.id} className="moment-card">
               <div className="moment-head">
@@ -475,7 +587,6 @@ function ComfortHistory() {
   const { state } = useGame();
   const c = state.comfort;
   const [openIdx, setOpenIdx] = useState<number | null>(null);
-  const nameOf = (id: ComfortContactId | 'sys') => (id === 'sys' ? '消息' : COMFORT_CONTACTS[id].handle);
   return (
     <section className="comfort-history">
       <h3>聊天记录</h3>
@@ -487,13 +598,13 @@ function ComfortHistory() {
             <div key={realIdx} className="history-item">
               <button className="history-head" onClick={() => setOpenIdx(openIdx === realIdx ? null : realIdx)}>
                 <span className="history-day">第 {a.day} 天</span>
-                <span className="history-name">{nameOf(a.contactId)}</span>
+                <span className="history-name">{speakerName(a.contactId)}</span>
                 <span className="muted small">{a.transcript.length} 条 · {openIdx === realIdx ? '收起' : '展开'}</span>
               </button>
               {openIdx === realIdx && (
                 <div className="history-transcript">
                   {a.transcript.map((m, j) => (
-                    <VoiceBubble key={j} m={m} name={nameOf(a.contactId)} who={a.contactId === 'sys' ? undefined : a.contactId} />
+                    <VoiceBubble key={j} m={m} name={speakerName(a.contactId)} who={speakerAvatar(a.contactId)} />
                   ))}
                 </div>
               )}
@@ -544,7 +655,7 @@ function ComfortChatView() {
   const { state } = store;
   const c = state.comfort;
   const chat = c.chat!;
-  const name = chat.contactId === 'mother' ? '妈' : COMFORT_CONTACTS.boyfriend.handle;
+  const name = speakerName(chat.contactId);
   const streamRef = useRef<HTMLDivElement>(null);
   // 新气泡到达 → 平滑贴底（微信式：旧消息向上滚，最新的永远可见）。
   useEffect(() => {
@@ -554,14 +665,14 @@ function ComfortChatView() {
   return (
     <section className="chat-panel comfort-chat">
       <header className="chat-header">
-        <ComfortAvatar who={chat.contactId === 'mother' ? 'mother' : 'boyfriend'} size={36} />
+        <ComfortAvatar who={speakerAvatar(chat.contactId) ?? 'xiaoman'} size={36} />
         <div>
           <div className="target-name">{name}</div>
         </div>
       </header>
       <div className="chat-stream" ref={streamRef}>
         {chat.transcript.map((m, i) => (
-          <VoiceBubble key={i} m={m} name={name} who={chat.contactId} />
+          <VoiceBubble key={i} m={m} name={name} who={speakerAvatar(chat.contactId)} />
         ))}
       </div>
       {chat.awaiting === 'player' && (

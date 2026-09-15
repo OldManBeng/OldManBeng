@@ -69,7 +69,8 @@ import type { IncidentDef, IncidentOption } from '../data/incidents';
 import { freshComfortState } from '../data/comfort';
 import { SWITCH_TO_COMFORT, SWITCH_TO_WORK } from '../data/comfort-contrast';
 import {
-  runComfortMorning, resolveComfortIncoming, openComfortChat, pickComfortOption, endComfortChat,
+  runComfortMorning,
+  openDateChat, resolveComfortIncoming, openComfortChat, pickComfortOption, endComfortChat,
   postComfortMoment, reactComfortMoment,
 } from './comfort';
 
@@ -1897,6 +1898,14 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       if (s.comfort.chat) return s;
       if (action.contactId === 'boyfriend' && s.comfort.blockedByBf) return s;
       openComfortChat(s, action.contactId);
+      return s;
+    }
+
+    case 'comfort_open_date_chat': {
+      // 相亲对象聊天同样免费——阿姨介绍的人，客气是标配。
+      if (s.comfort.chat) return s;
+      if (!(action.dateId in s.comfort.datesMet)) return s;
+      openDateChat(s, action.dateId);
       return s;
     }
 

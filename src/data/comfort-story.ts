@@ -234,6 +234,7 @@ export const STORY_BEATS: ComfortStoryBeat[] = [
 
 /** 剧情卡在「今天」页的按钮文案（按 from 区分）。 */
 export const STORY_OPEN_LABEL: Record<ComfortContactId | 'sys', string> = {
+  auntie: '听凤霞姨说',
   mother: '听妈说完',
   boyfriend: '点开他的语音',
   sys: '看这条消息',

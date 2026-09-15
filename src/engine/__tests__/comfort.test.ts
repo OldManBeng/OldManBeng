@@ -33,9 +33,12 @@ import {
 import {
   BF_DEMAND_FIRST_DAY, BF_DEMAND_GAP_COLD, BF_BREAKUP_REFUSES,
   MOM_GIFT_FIRST_DAY, BF_PACKET_FIRST_DAY, BF_OMEN_DAY,
-  XIAOMAN_BIRTHDAY_DAY, freshComfortState,
+  XIAOMAN_BIRTHDAY_DAY, freshComfortState, AUNTIE_TALK_FIRST_DAY,
 } from '../../data/comfort';
 import { STORY_BEATS } from '../../data/comfort-story';
+import { AUNTIE_PACKS, QUARREL_PACKS } from '../../data/comfort-packs';
+import { BLIND_DATES, BLIND_DATE_MAP } from '../../data/comfort-dates';
+import { AUNTIE_POSTS, AUNTIE_COMMENTS } from '../../data/comfort-moments';
 import type { GameState } from '../../types/game';
 
 function fresh(seed = 7): GameState {
@@ -503,10 +506,9 @@ describe('1.1.0 切换手机 / 事件派发 / 迁移', () => {
   it('首事件日节奏：红包最早 D2 / 生活费最早 D3 / 要钱最早 D6', () => {
     let s = fresh(43);
     while (s.day < BF_DEMAND_FIRST_DAY + 1) s = dispatch(s, { type: 'sleep' });
-    // 全部历史事件卡都不得早于各线首日
-    for (const l of s.log.filter((l) => l.kind === 'comfort')) {
-      void l;
-    }
+    // 跑到要钱首日+1：日志里不应出现任何"被塞了钱/被要钱"字样的早到事件
+    const comfortLogs = s.log.filter((l) => l.kind === 'comfort').map((l) => l.details);
+    expect(comfortLogs.some((d) => d.includes('阿凯把他"崩阿姨"的钱分了你一半') && s.day < BF_PACKET_FIRST_DAY)).toBe(false);
     expect(BF_PACKET_FIRST_DAY).toBe(2);
     expect(MOM_GIFT_FIRST_DAY).toBe(3);
     expect(BF_DEMAND_FIRST_DAY).toBe(6);
@@ -523,5 +525,150 @@ describe('1.1.0 切换手机 / 事件派发 / 迁移', () => {
 
   it('感情冰点保底：感情凉到 60 以下，要钱的间隔缩到 3 天', () => {
     expect(BF_DEMAND_GAP_COLD).toBe(3);
+  });
+});
+
+describe('审查修复回归：边界不再吞事件', () => {
+  it('D21 上限已满时生日红包不再丢失（绕开上限 + 标志只在落地后置位）', () => {
+    let s = fresh(81);
+    s.day = XIAOMAN_BIRTHDAY_DAY;
+    const base = freshComfortState();
+    // 预填满 3 张普通事件卡
+    base.incoming = [
+      { id: 'f1', kind: 'mom_talk', day: XIAOMAN_BIRTHDAY_DAY - 1, amount: 0, lines: ['x'] },
+      { id: 'f2', kind: 'bf_packet', day: XIAOMAN_BIRTHDAY_DAY - 1, amount: 88, lines: ['y'] },
+      { id: 'f3', kind: 'mom_talk', day: XIAOMAN_BIRTHDAY_DAY, amount: 0, lines: ['z'] },
+    ];
+    s.comfort = base;
+    runComfortMorning(s);
+    const card = s.comfort.incoming.find((m) => m.kind === 'mom_gift' && m.tone === 'birthday');
+    expect(card).toBeDefined();
+    expect(s.flags.xiaoman_birthday_done).toBe(true);
+  });
+
+  it('过期未回的嘘寒问暖卡同样扣关系（无视不是免费的）', () => {
+    let s = fresh(83);
+    s.day = 10;
+    s.comfort = freshComfortState();
+    s.comfort.incoming = [{ id: 'old_talk', kind: 'mom_talk', day: 8, amount: 0, lines: ['x'] }];
+    runComfortMorning(s);
+    expect(s.comfort.family).toBe(72 - 2);
+    expect(s.comfort.incoming.some((m) => m.id === 'old_talk')).toBe(false);
+    const all = s.log.filter((l) => l.kind === 'comfort').map((l) => l.details);
+    expect(all.some((d) => d.includes('还一条没听'))).toBe(true);
+  });
+});
+
+describe('1.1.x 红娘线：凤霞姨与十张牌', () => {
+  it('阿姨介绍流：接受 → 候选人入册 + 家庭+/感情- + 直接开场首聊', () => {
+    let s = fresh(85);
+    s.day = AUNTIE_TALK_FIRST_DAY;
+    s.comfort = freshComfortState();
+    runComfortMorning(s);
+    const card = s.comfort.incoming.find((m) => m.kind === 'auntie_intro');
+    expect(card).toBeDefined();
+    expect(card!.lines[0].length).toBeGreaterThan(4);
+    const family0 = s.comfort.family;
+    const love0 = s.comfort.love;
+    s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: card!.id, accept: true });
+    // 认识了一个人
+    expect(Object.keys(s.comfort.datesMet).length).toBe(1);
+    expect(s.comfort.family).toBe(family0 + 2);
+    expect(s.comfort.love).toBe(love0 - 6);
+    // 首聊直接开场，说话人是候选人
+    expect(s.comfort.chat!.contactId.startsWith('bd:')).toBe(true);
+    // 正常玩：选一句回复并结束首聊
+    s = dispatch(s, { type: 'comfort_pick', optionIndex: 0 });
+    s = dispatch(s, { type: 'comfort_end_chat' });
+    // 第二天早晨阿凯炸毛
+    s = { ...s, day: s.day + 1 };
+    runComfortMorning(s);
+    const quarrel = s.comfort.incoming.find((m) => m.kind === 'quarrel');
+    expect(quarrel).toBeDefined();
+    s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: quarrel!.id, accept: true });
+    expect(s.comfort.chat!.contactId).toBe('boyfriend');
+    expect(s.comfort.chat!.transcript.some((m) => m.text.includes('相亲'))).toBe(true);
+  });
+
+  it('婉拒介绍：候选人不入册，阿姨不气不恼（下一次还会介绍）', () => {
+    let s = fresh(87);
+    s.day = AUNTIE_TALK_FIRST_DAY;
+    s.comfort = freshComfortState();
+    runComfortMorning(s);
+    const card = s.comfort.incoming.find((m) => m.kind === 'auntie_intro')!;
+    const id = card.packId!;
+    s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: card.id, accept: false });
+    expect(id in s.comfort.datesMet).toBe(false);
+    expect(s.comfort.quarrel.pending).toBe(false);
+  });
+
+  it('候选人的朋友圈在认识第 2 / 4 天浮出，且会给小满的新动态点赞评论', () => {
+    let s = fresh(89);
+    s.day = AUNTIE_TALK_FIRST_DAY;
+    s.comfort = freshComfortState();
+    runComfortMorning(s);
+    const card = s.comfort.incoming.find((m) => m.kind === 'auntie_intro')!;
+    s = dispatch(s, { type: 'comfort_resolve_incoming', incomingId: card.id, accept: true });
+    const metId = Object.keys(s.comfort.datesMet)[0];
+    const met = s.comfort.datesMet[metId];
+    // 第 2 天：第一条朋友圈
+    s = { ...s, day: met + 2 };
+    runComfortMorning(s);
+    expect(s.comfort.moments.some((m) => m.author === `bd:${metId}`)).toBe(true);
+    // 第 4 天：第二条
+    s = { ...s, day: met + 4 };
+    runComfortMorning(s);
+    expect(s.comfort.moments.filter((m) => m.author === `bd:${metId}`).length).toBe(2);
+    // 小满发动态：妈/阿姨必互动，最近认识的候选人大概率来评
+    s = dispatch(s, { type: 'comfort_post_moment', kind: 'family' });
+    const post = s.comfort.moments.find((m) => m.author === 'me' && m.day === s.day)!;
+    expect(post.likes).toContain('auntie');
+    expect(post.comments.some((cm) => cm.by === 'auntie')).toBe(true);
+  });
+
+  it('阿姨日常话术/吵架话术/候选人全库台词零重复', () => {
+    const seen = new Set<string>();
+    const dupes: string[] = [];
+    const put = (t: string) => {
+      const k = t.replace(/\s/g, '');
+      if (k && seen.has(k)) dupes.push(t);
+      seen.add(k);
+    };
+    for (const p of [...AUNTIE_PACKS, ...QUARREL_PACKS]) {
+      for (const l of p.lines) l.split('｜').forEach(put);
+      for (const o of p.options) { put(o.text); o.reply.split('｜').forEach(put); }
+    }
+    for (const d of BLIND_DATES) {
+      d.intro.split('｜').forEach(put);
+      for (const l of d.pack.lines) l.split('｜').forEach(put);
+      for (const o of d.pack.options) { put(o.text); o.reply.split('｜').forEach(put); }
+      d.comments.forEach(put);
+      for (const mo of d.moments) put(mo.text);
+    }
+    AUNTIE_COMMENTS.forEach(put);
+    AUNTIE_POSTS.forEach((p) => put(p.text));
+    expect(dupes).toEqual([]);
+    expect(BLIND_DATES.length).toBe(10);
+    expect(BLIND_DATES.every((d) => d.pack.options.length >= 2 && d.moments.length === 2)).toBe(true);
+    expect(Object.keys(BLIND_DATE_MAP).length).toBe(10);
+  });
+
+  it('剧情卡不占常规配额：挂着的剧情卡不挤掉生活费/介绍卡', () => {
+    let s = fresh(91);
+    s.day = 9;
+    s.comfort = freshComfortState();
+    // 预挂 3 张剧情卡（永不过期）
+    s.comfort.incoming = [
+      { id: 'story_d2', kind: 'story', day: 2, amount: 0, lines: ['a'], beatId: 'd2_mom_eight_hundred' },
+      { id: 'story_d4', kind: 'story', day: 4, amount: 0, lines: ['b'], beatId: 'd4_mom_hospital' },
+      { id: 'story_d7', kind: 'story', day: 7, amount: 0, lines: ['c'], beatId: 'd7_kai_lanyi' },
+    ];
+    s.comfort.storyDone = ['d2_mom_eight_hundred', 'd4_mom_hospital', 'd7_kai_lanyi'];
+    runComfortMorning(s);
+    // 妈的 D9 账本剧情卡照常来（独立通道）
+    expect(s.comfort.incoming.some((m) => m.beatId === 'd9_mom_ledger')).toBe(true);
+    // 常规事件卡配额不被剧情卡占据：嘘寒问暖/生活费照发
+    const talkOrGift = s.comfort.incoming.some((m) => m.kind === 'mom_talk' || m.kind === 'mom_gift');
+    expect(talkOrGift).toBe(true);
   });
 });

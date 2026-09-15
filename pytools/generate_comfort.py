@@ -112,6 +112,7 @@ for _k in SCENES:
     _seed += 1
 
 
+
 def patch_avatar(workflow: dict, key: str) -> None:
     workflow[STYLE_NODE]["inputs"]["value"] = CLEAN_STYLE
     workflow[PROMPT_NODE]["inputs"]["string"] = f"舒适圈头像·{key}：{AVATARS[key]} +（通用底座）"
@@ -119,6 +120,14 @@ def patch_avatar(workflow: dict, key: str) -> None:
     workflow[SIZE_NODE]["inputs"]["width"] = AVATAR_SIZE
     workflow[SIZE_NODE]["inputs"]["height"] = AVATAR_SIZE
     workflow[PREFIX_NODE]["inputs"]["filename_prefix"] = f"comfort/{key}"
+
+
+def _patch_date_scene(workflow: dict, key: str) -> None:
+    workflow[PROMPT_NODE]["inputs"]["string"] = f"相亲对象朋友圈配图·{key}：{DATE_SCENES[key]}，横构图 4:3"
+    workflow[SEED_NODE]["inputs"]["value"] = SEEDS[key]
+    workflow[SIZE_NODE]["inputs"]["width"] = SCENE_W
+    workflow[SIZE_NODE]["inputs"]["height"] = SCENE_H
+    workflow[PREFIX_NODE]["inputs"]["filename_prefix"] = f"comfort/scenes/{key}"
 
 
 def patch_scene(workflow: dict, key: str) -> None:
@@ -167,27 +176,119 @@ def generate_one(server: str, workflow: dict, key: str, is_avatar: bool) -> str:
     return save_avatar(raw_path, key) if is_avatar else save_scene(raw_path, key)
 
 
+
+# ==========================================================================
+# v1.1.x 红娘线：凤霞姨头像 + 10 个相亲对象头像 + 20 张候选人朋友圈图
+# 产物：
+#   头像 → public/comfort/auntie.png / public/comfort/dates/{key}.png
+#   场景 → public/comfort/scenes/bd_{key}_{1,2}.jpg
+# ==========================================================================
+DATE_AVATARS = {
+    "auntie": (
+        "53 岁中国热心阿姨头像，社区红娘：黑色短卷发烫小卷，红框圆眼镜，眼角笑纹深，"
+        "穿藕粉色针织开衫配碎花围巾，表情热络爽利像正要拉着你介绍对象，"
+        "居委会办公室背景虚化（荣誉锦旗隐约可见）"
+    ),
+    "chen": "29 岁中国男教师头像：清爽短发，细框方眼镜，白衬衫扣到顶，清瘦书卷气，表情温和拘谨，教室黑板绿背景虚化",
+    "zhao": "31 岁中国男医生头像：黑色短发压得服帖，白大褂配听诊器，眼下淡淡熬夜青影，笑容干净可靠，医院走廊冷白背景虚化",
+    "sun": "28 岁中国消防员头像：板寸头，皮肤晒成小麦色，浓眉大眼笑得憨直，深蓝色作训服，消防车红白车身边缘虚化",
+    "zhou": "33 岁中国公务员头像：三七分短发一丝不苟，深色polo衫，方脸平和面相，表情规矩老实，办公室绿植背景虚化",
+    "wu": "27 岁中国程序员头像：蓬乱短发，黑框眼镜，灰色连帽衫，脸色偏白偶尔熬夜，表情认真直接，双显示器代码屏背景虚化",
+    "zheng": "30 岁中国健身教练头像：短寸发，下颌线分明，皮肤健康古铜色，紧身运动背心，笑容阳光自信带点自恋，健身房器械背景虚化",
+    "feng": "35 岁中国汽修师傅头像：短寸头发鬓角略长，手背有旧疤，深蓝色工装外套拉链半开，表情沉静内敛带一丝沧桑，汽修厂工具墙背景虚化",
+    "he": "28 岁中国摄影师头像：微卷中长发，米色亚麻衬衫，脖挂胶片相机，眼神温柔观察感，暖调婚礼背景虚化光斑",
+    "xu": "31 岁中国公交司机头像：平头，制服深蓝配肩章，坐姿端正，表情沉稳朴实带一点倦，公交车驾驶位前挡玻璃街景虚化",
+    "jiang": "26 岁中国创业青年头像：油头梳背，白色衬衫外搭休闲西装，笑得热情洋溢带几分表演感，奶茶店暖色灯光背景虚化",
+}
+
+DATE_SCENES = {
+    "bd_chen_1": "办公桌上摊开的批改完的试卷，红笔批注工整，一杯凉了的茶，台灯光，夜晚办公室氛围",
+    "bd_chen_2": "教室窗台上的粉笔盒和黑板擦，夕阳斜照进空教室，粉笔灰在光柱里飞舞",
+    "bd_zhao_1": "医院儿科走廊长椅：墙上贴着卡通退烧贴广告，暖灯，寂静的深夜氛围，输液架剪影",
+    "bd_zhao_2": "医院食堂早餐：一碗豆浆两个包子放在不锈钢餐盘上，蒸汽升起，清晨倦怠感",
+    "bd_sun_1": "消防训练塔和拉练绳索：湿透的手套搭在栏杆上，夕阳把影子拉得很长",
+    "bd_sun_2": "消防站食堂的一碗热汤面：白瓷碗冒热气，背景是红色餐盘和兄弟们的筷影",
+    "bd_zhou_1": "窗台上一盆开花的君子兰：橘色花朵，瓷盆擦得锃亮，背景一尘不染的窗玻璃",
+    "bd_zhou_2": "阳台上擦得锃亮的自行车车把特写：阳光反光，抹布搭在车座上，生活规律感",
+    "bd_wu_1": "程序员书桌：双显示器代码界面发光，旁边一盆多肉小盆栽，机械键盘RGB微光，深夜氛围",
+    "bd_wu_2": "厨房里炖着汤的砂锅：小火慢炖冒热气，旁边摊开的手写食谱笔记，温馨居家感",
+    "bd_zheng_1": "清晨健身房的哑铃架和镜子：一位教练的剪影在做示范，晨光从百叶窗切进来",
+    "bd_zheng_2": "健身房前台的一排奖牌和会员感谢锦旗：暖色射灯打光，专业自信氛围",
+    "bd_feng_1": "汽修厂里一台老桑塔纳被缓缓升起：老师傅站在车下仰头，工具墙背景，油污与光线交错",
+    "bd_feng_2": "汽修厂角落的旧工具箱：磨掉漆的抽屉，扳手排列整齐，一杯泡着枸杞的茶，午后阳光",
+    "bd_he_1": "婚礼现场的抓拍视角：新娘父亲独自坐在角落，手里捏着酒杯，暖色水晶灯光斑虚化",
+    "bd_he_2": "摄影师的修片桌面：双屏显示着婚纱照原片，手写便签贴满屏幕边框，凌晨咖啡杯",
+    "bd_xu_1": "清晨公交车总站的车辆排班：28路公交大灯亮着，天色蒙蒙亮，站牌灯箱发光",
+    "bd_xu_2": "公交车驾驶位视角：方向盘、刷卡机、挂着的的水杯，挡风玻璃外城市清晨街景",
+    "bd_jiang_1": "温馨奶茶店吧台：招牌杨枝甘露放在前台，价目牌灯光暖黄，年轻店员的围裙特写",
+    "bd_jiang_2": "深夜奶茶店打烊盘账：收银机屏幕亮着，账本和计算器，一杯做坏的试验品奶茶放在角落",
+}
+
+# 红娘线 seed 接续原池
+for _k in DATE_AVATARS:
+    SEEDS[_k] = _seed
+    _seed += 1
+for _k in DATE_SCENES:
+    SEEDS[_k] = _seed
+    _seed += 1
+
+# 候选人头像生成到 public/comfort/dates/{key}.png
+DATE_DIR = os.path.join(OUT_DIR, "dates")
+
+
+def save_date_avatar(raw_path: str, key: str) -> str:
+    if key == "auntie":  # 阿姨是主联系人，头像和妈/阿凯平级放根目录
+        final_path = os.path.join(OUT_DIR, "auntie.png")
+    else:
+        os.makedirs(DATE_DIR, exist_ok=True)
+        final_path = os.path.join(DATE_DIR, f"{key}.png")
+    with Image.open(raw_path) as im:
+        im = im.convert("RGB").resize((AVATAR_FINAL, AVATAR_FINAL), Image.LANCZOS)
+        im.save(final_path, optimize=True)
+    return final_path
+
+
+def patch_date_avatar(workflow: dict, key: str) -> None:
+    workflow[STYLE_NODE]["inputs"]["value"] = CLEAN_STYLE
+    workflow[PROMPT_NODE]["inputs"]["string"] = f"相亲对象头像·{key}：{DATE_AVATARS[key]} +（通用底座）"
+    workflow[SEED_NODE]["inputs"]["value"] = SEEDS[key]
+    workflow[SIZE_NODE]["inputs"]["width"] = AVATAR_SIZE
+    workflow[SIZE_NODE]["inputs"]["height"] = AVATAR_SIZE
+    workflow[PREFIX_NODE]["inputs"]["filename_prefix"] = f"comfort/dates/{key}"
+
 def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
     parser = argparse.ArgumentParser(description="批量生成舒适圈角色头像与朋友圈场景（1.1.0）")
     parser.add_argument("--server", default="192.168.1.127:8188", help="ComfyUI 地址")
-    parser.add_argument("--only", choices=["avatars", "scenes"], help="只生成头像或场景")
+    parser.add_argument("--only", choices=["avatars", "scenes", "dates"], help="只生成头像/场景/红娘线（11头像+20图）")
     parser.add_argument("--key", help="只生成指定 key（如 mother / cm_boba），--force 时可重跑单张")
     parser.add_argument("--force", action="store_true", help="已存在也重新生成")
     parser.add_argument("--dry-run", action="store_true", help="只打印 prompt 不提交")
     args = parser.parse_args()
 
     avatar_keys = list(AVATARS) if args.only in (None, "avatars") else []
+    date_keys = list(DATE_AVATARS) if args.only in (None, "dates") else []
+    scene_keys = list(SCENES) if args.only in (None, "scenes") else []
+    date_scene_keys = list(DATE_SCENES) if args.only in (None, "dates") else []
     if args.key:
-        if args.key in AVATARS and (args.only in (None, "avatars")):
+        if args.key in AVATARS and args.only in (None, "avatars"):
             avatar_keys = [args.key]
         else:
             avatar_keys = []
-    scene_keys = list(SCENES) if args.only in (None, "scenes") else []
-    if args.key:
-        scene_keys = [args.key] if args.key in SCENES else ([] if avatar_keys else scene_keys)
+        if args.key in DATE_AVATARS and args.only in (None, "dates"):
+            date_keys = [args.key]
+        else:
+            date_keys = [k for k in date_keys if k != args.key]
+        if args.key in SCENES and args.only in (None, "scenes"):
+            scene_keys = [args.key]
+        else:
+            scene_keys = [k for k in scene_keys if k != args.key]
+        if args.key in DATE_SCENES and args.only in (None, "dates"):
+            date_scene_keys = [args.key]
+        else:
+            date_scene_keys = [k for k in date_scene_keys if k != args.key]
 
     if args.dry_run:
         workflow = load_workflow(WORKFLOW_PATH)
@@ -196,9 +297,19 @@ def main() -> None:
             print(f"--- 头像 {k}（seed={SEEDS[k]}）→ comfort/{k}.png ---")
             print(workflow[PROMPT_NODE]["inputs"]["string"])
             print()
+        for k in date_keys:
+            patch_date_avatar(workflow, k)
+            print(f"--- 候选人头像 {k}（seed={SEEDS[k]}）→ comfort/dates/{k}.png ---")
+            print(workflow[PROMPT_NODE]["inputs"]["string"])
+            print()
         for k in scene_keys:
             patch_scene(workflow, k)
             print(f"--- 场景 {k}（seed={SEEDS[k]}）→ comfort/scenes/{k}.jpg ---")
+            print(workflow[PROMPT_NODE]["inputs"]["string"])
+            print()
+        for k in date_scene_keys:
+            _patch_date_scene(workflow, k)
+            print(f"--- 候选人场景 {k}（seed={SEEDS[k]}）→ comfort/scenes/{k}.jpg ---")
             print(workflow[PROMPT_NODE]["inputs"]["string"])
             print()
         return
@@ -220,6 +331,43 @@ def main() -> None:
         workflow = load_workflow(WORKFLOW_PATH)
         print(f"生成场景 {k} ...")
         print("→", generate_one(args.server, workflow, k, is_avatar=False))
+
+    # 红娘线：候选人头像 → public/comfort/dates/，朋友圈图 → public/comfort/scenes/
+    for k in date_keys:
+        out = os.path.join(OUT_DIR, "dates", f"{k}.png")
+        if os.path.exists(out) and not args.force:
+            print(f"skip {k}（已存在，--force 重生成）")
+            continue
+        workflow = load_workflow(WORKFLOW_PATH)
+        patch_date_avatar(workflow, k)
+        client_id = f"py-comfort-{k}-{os.getpid()}"
+        prompt_id = queue_prompt(args.server, workflow, client_id)
+        print(f"{k}: 已提交 {prompt_id}，等待生成...")
+        history = wait_for_history(args.server, prompt_id)
+        images = collect_images(history)
+        if not images:
+            print(f"{k}: 任务完成但没有输出图片")
+            sys.exit(1)
+        raw_path = download_image(args.server, images[0], RAW_DIR, prompt_id)
+        print("→", save_date_avatar(raw_path, k))
+
+    for k in date_scene_keys:
+        out = os.path.join(OUT_DIR, "scenes", f"{k}.jpg")
+        if os.path.exists(out) and not args.force:
+            print(f"skip {k}（已存在，--force 重生成）")
+            continue
+        workflow = load_workflow(WORKFLOW_PATH)
+        patch_scene(workflow, k) if k in SCENES else _patch_date_scene(workflow, k)
+        client_id = f"py-comfort-{k}-{os.getpid()}"
+        prompt_id = queue_prompt(args.server, workflow, client_id)
+        print(f"{k}: 已提交 {prompt_id}，等待生成...")
+        history = wait_for_history(args.server, prompt_id)
+        images = collect_images(history)
+        if not images:
+            print(f"{k}: 任务完成但没有输出图片")
+            sys.exit(1)
+        raw_path = download_image(args.server, images[0], RAW_DIR, prompt_id)
+        print("→", save_scene(raw_path, k))
 
 
 if __name__ == "__main__":
