@@ -1841,16 +1841,19 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
    —— 只作用于常用手机；:root 冷色主题（v1.0.0）原封不动。
 
    语义：暖纸中性阶承载"家"的温度；烘橙主色只给可交互与钱；
-   感情玫红是全主题唯一允许的第二个情绪色。文字对比按 WCAG AA 校过：
-   主文 n7 #43331F / 卡面 = 10.6:1；次文 n6 = 7.4:1；辅文 n5 = 4.9:1；
-   白字 on 主色 #C2620E = 4.6:1。
+   感情玫红是全主题唯一允许的第二个情绪色；靛蓝 --c-story 只给暗线剧情卡。
+   文字对比按 WCAG AA 实测校过（docs/site-audit/contrast-check.js）：
+   主文 n7 on 卡面 = 11.9:1；次文 n6 = 8.3:1；辅文 n5 = 4.8:1（仅限 ≥14px 或装饰）；
+   白字 on 主色 #B85A0A = 4.7:1（#C2620E 实测仅 4.16:1 不达标，已加深一档）。
    ======================================================================== */
 .comfort-theme {
   /* ---- 主色 / 辅助色 ---- */
-  --c-accent: #C2620E;         /* 主交互：主按钮底、进度、当前态 */
-  --c-accent-strong: #9A4E0B;  /* 彩底/浅底上的文字与图标（AA） */
-  --c-gold: #B67A1E;           /* 钱——沿用工作手机「灯笼金」语义，暗档 */
+  --c-accent: #B85A0A;         /* 主交互：主按钮底、进度、当前态（白字实测 4.66:1 AA） */
+  --c-accent-strong: #9A4E0B;  /* 彩底/浅底上的文字与图标（AA，on n2 = 4.99:1） */
+  --c-gold: #B67A1E;           /* 钱——沿用「灯笼金」语义；on n0 = 3.57:1，仅限边/底/图标，禁做文字色 */
   --c-rose: #B3485C;           /* 感情——唯一的第二个情绪色 */
+  --c-story: #454E75;          /* 暗线剧情卡专属「夜的信」靛蓝（on n0 = 7.95 / on n2 = 6.66）——
+                                  全主题唯一第三个情绪色，只给剧情卡，不作通用交互色 */
 
   /* ---- 中性阶（暖纸，8 级） ---- */
   --c-n0: #FFFDF8;             /* 卡面 */
@@ -1867,13 +1870,22 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   --c-warning: #9A6B08;        /* 风险提示 / 警察卡 */
   --c-danger: #B3382C;         /* 要钱卡 / 代价 */
 
+  /* ---- 场景色（收敛自散落硬编码） ---- */
+  --c-bubble: #F5D08C;         /* 她的语音气泡面（暖绿） */
+  --c-bubble-ink: #5A3E10;      /* 气泡文字（on --c-bubble = 6.70:1） */
+  --c-night-bg: #2E3350;       /* 夜间 chip 实底（#F2ECDD on 它 = 10.45:1） */
+  --c-night-text: #F2ECDD;     /* 夜间 chip 文字 */
+  --c-night-tag: #C9CFEA;      /* 夜间标签文字（on --c-night-bg = 7.97:1） */
+  --c-overlay: rgba(58, 42, 20, 0.44);  /* 弹窗遮罩 */
+  --c-dawn: #FFEFD6;           /* 页顶晨光渐变第一段 */
+
   /* ---- 字阶（6 档；正文 14px 起） ---- */
   --c-fs-display: 22px;  --c-lh-display: 1.3;  --c-w-display: 700;
   --c-fs-title:   17px;  --c-lh-title: 1.4;    --c-w-title: 600;
   --c-fs-heading: 15px;  --c-lh-heading: 1.4;  --c-w-heading: 600;
   --c-fs-body:    14px;  --c-lh-body: 1.7;
   --c-fs-caption: 12px;  --c-lh-caption: 1.5;
-  --c-fs-micro:   11px;  --c-lh-micro: 1.4;
+  --c-fs-micro:   12px;  --c-lh-micro: 1.4;  /* 功能标签下限 12px（11px × 辅文对比处于 AA 边缘） */
 
   /* ---- 间距（4px 网格） ---- */
   --c-s-1: 4px; --c-s-2: 8px; --c-s-3: 12px;
@@ -1915,8 +1927,8 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   --danger: var(--c-danger);
   --bub-target: #FFFFFF;
   --bub-ink: var(--c-n7);
-  --bub-green: #F5D08C;
-  --bub-green-ink: #5A3E10;
+  --bub-green: var(--c-bubble);
+  --bub-green-ink: var(--c-bubble-ink);
   /* 字阶别名：旧 7 档挤压（10.5-14px）→ 新 6 档；正文 13→14px。 */
   --fs-0: var(--c-fs-micro);
   --fs-1: var(--c-fs-micro);
@@ -1930,7 +1942,7 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   --fs-8: 17px;
 
   background:
-    radial-gradient(120% 55% at 50% -6%, #FFEFD6 0%, rgba(255, 239, 214, 0) 55%),
+    radial-gradient(120% 55% at 50% -6%, var(--c-dawn) 0%, rgba(255, 239, 214, 0) 55%),
     linear-gradient(180deg, var(--c-n1) 0%, var(--c-n2) 240px),
     var(--c-n1);
   color: var(--text);
@@ -2250,7 +2262,7 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
   position: fixed; inset: 0; z-index: 60;
   display: flex; align-items: center; justify-content: center;
   padding: 18px;
-  background: rgba(58, 42, 20, 0.44);
+  background: var(--c-overlay);
   backdrop-filter: blur(3px);
   animation: briefing-in 0.25s ease both;
 }
