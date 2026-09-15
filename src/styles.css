@@ -2280,6 +2280,41 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 6px; }
 .comfort-day-stats span { font-size: var(--c-fs-micro); color: var(--c-n5); }
 .comfort-day-stats strong { font-size: var(--c-fs-heading); color: var(--c-n7); }
 .comfort-day-stats strong .hud-sub { font-size: var(--c-fs-micro); font-style: normal; color: var(--c-n5); }
+/* 晨间简报的余额格与昨日回响行——结构同工作手机 briefing-*，配色走 --c-* 暖系 */
+.comfort-day-money {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.comfort-day-money > div {
+  background: var(--c-n2);
+  border-radius: var(--c-r-sm);
+  padding: 8px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.comfort-day-money span { font-size: var(--c-fs-micro); color: var(--c-n5); letter-spacing: 1px; }
+.comfort-day-money strong { font-size: var(--c-fs-heading); color: var(--c-n7); font-variant-numeric: tabular-nums; }
+.comfort-day-money strong .hud-sub { font-size: var(--c-fs-micro); font-style: normal; color: var(--c-n5); }
+.comfort-day-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: var(--c-n2);
+  border-radius: var(--c-r-md);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  animation: row-in 300ms var(--ease-out) both;
+}
+.comfort-day-row .briefing-ico { color: var(--c-accent-strong); flex: none; padding-top: 1px; }
+.comfort-day-row-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.comfort-day-row-label { font-size: var(--c-fs-micro); color: var(--c-n5); letter-spacing: 2px; }
+.comfort-day-row-text { font-size: var(--c-fs-caption); line-height: 1.7; color: var(--c-n6); }
+.comfort-day-rule-label { font-size: var(--c-fs-micro); color: var(--c-n5); letter-spacing: 2px; margin-bottom: 2px; }
+/* 简报内逐行浮现：animationDelay 由组件按行内序注入 */
+.comfort-day-card .cd-in { animation: row-in 300ms var(--ease-out) both; }
 
 /* 速聊行的作息禁用态：按钮本身就是提示（补觉中/睡了/没时间） */
 .comfort-theme .comfort-contact-row .btn:disabled {

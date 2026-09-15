@@ -12,7 +12,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../store/gameStore';
 import { formatMoney } from '../utils/format';
 import { ComfortAvatar, ComfortSceneRender, type ComfortAvatarKey } from './comfort-art';
-import { Ico } from './icons';
+import { Ico, type IconName } from './icons';
 import { playMessage, playSend, playMoney, playTab, playBlocked, playPost, playSocial, playMorning } from '../utils/sound';
 import { COMFORT_CONTACTS, COMFORT_DAY_MINUTES, COMFORT_CHAT_MINUTES, FATHER_MEMORIAL, XIAOMAN } from '../data/comfort';
 import { MIRROR_LINES, WALLET_CONTRAST } from '../data/comfort-contrast';
@@ -120,7 +120,8 @@ function VoiceBubble({ m, name, who }: { m: ComfortMessage; name?: string; who?:
 }
 
 /** 「开始今天」：常用手机版的晨间简报（v1.0.0 的 DayBriefingModal 同构）。
- *  晨线一句 + 今日时间与未读 + 第一天的规矩（规矩只教一遍，其余让故事自己讲）。 */
+ *  日期 pop → 晨线一句 → 余额格 → 昨日回响逐行浮现 → 第一天的规矩 → 经文 → 今日两格 → 开始今天。
+ *  昨日回响直接从 log 组装（comfort 条目），不在 state 里重复存文案。 */
 function ComfortDayDialog() {
   const store = useGame();
   const { state } = store;
@@ -129,6 +130,29 @@ function ComfortDayDialog() {
   // 每日经文（工作手机敲佛偈，常用手机读经文——同一双手，各念各的经）
   const verse = DAILY_VERSES[(state.day - 1) % DAILY_VERSES.length];
   const firstDay = state.day === 1;
+  // 昨日回响（同工作手机的账单/事件行）：昨天的常用手机日志逐行浮现——
+  // 去掉「常用手机 ·」前缀与事件经文行，最多 3 条；安静的昨天就让它安静。
+  const yesterdayRows = state.day > 1
+    ? state.log
+        .filter((l) => l.kind === 'comfort' && l.day === state.day - 1)
+        .map((l) => l.details.replace(/^常用手机 · /, ''))
+        .filter((t) => t && !t.startsWith('「'))
+        .slice(-3)
+    : [];
+  // 回响行图标：钱事 → 现金，朋友圈 → 心，其余 → 对话泡
+  const icoOf = (t: string): IconName =>
+    /元|红包|转账|拿走/.test(t) ? 'cash' : t.includes('朋友圈') ? 'heart' : 'chat';
+  // 余额格（工作手机的余额三格同构）：钱两机共用；关系是暖色系里的"风险条"
+  const bfNormal = c.bfState === 'normal' && !c.blockedByBf;
+  const moneyCells: { label: string; value: string; sub?: string }[] = [
+    { label: '活命钱', value: formatMoney(state.money), sub: '（两机共用）' },
+    { label: '还差', value: formatMoney(Math.max(0, state.goal - state.stats.totalEarned)), sub: '（债）' },
+    { label: '家庭', value: String(Math.round(c.family)) },
+    ...(bfNormal ? [{ label: '感情', value: String(Math.round(c.love)) }] : []),
+  ];
+  const step = 150;
+  const delay = (i: number) => `${300 + i * step}ms`;
+  let rowIdx = 0;
   return (
     <div className="comfort-day-overlay">
       <div className="comfort-day-card">
@@ -136,27 +160,51 @@ function ComfortDayDialog() {
           <span className="comfort-day-num">第 {state.day} 天</span>
           <span className="comfort-day-sub">常用手机 · 睁眼</span>
         </div>
-        <p className="comfort-day-line">{morningLine}</p>
-        <div className="comfort-verse">
+        <p className="comfort-day-line cd-in" style={{ animationDelay: delay(rowIdx++) }}>{morningLine}</p>
+        <div className="comfort-day-money cd-in" style={{ animationDelay: delay(rowIdx++), gridTemplateColumns: `repeat(${moneyCells.length}, 1fr)` }}>
+          {moneyCells.map((cell) => (
+            <div key={cell.label}>
+              <span>{cell.label}</span>
+              <strong>{cell.value}{cell.sub && <i className="hud-sub">{cell.sub}</i>}</strong>
+            </div>
+          ))}
+        </div>
+        {yesterdayRows.map((t) => {
+          const i = rowIdx++;
+          return (
+            <div key={i} className="comfort-day-row" style={{ animationDelay: delay(i) }}>
+              <span className="briefing-ico"><Ico name={icoOf(t)} size={20} /></span>
+              <div className="comfort-day-row-body">
+                <div className="comfort-day-row-label">昨天的手机</div>
+                <div className="comfort-day-row-text">{t}</div>
+              </div>
+            </div>
+          );
+        })}
+        {firstDay && (
+          <div className="comfort-day-rule cd-in" style={{ animationDelay: delay(rowIdx++) }}>
+            <div className="comfort-day-rule-row"><span className="briefing-ico"><Ico name="clock" size={20} /></span>
+              <div><div className="comfort-day-rule-label">一天的时长</div>
+                <div>一天能匀给这部手机的时间只有 <b>40 分钟</b>。每一场对话，10 分钟——妈的、姨的、曼曼的、他的，都一样。时间花给谁，就是爱给了谁。</div>
+              </div>
+            </div>
+            <div className="comfort-day-rule-row"><span className="briefing-ico"><Ico name="hourglass" size={20} /></span>
+              <div><div className="comfort-day-rule-label">他的作息</div>
+                <div>他白天睡觉，夜里活过来。这部手机上，<b>黑夜才是他的白天</b>。</div>
+              </div>
+            </div>
+          </div>
+        )}
+        <div className="comfort-verse cd-in" style={{ animationDelay: delay(rowIdx++) }}>
           <div className="comfort-verse-text">「{verse.v}」</div>
           <div className="comfort-verse-src">——{verse.s}</div>
           <div className="comfort-verse-gloss">{verse.g}</div>
         </div>
-        {firstDay && (
-          <div className="comfort-day-rule">
-            <div className="comfort-day-rule-row"><span className="briefing-ico"><Ico name="clock" size={20} /></span>
-              <div>一天能匀给这部手机的时间只有 <b>40 分钟</b>。每一场对话，10 分钟——妈的、姨的、曼曼的、他的，都一样。时间花给谁，就是爱给了谁。</div>
-            </div>
-            <div className="comfort-day-rule-row"><span className="briefing-ico"><Ico name="hourglass" size={20} /></span>
-              <div>他白天睡觉，夜里活过来。这部手机上，<b>黑夜才是他的白天</b>。</div>
-            </div>
-          </div>
-        )}
-        <div className="comfort-day-stats">
+        <div className="comfort-day-stats cd-in" style={{ animationDelay: delay(rowIdx++) }}>
           <div><span>今日时间</span><strong>{c.minutes}′<i className="hud-sub">（一场 {COMFORT_CHAT_MINUTES}′）</i></strong></div>
           <div><span>未读消息</span><strong>{c.incoming.length} 条</strong></div>
         </div>
-        <button className="btn primary wide" onClick={() => { playMorning(); store.dispatch({ type: 'comfort_ack_day' }); }}>
+        <button className="btn primary wide cd-in" style={{ animationDelay: delay(rowIdx + 0.4) }} onClick={() => { playMorning(); store.dispatch({ type: 'comfort_ack_day' }); }}>
           开始今天
         </button>
       </div>
