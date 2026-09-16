@@ -661,7 +661,7 @@ function ComfortToday({ policeToday }: { policeToday: boolean }) {
       {/* 两段式日夜：天黑了 → 他的时间 → 进入明天 */}
       {night ? (
         <>
-          <p className="muted small center" style={{ margin: '2px 0 4px' }}>
+          <p className="muted small center" style={{ margin: '12px 0 0' }}>
             {timeLeft ? `夜里还剩 ${c.minutes} 分钟——是他的时间，也是你的。` : '今天的时间用完了。明天再说。'}
           </p>
           <button className="btn wide" onClick={() => store.dispatch({ type: 'sleep' })}>

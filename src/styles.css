@@ -391,6 +391,9 @@ button { -webkit-tap-highlight-color: transparent; font-family: inherit; }
 }
 .btn.warm:hover { opacity: 0.85; transform: none; }
 .btn.wide { width: 100%; }
+/* 换段主键（白天「天黑了」）：上下保底呼吸感——下方账目条的 margin-top:auto
+   在长内容时归零，按钮会贴死名单与账目条；16/12 与 roster-panel 的节奏一致 */
+.app-scroll > .btn.primary.wide { margin: 16px 0 12px; }
 .btn.small { min-height: var(--touch-sm); padding: 8px 16px; border-radius: var(--r-pill); font-size: var(--fs-3); }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
 .muted-btn { color: var(--muted); border: none; background: none; text-decoration: underline dotted; }
@@ -2294,6 +2297,9 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 8px; }
 /* ---- 舒适圈控件规范：按钮三档（32/44/52）+ 每屏唯一主 CTA ---- */
 .comfort-theme .btn { min-height: var(--c-h-md); }
 .comfort-theme .btn.small { min-height: var(--c-h-sm); }
+/* 换段键（天黑了/进入明天）上下保底呼吸感——同工作手机，长内容时不贴死
+   上面的动态流水与下面的账目条 */
+.comfort-theme .comfort-today > .btn.wide { margin: 16px 0 12px; }
 /* 两段式日夜换键变色（同 v1.0.0 的蓝→灰）：白天「天黑了」= 暖橙主 CTA，
    夜里「进入明天」压成夜色深棕——一眼看出页面已经换了一段。 */
 .comfort-theme .comfort-today > .btn.primary.wide {
