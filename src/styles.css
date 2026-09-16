@@ -1938,9 +1938,7 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 8px; }
 
   /* ---- 场景色（收敛自散落硬编码） ---- */
   /* 微信绿改版后：金色气泡令牌已废——她发出的气泡统一用 --bub-green */
-  --c-night-bg: #2E3350;       /* 夜间 chip 实底（#F2ECDD on 它 = 10.45:1） */
-  --c-night-text: #F2ECDD;     /* 夜间 chip 文字 */
-  --c-night-tag: #C9CFEA;      /* 夜间标签文字（on --c-night-bg = 7.97:1） */
+  --c-night-ink: #2E3350;      /* 夜间浅底（暮靛 14%/10%）上的深靛字，与描边一族 */
   --c-overlay: rgba(58, 42, 20, 0.44);  /* 弹窗遮罩 */
   --c-dawn: #FFEFD6;           /* 页顶晨光渐变第一段 */
 
@@ -2020,7 +2018,12 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 8px; }
 .comfort-theme .module-nav { background: var(--panel-glass); border-top: 1px solid var(--line-soft); }
 .comfort-theme .nav-btn { color: var(--muted); }
 .comfort-theme .nav-btn.on { color: var(--accent-deep); }
-.comfort-theme .day-chip { background: var(--fill); color: var(--text); }
+.comfort-theme .day-chip {
+  background: var(--fill);
+  color: var(--text);
+  padding: 2px var(--c-s-2);
+  border-radius: var(--c-r-full);   /* 与旁边 comfort-phone-tag 同解剖：胶囊浅底+深字 */
+}
 /* HUD 两列制对齐主线口径：活命钱 --fs-6 / 债 --fs-3（同一套字阶，颜色走暖色变量） */
 .comfort-theme .money { color: var(--accent-deep); font-size: var(--fs-6); }
 .comfort-theme .goal { color: var(--muted); font-size: var(--fs-3); }
@@ -2311,7 +2314,7 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 8px; }
 }
 .comfort-theme .comfort-today > .btn.wide:not(.primary) {
   min-height: var(--c-h-lg);
-  background: var(--c-n7);
+  background: var(--c-night-ink);  /* 夜 CTA 入暮靛一族：与夜间头部 chip 同语言（奶油字 10.4:1） */
   color: var(--c-n1);
   box-shadow: var(--c-shadow-1);
 }
@@ -2388,11 +2391,16 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 8px; }
     radial-gradient(120% 52% at 50% -8%, rgba(99, 112, 160, 0.24), transparent 62%),
     linear-gradient(180deg, rgba(40, 44, 68, 0.08) 0%, rgba(40, 44, 68, 0.24) 100%);
 }
-.comfort-theme.comfort-night .day-chip { background: var(--c-night-bg); color: var(--c-night-text); }
+/* 夜 chip 不再实底反白（深块贴暖纸像选中高亮）：保持白天「浅底深字」的解剖，
+   只把色相从暖沙换成暮靛——文字对比 ≈9:1，与夜罩同源。 */
+.comfort-theme.comfort-night .day-chip {
+  background: rgba(46, 51, 80, 0.14);
+  color: var(--c-night-ink);
+}
 .comfort-theme.comfort-night .comfort-phone-tag {
-  color: var(--c-night-tag);
-  background: rgba(46, 51, 80, 0.55);
-  border-color: rgba(201, 207, 234, 0.30);
+  color: var(--c-night-ink);
+  background: rgba(46, 51, 80, 0.10);
+  border-color: rgba(46, 51, 80, 0.32);
 }
 .comfort-theme.comfort-night .btn:disabled { color: var(--c-n6); }
 /* 聊天是「家里的灯」：气泡在夜里保持白/暖绿不变，只有环境变夜。 */
