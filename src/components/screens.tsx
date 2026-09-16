@@ -86,7 +86,7 @@ export function TitleScreen() {
     <div className="screen title-screen">
       <TitleBackdrop />
       <div className="title-block">
-        <h1>情感反诈模拟器<span className="h1-ver">v2.0</span></h1>
+        <h1>情感反诈模拟器<span className="h1-ver">V1.1</span></h1>
         <p className="subtitle">原名《凌晨三点，哥哥》</p>
         <p className="title-motto">
           <span>一部手机做生意，一部过日子。</span>
