@@ -39,6 +39,8 @@ export interface ComfortIncoming {
   tone?: 'birthday';
   /** 暗线剧情卡：对应的 beat id（comfort-story.ts）。 */
   beatId?: string;
+  /** 暗线剧情卡：听完之后的叙事行（落舒适圈日志，不耗 RNG）。 */
+  narration?: string;
 }
 
 /** 舒适圈聊天气泡。voiceSecs：语音条显示秒数（纯显示效果，游戏无真实语音）。

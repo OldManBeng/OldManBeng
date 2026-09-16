@@ -5,7 +5,7 @@ import { formatMoney } from '../utils/format';
 import { OldManAvatar, PersonaAvatar, ProfileAvatar, PERSONA_AVATARS, PhotoRender, MomentPhoto } from './character-art';
 import { playMessage, playSend, playPacket, playFail, playBlocked, playMorning, playPost, playSocial, playBell, playPersonaSwitch, playAvatarPick, playMoney, playRisk, playTab, playPhoto, playTypeTick, isMuted, setMuted, isMusicMuted, setMusicMuted } from '../utils/sound';
 import { useEffect, useRef, useState } from 'react';
-import { INDUSTRY_COURSE_COST, CHAT_SESSION_COST } from '../data/constants';
+import { INDUSTRY_COURSE_COST, CHAT_SESSION_COST, MONTHLY_GOAL } from '../data/constants';
 import { DAILY_PLANS } from '../data/plans';
 import { Ico } from './icons';
 import type { IconName } from './icons';
@@ -302,7 +302,7 @@ export function MainScreen() {
         </div>
         <div className="hud-right">
           <span className="money">余额 {formatMoney(state.money)}<i className="hud-sub">（活命钱）</i></span>
-          <span className="goal">还差 {formatMoney(Math.max(0, state.goal - state.stats.totalEarned))}<i className="hud-sub">（债）</i></span>
+          <span className="goal">原始债 {formatMoney(MONTHLY_GOAL)} · 新增 {formatMoney(Math.max(0, state.goal - MONTHLY_GOAL))}<i className="hud-sub">（债）</i></span>
         </div>
       </header>
       <div className={`risk-strip ${risk.cls}`} title="多线经营的风险——活跃的「哥哥」越多，他们越容易在你的评论区看见彼此。">

@@ -167,6 +167,7 @@ export function runComfortMorning(state: GameState): void {
       amount: 0,
       lines: [opener.length > 30 ? `${opener.slice(0, 30)}……` : opener],
       note: beat.note,
+      narration: beat.narration,
       beatId: beat.id,
     });
   }

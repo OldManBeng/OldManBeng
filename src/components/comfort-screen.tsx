@@ -20,6 +20,7 @@ import { STORY_BEATS, STORY_OPEN_LABEL } from '../data/comfort-story';
 import { BLIND_DATES, BLIND_DATE_MAP } from '../data/comfort-dates';
 import { COMFORT_MORNING_LINES } from '../data/comfort-packs';
 import { COMFORT_INCIDENTS, DAILY_VERSES } from '../data/comfort-incidents';
+import { MONTHLY_GOAL } from '../data/constants';
 import { myMomentCommentOptions } from '../engine/comfort';
 import type { ComfortContactId, ComfortMessage, ComfortSpeakerId } from '../types/comfort';
 
@@ -280,7 +281,7 @@ export function ComfortScreen() {
         </div>
         <div className="hud-right">
           <span className="money">活命钱 {formatMoney(state.money)}</span>
-          <span className="goal">债 {formatMoney(Math.max(0, state.goal - state.stats.totalEarned))}<i className="hud-sub">（两机共用）</i></span>
+          <span className="goal">原始债 {formatMoney(MONTHLY_GOAL)} · 新增 {formatMoney(Math.max(0, state.goal - MONTHLY_GOAL))}<i className="hud-sub">（两机共用）</i></span>
         </div>
       </header>
 
