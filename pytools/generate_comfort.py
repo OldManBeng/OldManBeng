@@ -283,13 +283,13 @@ DATE_SCENES = {
     "bd_wu_2": "厨房里炖着汤的砂锅：小火慢炖冒热气，旁边摊开的手写食谱笔记，温馨居家感",
     "bd_zheng_1": "清晨健身房的哑铃架和镜子：一位教练的剪影在做示范，晨光从百叶窗切进来",
     "bd_zheng_2": "健身房前台的一排奖牌和会员感谢锦旗：暖色射灯打光，专业自信氛围",
-    "bd_feng_1": "汽修厂里一台老桑塔纳被缓缓升起：老师傅站在车下仰头，工具墙背景，油污与光线交错",
+    "bd_feng_1": "汽修厂里一台老桑塔纳稳稳停在双柱举升机上：红色钢托臂从车底两侧撑住车身，车轮离地，老师傅站在车旁俯身检查，工具墙背景，油污与光线交错",
     "bd_feng_2": "汽修厂角落的旧工具箱：磨掉漆的抽屉，扳手排列整齐，一杯泡着枸杞的茶，午后阳光",
     "bd_he_1": "婚礼现场的抓拍视角：新娘父亲独自坐在角落，手里捏着酒杯，暖色水晶灯光斑虚化",
     "bd_he_2": "摄影师的修片桌面：双屏显示着婚纱照原片，手写便签贴满屏幕边框，凌晨咖啡杯",
     "bd_xu_1": "清晨公交车总站的车辆排班：28路公交大灯亮着，天色蒙蒙亮，站牌灯箱发光",
     "bd_xu_2": "公交车驾驶位视角：方向盘、刷卡机、挂着的的水杯，挡风玻璃外城市清晨街景",
-    "bd_jiang_1": "温馨奶茶店吧台：招牌杨枝甘露放在前台，价目牌灯光暖黄，年轻店员的围裙特写",
+    "bd_jiang_1": "温馨奶茶店吧台：木牌招牌上写着四个汉字：杨枝甘露，一杯杨枝甘露放在前台，价目牌灯光暖黄，年轻店员的围裙特写",
     "bd_jiang_2": "深夜奶茶店打烊盘账：收银机屏幕亮着，账本和计算器，一杯做坏的试验品奶茶放在角落",
     # 扩充 1.2：每人的第三张朋友圈
     "bd_chen_3": "教师办公桌一角：绿萝盆栽旁边码着一摞作业本，红笔搁在翻开的教案上，午后窗光",
@@ -374,22 +374,11 @@ def main() -> None:
     scene_keys = list(SCENES) if args.only in (None, "scenes") else []
     date_scene_keys = list(DATE_SCENES) if args.only in (None, "dates") else []
     if args.key:
-        if args.key in AVATARS and args.only in (None, "avatars"):
-            avatar_keys = [args.key]
-        else:
-            avatar_keys = []
-        if args.key in DATE_AVATARS and args.only in (None, "dates"):
-            date_keys = [args.key]
-        else:
-            date_keys = [k for k in date_keys if k != args.key]
-        if args.key in SCENES and args.only in (None, "scenes"):
-            scene_keys = [args.key]
-        else:
-            scene_keys = [k for k in scene_keys if k != args.key]
-        if args.key in DATE_SCENES and args.only in (None, "dates"):
-            date_scene_keys = [args.key]
-        else:
-            date_scene_keys = [k for k in date_scene_keys if k != args.key]
+        # --key 是严格单张：未命中的组一律清空（否则 --force 会把整组重跑）
+        avatar_keys = [args.key] if args.key in AVATARS else []
+        date_keys = [args.key] if args.key in DATE_AVATARS else []
+        scene_keys = [args.key] if args.key in SCENES else []
+        date_scene_keys = [args.key] if args.key in DATE_SCENES else []
 
     if args.dry_run:
         workflow = load_workflow(WORKFLOW_PATH)
