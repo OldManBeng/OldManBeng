@@ -2513,18 +2513,18 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 8px; }
   background: color-mix(in srgb, var(--c-accent) 8%, var(--c-n0));
   border-color: var(--c-accent);
 }
-/* 弹窗内的突发事件：拍平为分区段落——不再嵌套盒中盒，
-   ⚡标题+正文+决策按钮与「开始今天」按钮全部对齐同一条 386px 内容线。
-   （旧样式自带底色描边+内衬，控件宽度比其它控件窄一圈，视觉不协调） */
+/* 弹窗内的突发事件：与「昨日回响」行同构的盒子——同样的通栏宽、同样的
+   s-3 s-4 内衬与圆角、同样的 7% 事件橙底，⚡标题同用加重橙（旧拍平方案
+   文字按钮顶格通栏，比盒装控件宽一圈，且与下方经文卡贴连）。 */
 .comfort-day-card .beat-card.comfort-incident {
-  background: transparent;
+  background: color-mix(in srgb, var(--c-accent) 7%, transparent);
   box-shadow: none;
   border: none;
-  border-top: 1px solid var(--c-n4);
-  border-radius: 0;
-  padding: var(--c-s-3) 0 0;
-  margin: 0 0 var(--c-s-3);
+  border-radius: var(--c-r-md);
+  padding: var(--c-s-3) var(--c-s-4);
+  margin: 0 0 var(--c-s-4);
 }
+.comfort-day-card .beat-card.comfort-incident .beat-title { color: var(--c-accent-strong); }
 .comfort-theme .beat-options { flex-direction: column; }
 .comfort-theme .beat-opt { flex: none; width: 100%; }
 /* 决策提示语：紧跟按钮（旧版挤在经文下面，像经文的注脚） */
@@ -2533,8 +2533,6 @@ p.retire-note { color: var(--warm); opacity: 0.75; margin-top: 8px; }
 .comfort-theme .mc-author { color: var(--c-accent-strong); }
 /* 事件卡脚注经文：小一号、斜体感，像顺手抄在便签上 */
 .comfort-incident-verse {
-
-
   margin-top: 8px;
   padding-top: 8px;
   border-top: 1px dashed var(--c-n4);
