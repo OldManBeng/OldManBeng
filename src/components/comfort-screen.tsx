@@ -809,7 +809,7 @@ function ComfortMoments() {
               <div className="muted small">打气的话——给刷到的人，也给自己</div>
             </button>
             <button className="choice-tile" onClick={() => { playPost(); store.dispatch({ type: 'comfort_post_moment', kind: 'family' }); }}>
-              <div className="tile-label">晒家庭幸福</div>
+              <div className="tile-label">稳稳的幸福</div>
               <div className="muted small">妈的被子、爸的螃蟹、养生文章</div>
             </button>
             <button className="choice-tile" onClick={() => { playPost(); store.dispatch({ type: 'comfort_post_moment', kind: 'love' }); }}>
